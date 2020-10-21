@@ -43,7 +43,7 @@ module.exports = {
         reply(parsed);
       })
       .catch((error) => {
-        console.error(error, "Error looking up symbol: ", string);
+        console.error(error, `Error looking up symbols: ${string}`);
         reply(`Error looking up symbols: \$${string}`);
       });
   },

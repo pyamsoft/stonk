@@ -1,3 +1,3 @@
-// Load the bot
+const config = require("./config.json");
 const Bot = require("./bot/bot");
-Bot.login();
+Bot.login(config);
