@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const YFinance = require("./yfinance");
+const Lookup = require("./lookup");
 const Status = require("./status");
 
 function botWatchReady(client) {
@@ -45,7 +45,7 @@ function botWatchMessages(client, prefix) {
     }
     symbols = [...symbols, ...args];
 
-    YFinance.lookup(symbols, (message) => channel.send(message));
+    Lookup.lookup({ symbol: symbols }, (message) => channel.send(message));
   });
 }
 

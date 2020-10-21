@@ -1,56 +1,41 @@
-function symbol(quote) {
-  return quote.symbol;
+function formatSymbol(symbol) {
+  return symbol;
 }
 
-function directionToSign(direction) {
-  return direction === 0 ? "" : direction > 0 ? "+" : "-";
+function formatAmountDirection(changeAmount) {
+  return changeAmount === 0 ? "" : changeAmount > 0 ? "+" : "-";
 }
 
-function price(quote) {
-  const price = quote.regularMarketPrice;
+function formatPrice(price) {
   return `${price.toFixed(2)}`;
 }
 
-function percentChange(quote) {
-  const percent = quote.regularMarketChangePercent;
+function formatChangePercent(percent) {
   return `${Math.abs(percent).toFixed(2)}%`;
 }
 
-function priceDirection(quote) {
-  const change = quote.regularMarketChange;
-  return directionToSign(change);
-}
-
-function priceChange(quote) {
-  const change = quote.regularMarketChange;
+function formatChangeAmount(change) {
   return `${Math.abs(change).toFixed(2)}`;
 }
 
-function parseQuote(quote) {
+function formatQuote({ symbol, price, changeAmount, changePercent }) {
   return `
-**${symbol(quote)}**
+**${formatSymbol(symbol)}**
 \`\`\`diff
-${price(quote)}
+${formatPrice(price)}
 
-${priceDirection(quote)} ${priceChange(quote)} (${percentChange(quote)})
+${formatAmountDirection(changeAmount)} ${formatChangeAmount(
+    changeAmount
+  )} (${formatChangePercent(changePercent)})
 \`\`\``;
 }
 
-function parseResults(symbols, results) {
-  const { quoteResponse, error } = results;
-  const { result } = quoteResponse;
-
-  console.log("Raw result:", JSON.stringify(quoteResponse));
-
-  if (error) {
-    return "Error looking up symbols";
-  }
-
+function parseResults({ symbols, parser, data }) {
   let message = "";
   for (const symbol of symbols) {
-    const quote = result.find((r) => r.symbol === symbol);
+    const quote = data[symbol];
     if (quote) {
-      message += parseQuote(quote);
+      message += formatQuote(parser(quote));
     } else {
       message += `Unable to find data for: \$${symbol}`;
     }
@@ -61,7 +46,7 @@ function parseResults(symbols, results) {
 }
 
 module.exports = {
-  parse: (symbols, data) => {
-    return parseResults(symbols, data);
+  parse: ({ symbols, data, parser }) => {
+    return parseResults({ symbols, data, parser });
   },
 };
