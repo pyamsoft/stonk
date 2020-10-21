@@ -30,7 +30,7 @@ function parseQuote(quote) {
   return `
 **${symbol(quote)}**
 \`\`\`diff
-\$${price(quote)}
+${price(quote)}
 
 ${priceDirection(quote)} ${priceChange(quote)} (${percentChange(quote)})
 \`\`\``;
