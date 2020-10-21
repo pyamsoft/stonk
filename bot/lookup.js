@@ -11,7 +11,6 @@ module.exports = {
         const parsed = Parser.parse({
           symbols,
           data,
-          parser: (payload) => YFinance.parse(payload),
         });
         reply(parsed);
       })

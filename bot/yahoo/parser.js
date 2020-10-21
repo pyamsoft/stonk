@@ -1,3 +1,5 @@
+const { newQuote } = require("../quote");
+
 function symbol(quote) {
   return quote.symbol;
 }
@@ -16,11 +18,11 @@ function priceChange(quote) {
 
 module.exports = {
   parse: (quote) => {
-    return {
-      symbol: symbol(quote),
-      price: price(quote),
-      changeAmount: priceChange(quote),
-      changePercent: percentChange(quote),
-    };
+    return newQuote(
+      symbol(quote),
+      price(quote),
+      priceChange(quote),
+      percentChange(quote)
+    );
   },
 };

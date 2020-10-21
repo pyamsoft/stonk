@@ -30,23 +30,19 @@ ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
 \`\`\``;
 }
 
-function parseResults({ symbols, parser, data }) {
-  let message = "";
-  for (const symbol of symbols) {
-    const quote = data[symbol];
-    if (quote) {
-      message += formatQuote(parser(quote));
-    } else {
-      message += `Unable to find data for: \$${symbol}`;
-    }
-    message += "\n";
-  }
-
-  return message;
-}
-
 module.exports = {
-  parse: ({ symbols, data, parser }) => {
-    return parseResults({ symbols, data, parser });
+  parse: ({ symbols, data }) => {
+    let message = "";
+    for (const symbol of symbols) {
+      const quote = data[symbol];
+      if (quote) {
+        message += formatQuote(quote);
+      } else {
+        message += `Unable to find data for: \$${symbol}`;
+      }
+      message += "\n";
+    }
+
+    return message;
   },
 };

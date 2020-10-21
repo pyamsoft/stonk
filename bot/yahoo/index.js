@@ -35,14 +35,10 @@ module.exports = {
       const results = {};
       for (const stock of result) {
         const { symbol } = stock;
-        results[symbol] = stock;
+        results[symbol] = Parser.parse(stock);
       }
 
       return results;
     });
-  },
-
-  parse: (data) => {
-    return Parser.parse(data);
   },
 };
