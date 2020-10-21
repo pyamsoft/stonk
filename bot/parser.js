@@ -39,6 +39,7 @@ ${priceDirection(quote)} ${priceChange(quote)} (${percentChange(quote)})
 function parseResults(symbols, results) {
   const { quoteResponse, error } = results;
   const { result } = quoteResponse;
+  console.log("Raw result:", JSON.stringify(quoteResponse));
 
   if (error) {
     return "Error looking up symbols";

@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "discord.js": "12.4.0",
+    "luxon": "1.25.0",
     "node-fetch": "2.6.1"
   },
   "devDependencies": {

@@ -1,37 +1,18 @@
 const Discord = require("discord.js");
 const YFinance = require("./yfinance");
-const config = require("./config.json");
+const config = require("../config.json");
+const Status = require("./status");
 const client = new Discord.Client();
-
-function updateActivity() {
-  const count = client.guilds.cache.size;
-  client.user.setActivity(
-    `Serving ${count} ${count === 1 ? "server" : "servers"}`
-  );
-}
 
 client.on("ready", () => {
   // This event will run if the bot starts, and logs in, successfully.
   console.log(
     `Bot has started, with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`
   );
-  // Example of changing the bot's playing game to something useful. `client.user` is what the
-  // docs refer to as the "ClientUser".
-  updateActivity();
-});
 
-client.on("guildCreate", (guild) => {
-  // This event triggers when the bot joins a guild.
-  console.log(
-    `New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`
-  );
-  updateActivity();
-});
-
-client.on("guildDelete", (guild) => {
-  // this event triggers when the bot is removed from a guild.
-  console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
-  updateActivity();
+  Status.watchStatus((message) => {
+    client.user.setActivity(message);
+  });
 });
 
 client.on("message", ({ author, content, channel }) => {
