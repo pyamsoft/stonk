@@ -1,0 +1,13 @@
+{
+  "name": "stonk-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "discord.js": "12.4.0",
+    "node-fetch": "2.6.1"
+  },
+  "devDependencies": {
+    "prettier": "2.1.2"
+  }
+}
