@@ -13,18 +13,27 @@ function price(quote) {
 
 function percentChange(quote) {
   const percent = quote.regularMarketChangePercent;
-  return `${directionToSign(percent)}${Math.abs(percent).toFixed(2)}%`;
+  return `${Math.abs(percent).toFixed(2)}%`;
+}
+
+function priceDirection(quote) {
+  const change = quote.regularMarketChange;
+  return directionToSign(change);
 }
 
 function priceChange(quote) {
   const change = quote.regularMarketChange;
-  return `${directionToSign(change)}${Math.abs(change).toFixed(2)}`;
+  return `${Math.abs(change).toFixed(2)}`;
 }
 
 function parseQuote(quote) {
-  return `${symbol(quote)}: ${price(quote)} (${percentChange(
-    quote
-  )}) [${priceChange(quote)}]`;
+  return `
+**${symbol(quote)}**
+\`\`\`diff
+\$${price(quote)}
+
+${priceDirection(quote)} ${priceChange(quote)} (${percentChange(quote)})
+\`\`\``;
 }
 
 function parseResults(symbols, results) {
