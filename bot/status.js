@@ -42,14 +42,12 @@ function whichHoliday(date) {
 function isMarketOpen(date, holiday) {
   // Closed on recognized holidays
   if (holiday) {
-    console.log("Market closed for the holidays: ", holiday);
     return false;
   }
 
   // Closed on weekends
   const weekday = date.weekday;
   if (weekday <= 0 || weekday >= 6) {
-    console.log("Market closed for the weekend: ", weekday);
     return false;
   }
 
@@ -63,13 +61,7 @@ function isMarketOpen(date, holiday) {
     .set({ hours: 12 + 4, minutes: 0, seconds: 0, milliseconds: 0 });
 
   const interval = Interval.fromDateTimes(marketOpenTime, marketCloseTime);
-  const open = interval.contains(date);
-  if (!open) {
-    console.log("Market closed during off hours: ", date.toISO());
-    console.log("Open: ", marketOpenTime.toISO());
-    console.log("Close: ", marketCloseTime.toISO());
-  }
-  return open;
+  return interval.contains(date);
 }
 
 function updateActivity(callback) {
