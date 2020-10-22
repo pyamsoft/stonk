@@ -1,4 +1,5 @@
 const { newQuote } = require("../quote");
+const Logger = require("../../logger");
 
 function symbol(quote) {
   return quote.symbol;
@@ -23,6 +24,7 @@ module.exports = {
     const pVC = priceChange(quote);
     const pPC = percentChange(quote);
     if (!s || !p || !pVC || !pPC) {
+      Logger.warn("Invalid YFinance quote: ", quote);
       return null;
     } else {
       return newQuote(s, p, pVC, pPC);

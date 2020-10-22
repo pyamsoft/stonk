@@ -1,6 +1,7 @@
 const fetch = require("node-fetch");
 const Parser = require("./parser");
 const { symbolsToString } = require("../../util/symbol");
+const Logger = require("../../logger");
 
 function generateUrl(symbols) {
   return `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsToString(
@@ -24,11 +25,13 @@ module.exports = {
     return lookupSymbols(symbols).then((data) => {
       const { quoteResponse } = data;
       if (!quoteResponse) {
+        Logger.warn("YFinance missing quoteResponse");
         return {};
       }
 
       const { result } = quoteResponse;
       if (!result) {
+        Logger.warn("YFinance missing quoteResponse.result");
         return {};
       }
 
@@ -38,6 +41,7 @@ module.exports = {
         results[symbol] = Parser.parse(stock);
       }
 
+      Logger.log("YFinance results: ", JSON.stringify(results));
       return results;
     });
   },

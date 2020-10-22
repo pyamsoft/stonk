@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const Lookup = require("./lookup");
 const Status = require("./status");
 const Cache = require("./cache");
+const Logger = require("../logger");
 
 // 2 hours
 const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
@@ -9,8 +10,9 @@ const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
 function botWatchReady(client) {
   client.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
-    console.log(`Bot has started!`);
+    Logger.log(`Bot has started!`);
     Status.watchStatus(client, (message) => {
+      Logger.log("Setting bot activity: ", message);
       client.user.setActivity(message);
     });
   });
@@ -33,22 +35,20 @@ function contentToSymbols(prefix, content) {
 
 function validateMessage({ prefix, id, author, content }) {
   if (!id) {
+    Logger.warn("Message missing ID, invalid");
     return false;
   }
 
   // It's good practice to ignore other bots. This also makes your bot ignore itself
   // and not get into a spam loop (we call that "botception").
   if (author.bot) {
+    Logger.warn("Message from bot, invalid");
     return false;
   }
 
   // Also good practice to ignore any message that does not start with our prefix,
   // which is set in the configuration file.
-  if (!content.startsWith(prefix)) {
-    return false;
-  }
-
-  return true;
+  return content.startsWith(prefix);
 }
 
 function cacheMessage(cache, skipCache, id, message) {
@@ -62,30 +62,33 @@ function sendMessage({ skipCache, cache, messageId, channel, messageText }) {
   // Edit an existing message
   const oldMessage = cache.get(messageId);
   if (oldMessage) {
+    Logger.log("Update old message with new content: ", messageId);
     oldMessage
       .edit(messageText)
       .then((message) => cacheMessage(cache, skipCache, messageId, message))
       .catch((error) => {
-        console.error(error, "Unable to update message: ", messageId);
+        Logger.error(error, "Unable to update message: ", messageId);
       });
     return;
   }
 
   // Send a new message
+  Logger.log("Send new message for id: ", messageId);
   channel
     .send(messageText)
     .then((message) => cacheMessage(cache, skipCache, messageId, message))
     .catch((error) => {
-      console.error(error, `Unable to send message: "${messageText}"`);
+      Logger.error(error, `Unable to send message: "${messageText}"`);
     });
 }
 
 function botWatchMessageUpdates(client, { prefix, cache }) {
   if (!prefix) {
-    console.warn(`Missing prefix defined in config.json`);
+    Logger.warn(`Missing prefix defined in config.json`);
     return;
   }
 
+  Logger.log("Watching for message updates");
   client.on("messageUpdate", (oldMessage, newMessage) => {
     const { id: oldId, author: oldAuthor, content: oldContent } = oldMessage;
     if (
@@ -131,10 +134,11 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
 
 function botWatchMessages(client, { prefix, cache }) {
   if (!prefix) {
-    console.warn(`Missing prefix defined in config.json`);
+    Logger.warn(`Missing prefix defined in config.json`);
     return;
   }
 
+  Logger.log("Watching for messages");
   client.on("message", ({ id, author, content, channel }) => {
     // This event will run on every single message received, from any channel or DM.
     if (!validateMessage({ prefix, id, author, content })) {
@@ -166,6 +170,7 @@ function initializeBot(prefix) {
 // Log the bot in
 module.exports = {
   login: (config) => {
+    Logger.log(`Initializing bot. Responds to: '${config.prefix}'`);
     const login = initializeBot(config.prefix);
     login(config.token);
   },

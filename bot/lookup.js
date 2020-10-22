@@ -2,10 +2,12 @@ const Parser = require("./parser");
 const YFinance = require("./yahoo");
 const { asArray } = require("../util/array");
 const { symbolsToString } = require("../util/symbol");
+const Logger = require("../logger");
 
 module.exports = {
   lookup: ({ symbols: symbolOrSymbols }, reply) => {
     const symbols = asArray(symbolOrSymbols);
+    Logger.log("Lookup for symbols: ", symbols);
     YFinance.lookup({ symbols })
       .then((data) => {
         const parsed = Parser.parse({
@@ -19,7 +21,7 @@ module.exports = {
       })
       .catch((error) => {
         const string = symbolsToString(symbols);
-        console.error(error, `Error looking up symbols: ${string}`);
+        Logger.error(error, `Error looking up symbols: ${string}`);
         reply({
           message: `Error looking up symbols: \$${string}`,
           isError: true,
