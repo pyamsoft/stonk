@@ -61,9 +61,12 @@ function insertIntoMessageMap(ignore, map, id, message) {
 
   // Clear out any stale messages
   for (const key of Object.keys(map)) {
-    const { lastUsed } = map[key];
-    if (now.valueOf() - STALE_OFFSET_MS > lastUsed.valueOf()) {
-      map[key] = null;
+    const old = map[key];
+    if (old) {
+      const { lastUsed } = old;
+      if (now.valueOf() - STALE_OFFSET_MS > lastUsed.valueOf()) {
+        map[key] = null;
+      }
     }
   }
 }
