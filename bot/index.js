@@ -6,7 +6,7 @@ function botWatchReady(client) {
   client.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
     console.log(`Bot has started!`);
-    Status.watchStatus((message) => {
+    Status.watchStatus(client, (message) => {
       client.user.setActivity(message);
     });
   });

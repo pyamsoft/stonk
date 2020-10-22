@@ -78,19 +78,13 @@ function updateActivity(callback) {
   );
 }
 
-let interval = null;
-
 // Log the bot in
 module.exports = {
-  watchStatus: (callback) => {
-    if (interval) {
-      clearInterval(interval);
-    }
-
+  watchStatus: (client, callback) => {
     updateActivity(callback);
 
     const timeout = 10 * 60 * 1000;
-    interval = setInterval(() => {
+    return client.setInterval(() => {
       updateActivity(callback);
     }, timeout);
   },
