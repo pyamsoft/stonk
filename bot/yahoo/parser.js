@@ -18,11 +18,14 @@ function priceChange(quote) {
 
 module.exports = {
   parse: (quote) => {
-    return newQuote(
-      symbol(quote),
-      price(quote),
-      priceChange(quote),
-      percentChange(quote)
-    );
+    const s = symbol(quote);
+    const p = price(quote);
+    const pVC = priceChange(quote);
+    const pPC = percentChange(quote);
+    if (!s || !p || !pVC || !pPC) {
+      return null;
+    } else {
+      return newQuote(s, p, pVC, pPC);
+    }
   },
 };

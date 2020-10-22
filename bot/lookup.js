@@ -4,7 +4,7 @@ const { asArray } = require("../util/array");
 const { symbolsToString } = require("../util/symbol");
 
 module.exports = {
-  lookup: ({ symbol: symbolOrSymbols }, reply) => {
+  lookup: ({ symbols: symbolOrSymbols }, reply) => {
     const symbols = asArray(symbolOrSymbols);
     YFinance.lookup({ symbols })
       .then((data) => {
@@ -12,12 +12,18 @@ module.exports = {
           symbols,
           data,
         });
-        reply(parsed);
+        reply({
+          message: parsed,
+          isError: false,
+        });
       })
       .catch((error) => {
         const string = symbolsToString(symbols);
         console.error(error, `Error looking up symbols: ${string}`);
-        reply(`Error looking up symbols: \$${string}`);
+        reply({
+          message: `Error looking up symbols: \$${string}`,
+          isError: true,
+        });
       });
   },
 };
