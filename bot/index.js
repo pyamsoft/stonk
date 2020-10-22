@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const Lookup = require("./lookup");
 const Status = require("./status");
+const Cache = require("./cache");
 
 // 2 hours
 const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
@@ -50,67 +51,36 @@ function validateMessage({ prefix, id, author, content }) {
   return true;
 }
 
-function insertIntoMessageMap(ignore, map, id, message) {
-  const now = new Date();
-  if (!ignore) {
-    map[id] = {
-      message,
-      lastUsed: now,
-    };
+function cacheMessage(cache, skipCache, id, message) {
+  if (!skipCache) {
+    cache.insert(id, message);
   }
-
-  // Clear out any stale messages
-  for (const key of Object.keys(map)) {
-    const old = map[key];
-    if (old) {
-      const { lastUsed } = old;
-      if (now.valueOf() - STALE_OFFSET_MS > lastUsed.valueOf()) {
-        map[key] = null;
-      }
-    }
-  }
+  cache.invalidate();
 }
 
-function sendMessage({
-  doNotCacheMessage,
-  messageMap,
-  messageId,
-  channel,
-  messageText,
-}) {
+function sendMessage({ skipCache, cache, messageId, channel, messageText }) {
   // Edit an existing message
-  if (messageId) {
-    const oldMessage = messageMap[messageId];
-    if (oldMessage) {
-      oldMessage.message
-        .edit(messageText)
-        .then((message) =>
-          insertIntoMessageMap(
-            doNotCacheMessage,
-            messageMap,
-            messageId,
-            message
-          )
-        )
-        .catch((error) => {
-          console.error(error, "Unable to update message: ", messageId);
-        });
-      return;
-    }
+  const oldMessage = cache.get(messageId);
+  if (oldMessage) {
+    oldMessage
+      .edit(messageText)
+      .then((message) => cacheMessage(cache, skipCache, messageId, message))
+      .catch((error) => {
+        console.error(error, "Unable to update message: ", messageId);
+      });
+    return;
   }
 
   // Send a new message
   channel
     .send(messageText)
-    .then((message) =>
-      insertIntoMessageMap(doNotCacheMessage, messageMap, messageId, message)
-    )
+    .then((message) => cacheMessage(cache, skipCache, messageId, message))
     .catch((error) => {
       console.error(error, `Unable to send message: "${messageText}"`);
     });
 }
 
-function botWatchMessageUpdates(client, { prefix, messageMap }) {
+function botWatchMessageUpdates(client, { prefix, cache }) {
   if (!prefix) {
     console.warn(`Missing prefix defined in config.json`);
     return;
@@ -149,8 +119,8 @@ function botWatchMessageUpdates(client, { prefix, messageMap }) {
     const newSymbols = contentToSymbols(prefix, newContent);
     Lookup.lookup({ symbols: newSymbols }, ({ message, isError }) =>
       sendMessage({
-        doNotCacheMessage: isError,
-        messageMap,
+        skipCache: isError,
+        cache,
         messageId: newId,
         channel,
         messageText: message,
@@ -159,7 +129,7 @@ function botWatchMessageUpdates(client, { prefix, messageMap }) {
   });
 }
 
-function botWatchMessages(client, { prefix, messageMap }) {
+function botWatchMessages(client, { prefix, cache }) {
   if (!prefix) {
     console.warn(`Missing prefix defined in config.json`);
     return;
@@ -174,8 +144,8 @@ function botWatchMessages(client, { prefix, messageMap }) {
     const symbols = contentToSymbols(prefix, content);
     Lookup.lookup({ symbols }, ({ message, isError }) =>
       sendMessage({
-        doNotCacheMessage: isError,
-        messageMap,
+        skipCache: isError,
+        cache,
         messageId: id,
         channel,
         messageText: message,
@@ -186,10 +156,10 @@ function botWatchMessages(client, { prefix, messageMap }) {
 
 function initializeBot(prefix) {
   const client = new Discord.Client();
-  const messageMap = {};
+  const cache = Cache.create(STALE_OFFSET_MS);
   botWatchReady(client);
-  botWatchMessages(client, { prefix, messageMap });
-  botWatchMessageUpdates(client, { prefix, messageMap });
+  botWatchMessages(client, { prefix, cache });
+  botWatchMessageUpdates(client, { prefix, cache });
   return (token) => client.login(token);
 }
 
