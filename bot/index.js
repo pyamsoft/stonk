@@ -34,7 +34,7 @@ function contentToSymbols(sliceOut, content) {
   return symbols;
 }
 
-function validateMessage({ prefix, id, author, content }) {
+function validateMessage(prefix, { id, author, content }) {
   if (!id) {
     return false;
   }
@@ -93,15 +93,8 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
 
   Logger.log("Watching for message updates");
   client.on("messageUpdate", (oldMessage, newMessage) => {
-    const { id, author, content, channel } = newMessage;
-    if (
-      !validateMessage({
-        prefix,
-        id,
-        author,
-        content,
-      })
-    ) {
+    const { id, content, channel } = newMessage;
+    if (!validateMessage(prefix, message)) {
       return;
     }
 
@@ -123,9 +116,11 @@ function botWatchMessages(client, { prefix, cache }) {
   }
 
   Logger.log("Watching for messages");
-  client.on("message", ({ id, author, content, channel }) => {
+  client.on("message", (message) => {
+    const { id, content, channel } = message;
+
     // This event will run on every single message received, from any channel or DM.
-    if (!validateMessage({ prefix, id, author, content })) {
+    if (!validateMessage(prefix, message)) {
       return;
     }
 
