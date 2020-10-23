@@ -11,7 +11,7 @@ const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
 function botWatchReady(client) {
   client.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
-    Logger.log(`Bot has started!`);
+    Logger.print(`Bot has started!`);
     Status.watchStatus(client, (message) => {
       Logger.log("Setting bot activity: ", message);
       client.user.setActivity(message);
@@ -185,7 +185,12 @@ function initializeBot(prefix) {
 // Log the bot in
 module.exports = {
   login: function login(config) {
-    Logger.log(`Initializing bot. Responds to: '${config.prefix}'`);
+    Logger.print(`Starting bot...`);
+    Logger.print(`Responds to: '${config.prefix}'`);
+    config.token
+      ? Logger.print(`Has authentication token`)
+      : Logger.error(`Missing authentication token!!`);
+    Logger.print();
     const loginBot = initializeBot(config.prefix);
     loginBot(config.token);
   },

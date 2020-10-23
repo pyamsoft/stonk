@@ -31,8 +31,13 @@ ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
 }
 
 module.exports = {
-  parse: function parse({ symbols, data }) {
+  parse: function parse({ query, symbols, data }) {
     let message = "";
+    if (query) {
+      message += `Best guess for: \`${query}\``;
+      message += "\n";
+    }
+
     for (const symbol of symbols) {
       const quote = data[symbol];
       if (quote) {

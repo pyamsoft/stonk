@@ -1,8 +1,12 @@
 const isDebug = process.env.BOT_ENV !== "production";
 
+function print(...args) {
+  console.log(...args);
+}
+
 function log(...args) {
   if (isDebug) {
-    console.log(...args);
+    print(...args);
   }
 }
 
@@ -17,6 +21,7 @@ function error(e, ...args) {
 }
 
 module.exports = {
+  print,
   log,
   warn,
   error,

@@ -25,13 +25,13 @@ function handleFetch(url) {
 }
 
 function lookupSymbols(symbols) {
-  Logger.log(`Perform lookup for symbol: '${symbols}'`);
+  Logger.print(`Perform lookup for symbol: '${symbols}'`);
   const url = generateLookupUrl(symbols);
   return handleFetch(url);
 }
 
 function queryYahoo(query, fuzzy) {
-  Logger.log(`Perform query for string: '${query}'`);
+  Logger.print(`Perform query for string: '${query}'`);
   const url = generateQueryUrl(query, fuzzy);
   return handleFetch(url);
 }
@@ -94,6 +94,7 @@ module.exports = {
       return this.lookup({ symbols: asArray(ticker) }).then((data) => {
         return {
           symbols: [ticker],
+          query,
           data,
         };
       });

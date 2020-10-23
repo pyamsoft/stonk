@@ -6,12 +6,10 @@ const DataSource = YFinance;
 module.exports = {
   query: ({ query, fuzzy }) => {
     return DataSource.query({ query, fuzzy })
-      .then(({ symbols, data }) => {
+      .then((result) => {
+        const { data } = result;
         Logger.log("Query results: ", JSON.stringify(data));
-        return {
-          symbols,
-          data,
-        };
+        return result;
       })
       .catch((error) => {
         const msg = `Error doing reverse lookup: ${error.message}`;
