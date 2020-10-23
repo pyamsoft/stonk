@@ -1,5 +1,5 @@
-const { newQuote } = require("../quote");
-const Logger = require("../../logger");
+const { newQuote } = require("../model/quote");
+const Logger = require("../../../logger");
 
 function symbol(quote) {
   return quote.symbol;
@@ -18,7 +18,7 @@ function priceChange(quote) {
 }
 
 module.exports = {
-  parse: (quote) => {
+  parse: function parse(quote) {
     const s = symbol(quote);
     const p = price(quote);
     const pVC = priceChange(quote);

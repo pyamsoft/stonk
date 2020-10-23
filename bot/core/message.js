@@ -31,7 +31,7 @@ ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
 }
 
 module.exports = {
-  parse: ({ symbols, data }) => {
+  parse: function parse({ symbols, data }) {
     let message = "";
     for (const symbol of symbols) {
       const quote = data[symbol];

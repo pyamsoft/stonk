@@ -1,5 +1,5 @@
 const { DateTime, Interval } = require("luxon");
-const Logger = require("../logger");
+const Logger = require("../../logger");
 
 const NYSE_ZONE = "America/New_York";
 
@@ -79,7 +79,7 @@ function updateActivity(callback) {
 
 // Log the bot in
 module.exports = {
-  watchStatus: (client, callback) => {
+  watchStatus: function watchStatus (client, callback) {
     updateActivity(callback);
 
     const timeout = 10 * 60 * 1000;

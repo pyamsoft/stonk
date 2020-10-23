@@ -1,8 +1,9 @@
 const Discord = require("discord.js");
-const Lookup = require("./lookup");
-const Status = require("./status");
-const Cache = require("./cache");
+const Commands = require("./commands");
 const Logger = require("../logger");
+const Status = require("./core/status");
+const Cache = require("./core/cache");
+const MessageParser = require("./core/message");
 
 // 2 hours
 const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
@@ -18,13 +19,13 @@ function botWatchReady(client) {
   });
 }
 
-function contentToSymbols(prefix, content) {
+function contentToSymbols(sliceOut, content) {
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // symbol = say
   // args = ["Is", "this", "the", "real", "life?"]
-  const args = content.slice(prefix.length).trim().split(/ +/g);
-  const symbol = args.shift().toUpperCase();
+  const args = content.slice(sliceOut).trim().split(/ +/g);
+  const symbol = args.shift();
   let symbols = [];
   if (symbol) {
     symbols.push(symbol);
@@ -35,14 +36,12 @@ function contentToSymbols(prefix, content) {
 
 function validateMessage({ prefix, id, author, content }) {
   if (!id) {
-    Logger.warn("Message missing ID, invalid");
     return false;
   }
 
   // It's good practice to ignore other bots. This also makes your bot ignore itself
   // and not get into a spam loop (we call that "botception").
   if (author.bot) {
-    Logger.warn("Message from bot, invalid");
     return false;
   }
 
@@ -82,6 +81,10 @@ function sendMessage({ skipCache, cache, messageId, channel, messageText }) {
     });
 }
 
+function isReverseLookupCommand(prefix, content) {
+  return content.startsWith(prefix) && content.slice(1).startsWith(prefix);
+}
+
 function botWatchMessageUpdates(client, { prefix, cache }) {
   if (!prefix) {
     Logger.warn(`Missing prefix defined in config.json`);
@@ -90,45 +93,26 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
 
   Logger.log("Watching for message updates");
   client.on("messageUpdate", (oldMessage, newMessage) => {
-    const { id: oldId, author: oldAuthor, content: oldContent } = oldMessage;
+    const { id, author, content, channel } = newMessage;
     if (
       !validateMessage({
         prefix,
-        id: oldId,
-        author: oldAuthor,
-        content: oldContent,
+        id,
+        author,
+        content,
       })
     ) {
       return;
     }
 
-    const {
-      id: newId,
-      author: newAuthor,
-      content: newContent,
-      channel,
-    } = newMessage;
-    if (
-      !validateMessage({
-        prefix,
-        id: newId,
-        author: newAuthor,
-        content: newContent,
-      })
-    ) {
+    if (isReverseLookupCommand(prefix, content)) {
+      const query = contentToSymbols(2 * prefix.length, content).join(" ");
+      reverseLookup(cache, channel, id, query);
       return;
     }
 
-    const newSymbols = contentToSymbols(prefix, newContent);
-    Lookup.lookup({ symbols: newSymbols }, ({ message, isError }) =>
-      sendMessage({
-        skipCache: isError,
-        cache,
-        messageId: newId,
-        channel,
-        messageText: message,
-      })
-    );
+    const symbols = contentToSymbols(prefix.length, content);
+    lookupSymbols(cache, channel, id, symbols);
   });
 }
 
@@ -145,17 +129,46 @@ function botWatchMessages(client, { prefix, cache }) {
       return;
     }
 
-    const symbols = contentToSymbols(prefix, content);
-    Lookup.lookup({ symbols }, ({ message, isError }) =>
+    if (isReverseLookupCommand(prefix, content)) {
+      const query = contentToSymbols(2 * prefix.length, content).join(" ");
+      reverseLookup(cache, channel, id, query);
+      return;
+    }
+
+    const symbols = contentToSymbols(prefix.length, content);
+    lookupSymbols(cache, channel, id, symbols);
+  });
+}
+
+function handleCommand(cache, channel, id, command) {
+  command
+    .then((result) => {
+      const parsed = MessageParser.parse(result);
       sendMessage({
-        skipCache: isError,
+        skipCache: false,
         cache,
         messageId: id,
         channel,
-        messageText: message,
-      })
-    );
-  });
+        messageText: parsed,
+      });
+    })
+    .catch((error) => {
+      sendMessage({
+        skipCache: true,
+        cache,
+        messageId: id,
+        channel,
+        messageText: error.message,
+      });
+    });
+}
+
+function reverseLookup(cache, channel, id, query) {
+  handleCommand(cache, channel, id, Commands.query({ query, fuzzy: true }));
+}
+
+function lookupSymbols(cache, channel, id, symbols) {
+  handleCommand(cache, channel, id, Commands.lookup({ symbols }));
 }
 
 function initializeBot(prefix) {
@@ -164,14 +177,16 @@ function initializeBot(prefix) {
   botWatchReady(client);
   botWatchMessages(client, { prefix, cache });
   botWatchMessageUpdates(client, { prefix, cache });
-  return (token) => client.login(token);
+  return function loginBot(token) {
+    client.login(token);
+  };
 }
 
 // Log the bot in
 module.exports = {
-  login: (config) => {
+  login: function login(config) {
     Logger.log(`Initializing bot. Responds to: '${config.prefix}'`);
-    const login = initializeBot(config.prefix);
-    login(config.token);
+    const loginBot = initializeBot(config.prefix);
+    loginBot(config.token);
   },
 };
