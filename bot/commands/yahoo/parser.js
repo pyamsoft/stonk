@@ -17,17 +17,28 @@ function priceChange(quote) {
   return quote.regularMarketChange;
 }
 
+function company(quote) {
+  return quote.shortName;
+}
+
 module.exports = {
   parse: function parse(quote) {
     const s = symbol(quote);
     const p = price(quote);
     const pVC = priceChange(quote);
     const pPC = percentChange(quote);
-    if (!s || !p || !pVC || !pPC) {
+    const sn = company(quote);
+    if (!s || !p || !pVC || !pPC || !sn) {
       Logger.warn("Invalid YFinance quote: ", quote);
       return null;
     } else {
-      return newQuote(s, p, pVC, pPC);
+      return newQuote({
+        company: sn,
+        symbol: s,
+        price: p,
+        changeAmount: pVC,
+        changePercent: pPC,
+      });
     }
   },
 };

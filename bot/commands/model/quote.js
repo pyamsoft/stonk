@@ -1,5 +1,6 @@
-function newQuote(symbol, price, changeAmount, changePercent) {
+function newQuote({ symbol, company, price, changeAmount, changePercent }) {
   return {
+    company,
     symbol,
     price,
     changeAmount,

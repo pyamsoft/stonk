@@ -1,5 +1,11 @@
+const NBSP = "\u00a0";
+
 function formatSymbol(symbol) {
   return symbol;
+}
+
+function formatCompany(company) {
+  return company;
 }
 
 function formatAmountDirection(changeAmount) {
@@ -18,9 +24,11 @@ function formatChangeAmount(change) {
   return `${Math.abs(change).toFixed(2)}`;
 }
 
-function formatQuote({ symbol, price, changeAmount, changePercent }) {
+function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
   return `
-**${formatSymbol(symbol)}**
+**${formatSymbol(symbol)}**${NBSP}${NBSP}${NBSP}${NBSP}*${formatCompany(
+    company
+  )}*
 \`\`\`diff
 ${formatPrice(price)}
 
@@ -38,14 +46,19 @@ module.exports = {
       message += "\n";
     }
 
-    for (const symbol of symbols) {
-      const quote = data[symbol];
-      if (quote) {
-        message += formatQuote(quote);
-      } else {
-        message += `Unable to find data for: \$${symbol}`;
-      }
+    if (!symbols || symbols.length <= 0) {
+      message += `Beep boop try again later.`;
       message += "\n";
+    } else {
+      for (const symbol of symbols) {
+        const quote = data ? data[symbol] : null;
+        if (quote) {
+          message += formatQuote(quote);
+        } else {
+          message += `Unable to find data for: \$${symbol}`;
+        }
+        message += "\n";
+      }
     }
 
     return message;

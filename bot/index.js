@@ -86,15 +86,10 @@ function isReverseLookupCommand(prefix, content) {
 }
 
 function botWatchMessageUpdates(client, { prefix, cache }) {
-  if (!prefix) {
-    Logger.warn(`Missing prefix defined in config.json`);
-    return;
-  }
-
   Logger.log("Watching for message updates");
   client.on("messageUpdate", (oldMessage, newMessage) => {
     const { id, content, channel } = newMessage;
-    if (!validateMessage(prefix, message)) {
+    if (!validateMessage(prefix, newMessage)) {
       return;
     }
 
@@ -110,11 +105,6 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
 }
 
 function botWatchMessages(client, { prefix, cache }) {
-  if (!prefix) {
-    Logger.warn(`Missing prefix defined in config.json`);
-    return;
-  }
-
   Logger.log("Watching for messages");
   client.on("message", (message) => {
     const { id, content, channel } = message;
