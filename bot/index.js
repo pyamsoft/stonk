@@ -104,6 +104,9 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
       return;
     }
 
+    // Make this an option input
+    const includeNews = false;
+
     if (isReverseLookupCommand(prefix, content)) {
       const query = contentToQuery(prefix, content);
       reverseLookup(query, {
@@ -111,13 +114,13 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
         cache,
         channel,
         id,
-        includeNews: true,
+        includeNews,
       });
       return;
     }
 
     const symbols = contentToSymbols(prefix, content);
-    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews: true });
+    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews });
   });
 }
 
@@ -131,6 +134,9 @@ function botWatchMessages(client, { prefix, cache }) {
       return;
     }
 
+    // Make this an option input
+    const includeNews = false;
+
     if (isReverseLookupCommand(prefix, content)) {
       const query = contentToQuery(prefix, content);
       reverseLookup(query, {
@@ -138,13 +144,13 @@ function botWatchMessages(client, { prefix, cache }) {
         cache,
         channel,
         id,
-        includeNews: true,
+        includeNews,
       });
       return;
     }
 
     const symbols = contentToSymbols(prefix, content);
-    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews: true });
+    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews });
   });
 }
 
