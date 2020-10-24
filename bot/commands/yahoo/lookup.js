@@ -1,7 +1,7 @@
 const Parser = require("./parser");
 const { symbolsToString } = require("../../../util/symbol");
 const Logger = require("../../../logger");
-const { api } = require("../../../util/api");
+const { jsonApi } = require("../../../util/api");
 
 function generateLookupUrl(symbols) {
   return `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsToString(
@@ -11,7 +11,7 @@ function generateLookupUrl(symbols) {
 
 function lookupSymbols(symbols) {
   const url = generateLookupUrl(symbols);
-  return api(url);
+  return jsonApi(url);
 }
 
 module.exports = {

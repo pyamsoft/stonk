@@ -3,6 +3,7 @@ const { asArray } = require("../../util/array");
 const { symbolsToString } = require("../../util/symbol");
 const Lookup = require("./yahoo/lookup");
 const Query = require("./yahoo/query");
+const News = require("./google/news");
 
 module.exports = {
   lookup: function lookup({ symbols }) {
@@ -29,6 +30,19 @@ module.exports = {
       })
       .catch((error) => {
         const msg = `Error doing reverse lookup: ${error.message}`;
+        Logger.error(error, msg);
+        throw new Error(msg);
+      });
+  },
+  news: function news({ query, addStockToQuery }) {
+    Logger.log(`Perform news for query: '${query}'`);
+    return News.news({ query, addStockToQuery })
+      .then((result) => {
+        Logger.log("News results: ", JSON.stringify(result));
+        return result;
+      })
+      .catch((error) => {
+        const msg = `Error doing news lookup: ${error.message}`;
         Logger.error(error, msg);
         throw new Error(msg);
       });

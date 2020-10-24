@@ -1,4 +1,4 @@
-const { newQuote } = require("../model/quote");
+const { newQuote } = require("../quote");
 const Logger = require("../../../logger");
 
 function symbol(quote) {

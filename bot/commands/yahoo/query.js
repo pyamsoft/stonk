@@ -1,4 +1,4 @@
-const { api } = require("../../../util/api");
+const { jsonApi } = require("../../../util/api");
 const { asArray } = require("../../../util/array");
 const Logger = require("../../../logger");
 const Lookup = require("./lookup");
@@ -9,7 +9,7 @@ function generateQueryUrl(query, fuzzy) {
 
 function queryYahoo(query, fuzzy) {
   const url = generateQueryUrl(query, fuzzy);
-  return api(url);
+  return jsonApi(url);
 }
 
 function query({ query, fuzzy }) {
