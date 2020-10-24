@@ -1,3 +1,5 @@
+const { code, codeBlock } = require("../../util/format");
+
 const NBSP = "\u00a0";
 
 function formatSymbol(symbol) {
@@ -29,20 +31,20 @@ function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
 **${formatSymbol(symbol)}**${NBSP}${NBSP}${NBSP}${NBSP}*${formatCompany(
     company
   )}*
-\`\`\`diff
+${codeBlock(`diff
 ${formatPrice(price)}
 
 ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
-    changeAmount
-  )} (${formatChangePercent(changePercent)})
-\`\`\``;
+  changeAmount
+)} (${formatChangePercent(changePercent)})
+`)}`;
 }
 
 module.exports = {
   parse: function parse({ query, symbols, data }) {
     let message = "";
     if (query) {
-      message += `Best guess for: \`${query}\``;
+      message += `Best guess for: ${code(query)}`;
       message += "\n";
     }
 

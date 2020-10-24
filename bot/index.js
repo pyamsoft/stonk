@@ -4,6 +4,7 @@ const Logger = require("../logger");
 const Status = require("./core/status");
 const Cache = require("./core/cache");
 const MessageParser = require("./core/message");
+const { codeBlock } = require("../util/format");
 
 // 2 hours
 const STALE_OFFSET_MS = 2 * 60 * 60 * 1000;
@@ -19,7 +20,17 @@ function botWatchReady(client) {
   });
 }
 
-function contentToSymbols(sliceOut, content) {
+function contentToSymbols(prefix, content) {
+  return contentToArray(prefix.length, content);
+}
+
+function contentToQuery(prefix, content) {
+  return contentToArray(2 * prefix.length, content)
+    .join(" ")
+    .trim();
+}
+
+function contentToArray(sliceOut, content) {
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // symbol = say
@@ -94,13 +105,13 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
     }
 
     if (isReverseLookupCommand(prefix, content)) {
-      const query = contentToSymbols(2 * prefix.length, content).join(" ");
-      reverseLookup(cache, channel, id, query);
+      const query = contentToQuery(prefix, content);
+      reverseLookup(prefix, cache, channel, id, query);
       return;
     }
 
-    const symbols = contentToSymbols(prefix.length, content);
-    lookupSymbols(cache, channel, id, symbols);
+    const symbols = contentToSymbols(prefix, content);
+    lookupSymbols(prefix, cache, channel, id, symbols);
   });
 }
 
@@ -115,13 +126,13 @@ function botWatchMessages(client, { prefix, cache }) {
     }
 
     if (isReverseLookupCommand(prefix, content)) {
-      const query = contentToSymbols(2 * prefix.length, content).join(" ");
-      reverseLookup(cache, channel, id, query);
+      const query = contentToQuery(prefix, content);
+      reverseLookup(prefix, cache, channel, id, query);
       return;
     }
 
-    const symbols = contentToSymbols(prefix.length, content);
-    lookupSymbols(cache, channel, id, symbols);
+    const symbols = contentToSymbols(prefix, content);
+    lookupSymbols(prefix, cache, channel, id, symbols);
   });
 }
 
@@ -148,12 +159,39 @@ function handleCommand(cache, channel, id, command) {
     });
 }
 
-function reverseLookup(cache, channel, id, query) {
-  handleCommand(cache, channel, id, Commands.query({ query, fuzzy: true }));
+function handleHelp(prefix, cache, channel, id) {
+  // Looks weird but this lines up.
+  const message = codeBlock(`Beep Boop.
+  
+  ${prefix}             This help.
+  ${prefix}${prefix}            This help.
+
+  ${prefix} SYMBOL...   Price information for <SYMBOL>
+  ${prefix}${prefix} QUERY      Query results for <QUERY>
+  `);
+  sendMessage({
+    skipCache: false,
+    cache,
+    messageId: id,
+    channel,
+    messageText: message,
+  });
 }
 
-function lookupSymbols(cache, channel, id, symbols) {
-  handleCommand(cache, channel, id, Commands.lookup({ symbols }));
+function reverseLookup(prefix, cache, channel, id, query) {
+  if (!query || query.length <= 0) {
+    handleHelp(prefix, cache, channel, id);
+  } else {
+    handleCommand(cache, channel, id, Commands.query({ query, fuzzy: true }));
+  }
+}
+
+function lookupSymbols(prefix, cache, channel, id, symbols) {
+  if (!symbols || symbols.length <= 0) {
+    handleHelp(prefix, cache, channel, id);
+  } else {
+    handleCommand(cache, channel, id, Commands.lookup({ symbols }));
+  }
 }
 
 function initializeBot(prefix) {
