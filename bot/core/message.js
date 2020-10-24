@@ -1,4 +1,4 @@
-const { code, codeBlock } = require("../../util/format");
+const { code, codeBlock, bold, italic } = require("../../util/format");
 
 const NBSP = "\u00a0";
 
@@ -28,9 +28,9 @@ function formatChangeAmount(change) {
 
 function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
   return `
-**${formatSymbol(symbol)}**${NBSP}${NBSP}${NBSP}${NBSP}*${formatCompany(
-    company
-  )}*
+${bold(formatSymbol(symbol))}${NBSP}${NBSP}${NBSP}${NBSP}${italic(
+    formatCompany(company)
+  )}
 ${codeBlock(`diff
 ${formatPrice(price)}
 
