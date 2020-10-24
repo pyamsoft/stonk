@@ -57,7 +57,7 @@ module.exports = {
         if (quote) {
           message += formatQuote(quote);
         } else {
-          message += `Unable to find data for: \$${symbol}`;
+          message += `Unable to find data for: $${symbol}`;
         }
         message += "\n";
       }

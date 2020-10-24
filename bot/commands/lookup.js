@@ -16,7 +16,7 @@ module.exports = {
       })
       .catch((error) => {
         const string = symbolsToString(symbols);
-        const msg = `Error looking up symbols: \$${string}`;
+        const msg = `Error looking up symbols: $${string}`;
         Logger.error(error, msg);
         throw new Error(msg);
       });
