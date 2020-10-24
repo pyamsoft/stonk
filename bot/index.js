@@ -106,12 +106,18 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
 
     if (isReverseLookupCommand(prefix, content)) {
       const query = contentToQuery(prefix, content);
-      reverseLookup(prefix, cache, channel, id, query);
+      reverseLookup(query, {
+        prefix,
+        cache,
+        channel,
+        id,
+        includeNews: true,
+      });
       return;
     }
 
     const symbols = contentToSymbols(prefix, content);
-    lookupSymbols(prefix, cache, channel, id, symbols);
+    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews: true });
   });
 }
 
@@ -127,18 +133,25 @@ function botWatchMessages(client, { prefix, cache }) {
 
     if (isReverseLookupCommand(prefix, content)) {
       const query = contentToQuery(prefix, content);
-      reverseLookup(prefix, cache, channel, id, query);
+      reverseLookup(query, {
+        prefix,
+        cache,
+        channel,
+        id,
+        includeNews: true,
+      });
       return;
     }
 
     const symbols = contentToSymbols(prefix, content);
-    lookupSymbols(prefix, cache, channel, id, symbols);
+    lookupSymbols(symbols, { prefix, cache, channel, id, includeNews: true });
   });
 }
 
 function handleCommand(cache, channel, id, command) {
   command
     .then((result) => {
+      Logger.log("Command result: ", result);
       const parsed = MessageParser.parse(result);
       sendMessage({
         skipCache: false,
@@ -178,19 +191,47 @@ function handleHelp(prefix, cache, channel, id) {
   });
 }
 
-function reverseLookup(prefix, cache, channel, id, query) {
+function attachNews(include, addStockToQuery) {
+  return function newAppender(result) {
+    if (include && result.symbols) {
+      return Commands.news({
+        symbols: result.symbols,
+        addStockToQuery,
+      }).then((news) => {
+        return {
+          ...result,
+          news,
+        };
+      });
+    } else {
+      return result;
+    }
+  };
+}
+
+function reverseLookup(query, { prefix, cache, channel, id, includeNews }) {
   if (!query || query.length <= 0) {
     handleHelp(prefix, cache, channel, id);
   } else {
-    handleCommand(cache, channel, id, Commands.query({ query, fuzzy: true }));
+    handleCommand(
+      cache,
+      channel,
+      id,
+      Commands.query({ query, fuzzy: true }).then(attachNews(includeNews, true))
+    );
   }
 }
 
-function lookupSymbols(prefix, cache, channel, id, symbols) {
+function lookupSymbols(symbols, { prefix, cache, channel, id, includeNews }) {
   if (!symbols || symbols.length <= 0) {
     handleHelp(prefix, cache, channel, id);
   } else {
-    handleCommand(cache, channel, id, Commands.lookup({ symbols }));
+    handleCommand(
+      cache,
+      channel,
+      id,
+      Commands.lookup({ symbols }).then(attachNews(includeNews, true))
+    );
   }
 }
 

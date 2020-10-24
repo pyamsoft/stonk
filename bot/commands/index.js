@@ -34,9 +34,9 @@ module.exports = {
         throw new Error(msg);
       });
   },
-  news: function news({ query, addStockToQuery }) {
-    Logger.log(`Perform news for query: '${query}'`);
-    return News.news({ query, addStockToQuery })
+  news: function news({ symbols, addStockToQuery }) {
+    Logger.log(`Perform news for symbols: '${symbols}'`);
+    return News.news({ symbols, addStockToQuery })
       .then((result) => {
         Logger.log("News results: ", JSON.stringify(result));
         return result;

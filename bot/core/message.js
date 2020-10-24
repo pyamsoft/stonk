@@ -41,7 +41,7 @@ ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
 }
 
 module.exports = {
-  parse: function parse({ query, symbols, data }) {
+  parse: function parse({ query, symbols, data, news }) {
     let message = "";
     if (query) {
       message += `Best guess for: ${code(query)}`;
@@ -59,6 +59,23 @@ module.exports = {
         } else {
           message += `Unable to find data for: $${symbol}`;
         }
+
+        const symbolNews = news ? news[symbol] : null;
+        if (symbolNews) {
+          message += "\n";
+          message += bold("News");
+          message += "\n";
+          if (symbolNews.error) {
+            message += `Unable to find news for: $${symbol}`;
+            message += "\n";
+          } else {
+            for (const newsLink of symbolNews.news) {
+              message += newsLink;
+              message += "\n";
+            }
+          }
+        }
+
         message += "\n";
       }
     }

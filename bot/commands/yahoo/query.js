@@ -9,11 +9,7 @@ function generateQueryUrl(query, fuzzy) {
 
 function queryYahoo(query, fuzzy) {
   const url = generateQueryUrl(query, fuzzy);
-  return jsonApi(url);
-}
-
-function query({ query, fuzzy }) {
-  return queryYahoo(query, fuzzy).then((data) => {
+  return jsonApi(url).then((data) => {
     const { quotes } = data;
     if (!quotes || quotes.length <= 0) {
       Logger.warn("YFinance query missing quotes");
@@ -52,5 +48,7 @@ function query({ query, fuzzy }) {
 }
 
 module.exports = {
-  query,
+  query: function query({ query, fuzzy }) {
+    return queryYahoo(query, fuzzy);
+  },
 };

@@ -11,34 +11,34 @@ function generateLookupUrl(symbols) {
 
 function lookupSymbols(symbols) {
   const url = generateLookupUrl(symbols);
-  return jsonApi(url);
+  return jsonApi(url).then((data) => {
+    const { quoteResponse } = data;
+    if (!quoteResponse) {
+      Logger.warn("YFinance lookup missing quoteResponse");
+      return { symbols };
+    }
+
+    const { result } = quoteResponse;
+    if (!result) {
+      Logger.warn("YFinance lookup missing quoteResponse.result");
+      return { symbols };
+    }
+
+    const results = {};
+    for (const stock of result) {
+      const { symbol } = stock;
+      results[symbol] = Parser.parse(stock);
+    }
+
+    return {
+      symbols,
+      data: results,
+    };
+  });
 }
 
 module.exports = {
   lookup: function lookup({ symbols }) {
-    return lookupSymbols(symbols).then((data) => {
-      const { quoteResponse } = data;
-      if (!quoteResponse) {
-        Logger.warn("YFinance lookup missing quoteResponse");
-        return { symbols };
-      }
-
-      const { result } = quoteResponse;
-      if (!result) {
-        Logger.warn("YFinance lookup missing quoteResponse.result");
-        return { symbols };
-      }
-
-      const results = {};
-      for (const stock of result) {
-        const { symbol } = stock;
-        results[symbol] = Parser.parse(stock);
-      }
-
-      return {
-        symbols,
-        data: results,
-      };
-    });
+    return lookupSymbols(symbols);
   },
 };
