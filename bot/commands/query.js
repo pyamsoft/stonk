@@ -7,8 +7,7 @@ module.exports = {
   query: ({ query, fuzzy }) => {
     return DataSource.query({ query, fuzzy })
       .then((result) => {
-        const { data } = result;
-        Logger.log("Query results: ", JSON.stringify(data));
+        Logger.log("Query results: ", JSON.stringify(result));
         return result;
       })
       .catch((error) => {

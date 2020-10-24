@@ -10,12 +10,9 @@ module.exports = {
     const symbols = asArray(symbolOrSymbols);
     Logger.log("Lookup for symbols: ", symbols);
     return DataSource.lookup({ symbols })
-      .then((data) => {
-        Logger.log("Lookup results: ", JSON.stringify(data));
-        return {
-          symbols,
-          data,
-        };
+      .then((result) => {
+        Logger.log("Lookup results: ", JSON.stringify(result));
+        return result;
       })
       .catch((error) => {
         const string = symbolsToString(symbols);

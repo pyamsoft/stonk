@@ -42,13 +42,13 @@ module.exports = {
       const { quoteResponse } = data;
       if (!quoteResponse) {
         Logger.warn("YFinance lookup missing quoteResponse");
-        return {};
+        return { symbols };
       }
 
       const { result } = quoteResponse;
       if (!result) {
         Logger.warn("YFinance lookup missing quoteResponse.result");
-        return {};
+        return { symbols };
       }
 
       const results = {};
@@ -57,7 +57,10 @@ module.exports = {
         results[symbol] = Parser.parse(stock);
       }
 
-      return results;
+      return {
+        symbols,
+        data: results,
+      };
     });
   },
 
@@ -66,7 +69,7 @@ module.exports = {
       const { quotes } = data;
       if (!quotes || quotes.length <= 0) {
         Logger.warn("YFinance query missing quotes");
-        return {};
+        return { query };
       }
 
       const equities = quotes
@@ -75,27 +78,26 @@ module.exports = {
 
       if (!equities || equities.length <= 0) {
         Logger.warn("YFinance query missing equities");
-        return {};
+        return { query };
       }
 
       const bestGuess = equities.sort((e1, e2) => e2.score - e1.score)[0];
       if (!bestGuess) {
         Logger.warn("YFinance query missing bestGuess");
-        return {};
+        return { query };
       }
 
       const { symbol } = bestGuess;
       if (!symbol) {
         Logger.warn("YFinance query missing symbol");
-        return {};
+        return { query };
       }
 
       const ticker = symbol.toUpperCase();
       return this.lookup({ symbols: asArray(ticker) }).then((data) => {
         return {
-          symbols: [ticker],
           query,
-          data,
+          ...data,
         };
       });
     });
