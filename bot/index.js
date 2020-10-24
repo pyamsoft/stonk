@@ -105,7 +105,7 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
     }
 
     // Make this an option input
-    const includeNews = false;
+    const includeNews = true;
 
     if (isReverseLookupCommand(prefix, content)) {
       const query = contentToQuery(prefix, content);

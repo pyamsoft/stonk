@@ -48,8 +48,8 @@ function getNews(symbol, addStockToQuery) {
 module.exports = {
   news: function news({ symbols, addStockToQuery }) {
     const promises = [];
-    for (const symbol of symbols) {
-      promises.push(getNews(symbol, addStockToQuery));
+    for (const s of symbols) {
+      promises.push(getNews(s.toUpperCase(), addStockToQuery));
     }
     return Promise.all(promises).then((data) => {
       const results = {};

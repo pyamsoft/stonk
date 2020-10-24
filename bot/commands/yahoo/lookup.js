@@ -5,7 +5,7 @@ const { jsonApi } = require("../../../util/api");
 
 function generateLookupUrl(symbols) {
   return `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsToString(
-    symbols.map((s) => s.toUpperCase())
+    symbols
   )}&format=json&fields=symbol,regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketTime,postMarketPrice,postMarketChange,postMarketChangePercent,postMarketTime,regularMarketVolume,shortName,currency,trailingAnnualDividendRate,trailingAnnualDividendYield`;
 }
 
@@ -39,6 +39,6 @@ function lookupSymbols(symbols) {
 
 module.exports = {
   lookup: function lookup({ symbols }) {
-    return lookupSymbols(symbols);
+    return lookupSymbols(symbols.map((s) => s.toUpperCase()));
   },
 };
