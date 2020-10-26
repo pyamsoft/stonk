@@ -3,6 +3,8 @@ const Logger = require("../logger");
 const MessageParser = require("./core/message");
 const { codeBlock } = require("../util/format");
 
+const TYPE_OBJECT = typeof {};
+
 function handleCommand(id, command, callback) {
   command
     .then((result) => {
@@ -26,12 +28,23 @@ function handleCommand(id, command, callback) {
 function handleHelp(prefix, id, callback) {
   // Looks weird but this lines up.
   const message = codeBlock(`Beep Boop.
-  
-  ${prefix}             This help.
-  ${prefix}${prefix}            This help.
 
-  ${prefix} SYMBOL...   Price information for <SYMBOL>
-  ${prefix}${prefix} QUERY      Query results for <QUERY>
+  [COMMANDS]
+  ${prefix}                         This help.
+  ${prefix}${prefix}                        This help.
+  ${prefix} SYMBOL... [OPTION...]   Price information for <SYMBOL>
+  ${prefix}${prefix} QUERY [OPTION...]      Query results for <QUERY>
+  
+  [OPTIONS]
+  news                      Get recent news for a <SYMBOL> or <QUERY>
+  
+  An OPTION can be added to a COMMAND by appending it with ':'
+  
+  [EXAMPLE]
+  ${prefix}MSFT                     Gets price information for MSFT
+  ${prefix}${prefix}Microsoft Corporation   Reverse lookup a symbol for 'Microsoft Corporation' and gets price information.
+  ${prefix}AAPL:news                Gets price information and news for AAPL
+  ${prefix}${prefix}Tesla:news              Reverse lookup a symbol for 'Tesla' and gets price information.
   `);
   callback({
     skipCache: false,
@@ -42,19 +55,33 @@ function handleHelp(prefix, id, callback) {
 
 function attachNews(include, addStockToQuery) {
   return function newAppender(result) {
-    if (include && result.symbols) {
-      return Commands.news({
-        symbols: result.symbols,
-        addStockToQuery,
-      }).then((news) => {
-        return {
-          ...result,
-          news,
-        };
-      });
-    } else {
-      return result;
+    if (result.symbols) {
+      let includeSymbols = [];
+
+      // Include news if true or symbol contained in news object payload
+      if (include === true) {
+        includeSymbols = result.symbols;
+      } else if (typeof include === TYPE_OBJECT) {
+        for (const symbol of Object.keys(include)) {
+          if (include[symbol]) {
+            includeSymbols.push(symbol);
+          }
+        }
+      }
+
+      if (includeSymbols.length > 0)
+        return Commands.news({
+          symbols: includeSymbols,
+          addStockToQuery,
+        }).then((news) => {
+          return {
+            ...result,
+            news,
+          };
+        });
     }
+
+    return result;
   };
 }
 
@@ -113,26 +140,46 @@ function contentToArray(sliceOut, content) {
   return symbols;
 }
 
+function parseOptions(what, rawOptions) {
+  if (!what || !rawOptions) {
+    return {};
+  }
+
+  const options = rawOptions.split(",").map((s) => s.toUpperCase());
+  Logger.log(`Parse options for symbol '${what}'`, options);
+  const news = options.includes("NEWS");
+  return { news };
+}
+
 module.exports = {
   handle: function handle({ prefix, content, id }, callback) {
-    // Make this an option input
-    const includeNews = true;
-
     if (isReverseLookupCommand(prefix, content)) {
-      const query = contentToQuery(prefix, content);
+      const rawQuery = contentToQuery(prefix, content);
+      const splitQuery = rawQuery.split(":");
+      const [query, rawOptions] = splitQuery;
+      const { news } = parseOptions(query, rawOptions);
       reverseLookup(
         query,
         {
           prefix,
           id,
-          includeNews,
+          includeNews: !!news,
         },
         callback
       );
       return;
     }
 
-    const symbols = contentToSymbols(prefix, content);
+    const rawSymbols = contentToSymbols(prefix, content);
+    const includeNews = {};
+    const symbols = [];
+    for (const rawSymbol of rawSymbols) {
+      const splitSymbol = rawSymbol.split(":").map((s) => s.toUpperCase());
+      const [symbol, rawOptions] = splitSymbol;
+      const { news } = parseOptions(symbol, rawOptions);
+      symbols.push(symbol);
+      includeNews[symbol] = !!news;
+    }
     lookupSymbols(symbols, { prefix, id, includeNews }, callback);
   },
 };
