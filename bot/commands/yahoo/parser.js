@@ -21,6 +21,14 @@ function company(quote) {
   return quote.shortName;
 }
 
+function isInvalid(value) {
+  return value === null || value === undefined;
+}
+
+function isAnyInvalid(...values) {
+  return values.some((v) => isInvalid(v));
+}
+
 module.exports = {
   parse: function parse(quote) {
     const s = symbol(quote);
@@ -28,8 +36,7 @@ module.exports = {
     const pVC = priceChange(quote);
     const pPC = percentChange(quote);
     const sn = company(quote);
-    if (!s || !p || !pVC || !pPC || !sn) {
-      Logger.warn("Invalid YFinance quote: ", quote);
+    if (isAnyInvalid(s, p, pVC, pPC, sn)) {
       return null;
     } else {
       return newQuote({

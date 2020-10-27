@@ -116,7 +116,10 @@ function isReverseLookupCommand(prefix, content) {
 }
 
 function contentToSymbols(prefix, content) {
-  return contentToArray(prefix.length, content);
+  const regex = new RegExp(prefix, "g");
+  return contentToArray(prefix.length, content)
+    .map((s) => s.replace(regex, ""))
+    .map((s) => s.replace(/,/g, ""));
 }
 
 function contentToQuery(prefix, content) {

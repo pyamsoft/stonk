@@ -57,7 +57,7 @@ module.exports = {
         if (quote) {
           message += formatQuote(quote);
         } else {
-          message += `Unable to find data for: $${symbol}`;
+          message += `Unable to find data for: ${symbol}`;
         }
 
         const symbolNews = news ? news[symbol] : null;
@@ -66,7 +66,7 @@ module.exports = {
           message += bold("News");
           message += "\n";
           if (symbolNews.error) {
-            message += `Unable to find news for: $${symbol}`;
+            message += `Unable to find news for: ${symbol}`;
             message += "\n";
           } else {
             for (const newsLink of symbolNews.news) {
