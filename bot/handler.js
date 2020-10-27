@@ -116,7 +116,10 @@ function isReverseLookupCommand(prefix, content) {
 }
 
 function contentToSymbols(prefix, content) {
-  const regex = new RegExp(prefix, "g");
+  // We escape here since it may be an escape character like $
+  // noinspection RegExpRedundantEscape
+  const regex = new RegExp(`\\${prefix}`, "g");
+
   return contentToArray(prefix.length, content)
     .map((s) => s.replace(regex, ""))
     .map((s) => s.replace(/,/g, ""));
