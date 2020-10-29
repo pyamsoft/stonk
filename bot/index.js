@@ -94,8 +94,8 @@ function handleWatchSymbols(client, channel, symbols) {
       low,
       high,
       interval: 15,
-      command: () => {
-        Logger.log("Perform watch command lookup: ", symbol, low, high);
+      command: (s, l, h) => {
+        Logger.log("Perform watch command lookup: ", s, l, h);
       },
     });
   }

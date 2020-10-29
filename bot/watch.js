@@ -1,22 +1,10 @@
+const { newWatchList } = require("./model/watchlist");
 const Logger = require("../logger");
 
-const watchList = {};
+const watchList = newWatchList();
 
-function stopWatchingSymbol(client, symbol) {
-  Logger.log("Stop watching symbol for prices: ", symbol);
-  for (const entry of Object.keys(watchList)) {
-    if (entry === symbol) {
-      const interval = watchList[entry];
-      if (interval) {
-        Logger.log("Clear interval for symbol:", entry);
-        client.clearInterval(interval);
-        watchList[entry] = null;
-        return true;
-      }
-    }
-  }
-
-  return false;
+function stopWatching(client, symbol) {
+  watchList.stop(client, { symbol });
 }
 
 module.exports = {
@@ -24,28 +12,17 @@ module.exports = {
     client,
     { symbol, low, high, interval, command }
   ) {
-    if (stopWatchingSymbol(client, { symbol })) {
+    if (stopWatching(client, symbol)) {
       Logger.log("Cleared old watch interval for symbol: ", symbol);
     }
-
-    Logger.log(
-      "Begin watching symbol for prices at interval(minutes) ",
-      symbol,
-      low,
-      high,
-      interval
+    watchList.start(client, { symbol, low, high, interval }, (s, l, h) =>
+      command(s, l, h)
     );
-    watchList[symbol] = client.setInterval(command, interval * 60 * 1000);
   },
-  stopWatchingSymbol,
+  stopWatchingSymbol: function stopWatchingSymbol(client, { symbol }) {
+    stopWatching(client, symbol);
+  },
   clearWatchList: function clearWatchList(client) {
-    Logger.log("Clear watch list");
-    for (const symbol of Object.keys(watchList)) {
-      const interval = watchList[symbol];
-      if (interval) {
-        client.clearInterval(interval);
-        watchList[symbol] = null;
-      }
-    }
+    watchList.clear(client);
   },
 };

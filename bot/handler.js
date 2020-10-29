@@ -1,4 +1,4 @@
-const Commands = require("./commands");
+const Commands = require("./command");
 const Logger = require("../logger");
 const MessageParser = require("./message");
 const { codeBlock } = require("../util/format");
@@ -55,11 +55,14 @@ function handleHelp(prefix, id, callback) {
   ${prefix}AAPL:news                Gets price information and news for AAPL
   ${prefix}${prefix}Tesla:news              Reverse lookup a symbol for 'Tesla' and gets price information.
   `);
-  callback({
-    skipCache: false,
-    messageId: id,
-    messageText: message,
-  });
+  callback(
+    {
+      skipCache: false,
+      messageId: id,
+      messageText: message,
+    },
+    EMPTY_OBJECT
+  );
 }
 
 function attachNews(include, addStockToQuery) {
