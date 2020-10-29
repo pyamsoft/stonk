@@ -16,11 +16,11 @@ function newWatchList() {
     };
   }
 
-  function stopWatching(client, symbol) {
+  function stopWatching(stopwatch, symbol) {
     const { interval } = getEntry(symbol);
     if (interval) {
       Logger.log("Clear interval for symbol:", symbol);
-      client.clearInterval(interval);
+      stopwatch.clearInterval(interval);
       watchList[symbol] = null;
       return true;
     }
@@ -29,7 +29,11 @@ function newWatchList() {
   }
 
   return {
-    start: function start(client, { symbol, low, high, interval }, onInterval) {
+    start: function start(
+      stopwatch,
+      { symbol, low, high, interval },
+      onInterval
+    ) {
       Logger.log(
         "Begin watching symbol at interval(minutes) ",
         symbol,
@@ -42,7 +46,7 @@ function newWatchList() {
         symbol,
         low,
         high,
-        client.setInterval(() => {
+        stopwatch.setInterval(() => {
           const entry = watchList[symbol];
           if (!entry) {
             Logger.warn(
@@ -57,39 +61,39 @@ function newWatchList() {
         }, interval * 60 * 1000)
       );
     },
-    passedLow: function passedLow(client, { symbol }) {
+    passedLow: function passedLow(stopwatch, { symbol }) {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (low) {
         Logger.log("Symbol passed low point: ", symbol, low);
         setEntry(symbol, null, high, interval);
       } else if (!low && !high) {
-        stopWatching(client, symbol);
+        stopWatching(stopwatch, symbol);
       }
     },
-    passedHigh: function passedHigh(client, { symbol }) {
+    passedHigh: function passedHigh(stopwatch, { symbol }) {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (high) {
         Logger.log("Symbol passed high point: ", symbol, high);
         setEntry(symbol, low, null, interval);
       } else if (!low && !high) {
-        stopWatching(client, symbol);
+        stopWatching(stopwatch, symbol);
       }
     },
-    stop: function stop(client, { symbol }) {
+    stop: function stop(stopwatch, { symbol }) {
       Logger.log("Stop watching symbol: ", symbol);
-      return stopWatching(client, symbol);
+      return stopWatching(stopwatch, symbol);
     },
-    clear: function clear(client) {
+    clear: function clear(stopwatch) {
       Logger.log("Clear watch list");
       for (const symbol of Object.keys(watchList)) {
-        stopWatching(client, symbol);
+        stopWatching(stopwatch, symbol);
       }
     },
   };
 }
 
 module.exports = {
-  newWatchList,
+  create: newWatchList,
 };

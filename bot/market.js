@@ -80,10 +80,10 @@ function updateActivity(callback) {
   });
 }
 
-function stopWatchingStatus(client) {
+function stopWatchingStatus(stopwatch) {
   if (statusInterval) {
     Logger.log("Clear interval for STATUS");
-    client.clearInterval(statusInterval);
+    stopwatch.clearInterval(statusInterval);
     statusInterval = null;
     return true;
   }
@@ -92,14 +92,15 @@ function stopWatchingStatus(client) {
 }
 
 module.exports = {
-  watchStatus: function watchStatus(client, callback) {
+  updateMarket: updateActivity,
+  watchMarket: function watchStatus(stopwatch, callback) {
     updateActivity(callback);
 
-    const timeout = 10 * 60 * 1000;
-    Logger.log("Begin watching STATUS");
-    statusInterval = client.setInterval(() => {
+    const timeout = 5 * 60 * 1000;
+    Logger.log("Begin watching MARKET");
+    statusInterval = stopwatch.setInterval(() => {
       updateActivity(callback);
     }, timeout);
   },
-  stopWatchingStatus,
+  stopWatchingMarket: stopWatchingStatus,
 };

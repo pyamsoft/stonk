@@ -1,28 +1,28 @@
-const { newWatchList } = require("./model/watchlist");
+const WatchList = require("./model/watchlist");
 const Logger = require("../logger");
 
-const watchList = newWatchList();
+const watchList = WatchList.create();
 
-function stopWatching(client, symbol) {
-  watchList.stop(client, { symbol });
+function stopWatching(stopwatch, symbol) {
+  watchList.stop(stopwatch, { symbol });
 }
 
 module.exports = {
   watchSymbol: function watchSymbol(
-    client,
+    stopwatch,
     { symbol, low, high, interval, command }
   ) {
-    if (stopWatching(client, symbol)) {
+    if (stopWatching(stopwatch, symbol)) {
       Logger.log("Cleared old watch interval for symbol: ", symbol);
     }
-    watchList.start(client, { symbol, low, high, interval }, (s, l, h) =>
+    watchList.start(stopwatch, { symbol, low, high, interval }, (s, l, h) =>
       command(s, l, h)
     );
   },
-  stopWatchingSymbol: function stopWatchingSymbol(client, { symbol }) {
-    stopWatching(client, symbol);
+  stopWatchingSymbol: function stopWatchingSymbol(stopwatch, { symbol }) {
+    stopWatching(stopwatch, symbol);
   },
-  clearWatchList: function clearWatchList(client) {
-    watchList.clear(client);
+  clearWatchList: function clearWatchList(stopwatch) {
+    watchList.clear(stopwatch);
   },
 };
