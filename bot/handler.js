@@ -1,28 +1,35 @@
 const Commands = require("./commands");
 const Logger = require("../logger");
-const MessageParser = require("./core/message");
+const MessageParser = require("./message");
 const { codeBlock } = require("../util/format");
 const { safeParseNumber } = require("../util/number");
 
 const TYPE_OBJECT = typeof {};
+const EMPTY_OBJECT = {};
 
 function handleCommand(id, command, callback) {
   command
-    .then((result) => {
+    .then(({ result, extras }) => {
       Logger.log("Command result: ", result);
       const parsed = MessageParser.parse(result);
-      callback({
-        skipCache: false,
-        messageId: id,
-        messageText: parsed,
-      });
+      callback(
+        {
+          skipCache: false,
+          messageId: id,
+          messageText: parsed,
+        },
+        extras
+      );
     })
     .catch((error) => {
-      callback({
-        skipCache: true,
-        messageId: id,
-        messageText: error.message,
-      });
+      callback(
+        {
+          skipCache: true,
+          messageId: id,
+          messageText: error.message,
+        },
+        EMPTY_OBJECT
+      );
     });
 }
 
@@ -38,7 +45,7 @@ function handleHelp(prefix, id, callback) {
   
   [OPTIONS]
   news                      Get recent news for a <SYMBOL> or <QUERY>
-  watch[LOW:HIGH]           Watch the symbol for if/when it crosses the <LOW> or <HIGH> points
+  watch[LOW|HIGH]           Watch the symbol for if/when it crosses the <LOW> or <HIGH> points
   
   An OPTION can be added to a COMMAND by appending it with ':'
   
@@ -76,22 +83,11 @@ function attachNews(include, addStockToQuery) {
           symbols: includeSymbols,
           addStockToQuery,
         }).then((news) => {
-          return {
-            ...result,
-            news,
-          };
+          Logger.log("Attaching news to result");
+          return { ...result, news };
         });
     }
 
-    return result;
-  };
-}
-
-function listenSymbols(watch, postNewMessage) {
-  return function newWatcher(result) {
-    if (result.symbols) {
-      Logger.log("Start watching symbols: ", watch);
-    }
     return result;
   };
 }
@@ -101,7 +97,6 @@ function reverseLookup(
   prefix,
   id,
   respond,
-  postNewMesage,
   { includeNews, watchSymbols }
 ) {
   if (!query || query.length <= 0) {
@@ -112,19 +107,25 @@ function reverseLookup(
       Commands.query({ query, fuzzy: true })
         .then(attachNews(includeNews, true))
         .then((result) => {
+          // Turn the watchSymbols payload into the expected format
           if (result.symbols) {
-            if (watchSymbols) {
-              const correctlyFormattedWatchSymbols = {};
-              correctlyFormattedWatchSymbols[result.symbols[0]] = watchSymbols;
-              const resultParser = listenSymbols(
-                correctlyFormattedWatchSymbols,
-                postNewMesage
-              );
-              return resultParser(result);
+            const [symbol] = result.symbols;
+            if (symbol) {
+              const correctWatchSymbols = {};
+              correctWatchSymbols[symbol] = watchSymbols;
+              return {
+                result,
+                extras: {
+                  watchSymbols: correctWatchSymbols,
+                },
+              };
             }
           }
 
-          return result;
+          return {
+            result,
+            extras: EMPTY_OBJECT,
+          };
         }),
       respond
     );
@@ -136,7 +137,6 @@ function lookupSymbols(
   prefix,
   id,
   respond,
-  postNewMessage,
   { includeNews, watchSymbols }
 ) {
   if (!symbols || symbols.length <= 0) {
@@ -146,7 +146,12 @@ function lookupSymbols(
       id,
       Commands.lookup({ symbols })
         .then(attachNews(includeNews, true))
-        .then(listenSymbols(watchSymbols, postNewMessage)),
+        .then((result) => {
+          return {
+            result,
+            extras: { watchSymbols },
+          };
+        }),
       respond
     );
   }
@@ -249,7 +254,7 @@ function parseOptions(what, rawOptions) {
 }
 
 module.exports = {
-  handle: function handle({ prefix, content, id, respond, postNewMessage }) {
+  handle: function handle({ prefix, content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
       const rawQuery = contentToQuery(prefix, content);
       Logger.log("Raw query is: ", rawQuery);
@@ -261,7 +266,7 @@ module.exports = {
         watchSymbols: watch,
       };
       Logger.log(`Perform reverse lookup: '${query}'`, options);
-      reverseLookup(query, prefix, id, respond, postNewMessage, options);
+      reverseLookup(query, prefix, id, respond, options);
       return;
     }
 
@@ -288,6 +293,6 @@ module.exports = {
     };
 
     Logger.log(`Perform symbol lookup: '${symbols}'`, options);
-    lookupSymbols(symbols, prefix, id, respond, postNewMessage, options);
+    lookupSymbols(symbols, prefix, id, respond, options);
   },
 };

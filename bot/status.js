@@ -1,6 +1,7 @@
 const { DateTime, Interval } = require("luxon");
-const Logger = require("../../logger");
+const Logger = require("../logger");
 
+let statusInterval = null;
 const NYSE_ZONE = "America/New_York";
 
 // keys are formatted as year,month,day
@@ -77,14 +78,26 @@ function updateActivity(callback) {
   );
 }
 
-// Log the bot in
+function stopWatchingStatus(client) {
+  if (statusInterval) {
+    Logger.log("Clear interval for STATUS");
+    client.clearInterval(statusInterval);
+    statusInterval = null;
+    return true;
+  }
+
+  return false;
+}
+
 module.exports = {
-  watchStatus: function watchStatus (client, callback) {
+  watchStatus: function watchStatus(client, callback) {
     updateActivity(callback);
 
     const timeout = 10 * 60 * 1000;
-    return client.setInterval(() => {
+    Logger.log("Begin watching STATUS");
+    statusInterval = client.setInterval(() => {
       updateActivity(callback);
     }, timeout);
   },
+  stopWatchingStatus,
 };

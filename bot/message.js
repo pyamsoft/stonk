@@ -1,4 +1,4 @@
-const { code, codeBlock, bold, italic } = require("../../util/format");
+const { code, codeBlock, bold, italic } = require("../util/format");
 
 const NBSP = "\u00a0";
 

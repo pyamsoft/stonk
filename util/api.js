@@ -1,7 +1,7 @@
 const fetch = require("node-fetch");
 
 function handleError(res, callback) {
-  if (res.status >= 400) {
+  if (res.watch >= 400) {
     throw new Error(res.statusText);
   } else {
     return callback(res);
