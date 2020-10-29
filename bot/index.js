@@ -35,7 +35,7 @@ function validateMessage(prefix, { id, author, content }) {
 }
 
 function cacheMessage(cache, skipCache, id, message) {
-  if (!skipCache) {
+  if (!skipCache && id) {
     cache.insert(id, message);
   }
   cache.invalidate();
@@ -43,16 +43,18 @@ function cacheMessage(cache, skipCache, id, message) {
 
 function sendMessage(cache, channel, { skipCache, messageId, messageText }) {
   // Edit an existing message
-  const oldMessage = cache.get(messageId);
-  if (oldMessage) {
-    Logger.log("Update old message with new content: ", messageId);
-    oldMessage
-      .edit(messageText)
-      .then((message) => cacheMessage(cache, skipCache, messageId, message))
-      .catch((error) => {
-        Logger.error(error, "Unable to update message: ", messageId);
-      });
-    return;
+  if (messageId) {
+    const oldMessage = cache.get(messageId);
+    if (oldMessage) {
+      Logger.log("Update old message with new content: ", messageId);
+      oldMessage
+        .edit(messageText)
+        .then((message) => cacheMessage(cache, skipCache, messageId, message))
+        .catch((error) => {
+          Logger.error(error, "Unable to update message: ", messageId);
+        });
+      return;
+    }
   }
 
   // Send a new message
@@ -73,8 +75,16 @@ function botWatchMessageUpdates(client, { prefix, cache }) {
       return;
     }
 
-    Handler.handle({ prefix, content, id }, (payload) => {
-      sendMessage(cache, channel, payload);
+    Handler.handle({
+      prefix,
+      content,
+      id,
+      respond: (payload) => {
+        sendMessage(cache, channel, payload);
+      },
+      postNewMessage: (payload) => {
+        Logger.log("Post new message to a channel: ", payload, channel);
+      },
     });
   });
 }
@@ -89,8 +99,16 @@ function botWatchMessages(client, { prefix, cache }) {
       return;
     }
 
-    Handler.handle({ prefix, content, id }, (payload) => {
-      sendMessage(cache, channel, payload);
+    Handler.handle({
+      prefix,
+      content,
+      id,
+      respond: (payload) => {
+        sendMessage(cache, channel, payload);
+      },
+      postNewMessage: (payload) => {
+        Logger.log("Post new message to a channel: ", payload, channel);
+      },
     });
   });
 }

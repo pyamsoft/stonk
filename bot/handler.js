@@ -37,6 +37,7 @@ function handleHelp(prefix, id, callback) {
   
   [OPTIONS]
   news                      Get recent news for a <SYMBOL> or <QUERY>
+  watch[LOW:HIGH]           Watch the symbol for if/when it crosses the <LOW> or <HIGH> points
   
   An OPTION can be added to a COMMAND by appending it with ':'
   
@@ -85,28 +86,51 @@ function attachNews(include, addStockToQuery) {
   };
 }
 
-function reverseLookup(query, { prefix, id, includeNews }, callback) {
+function listenSymbols(watch, postNewMessage) {
+  return function newWatcher(result) {
+    Logger.log("Begin watching: ", watch, result);
+    return result;
+  };
+}
+
+function reverseLookup(
+  query,
+  prefix,
+  id,
+  respond,
+  postNewMesage,
+  { includeNews, watchSymbols }
+) {
   if (!query || query.length <= 0) {
-    handleHelp(prefix, id, callback);
+    handleHelp(prefix, id, respond);
   } else {
     handleCommand(
       id,
-      Commands.query({ query, fuzzy: true }).then(
-        attachNews(includeNews, true)
-      ),
-      callback
+      Commands.query({ query, fuzzy: true })
+        .then(attachNews(includeNews, true))
+        .then(listenSymbols(watchSymbols, postNewMesage)),
+      respond
     );
   }
 }
 
-function lookupSymbols(symbols, { prefix, id, includeNews }, callback) {
+function lookupSymbols(
+  symbols,
+  prefix,
+  id,
+  respond,
+  postNewMessage,
+  { includeNews, watchSymbols }
+) {
   if (!symbols || symbols.length <= 0) {
-    handleHelp(prefix, id, callback);
+    handleHelp(prefix, id, respond);
   } else {
     handleCommand(
       id,
-      Commands.lookup({ symbols }).then(attachNews(includeNews, true)),
-      callback
+      Commands.lookup({ symbols })
+        .then(attachNews(includeNews, true))
+        .then(listenSymbols(watchSymbols, postNewMessage)),
+      respond
     );
   }
 }
@@ -120,9 +144,9 @@ function contentToSymbols(prefix, content) {
   // noinspection RegExpRedundantEscape
   const regex = new RegExp(`\\${prefix}`, "g");
 
-  return contentToArray(prefix.length, content)
-    .map((s) => s.replace(regex, ""))
-    .map((s) => s.replace(/,/g, ""));
+  return contentToArray(prefix.length, content).map((s) =>
+    s.replace(regex, "")
+  );
 }
 
 function contentToQuery(prefix, content) {
@@ -146,6 +170,14 @@ function contentToArray(sliceOut, content) {
   return symbols;
 }
 
+function parseNewsOption(options) {
+  return options.includes("NEWS");
+}
+
+function parseWatchOption(options) {
+  return options.includes("WATCH");
+}
+
 function parseOptions(what, rawOptions) {
   if (!what || !rawOptions) {
     return {};
@@ -153,39 +185,45 @@ function parseOptions(what, rawOptions) {
 
   const options = rawOptions.split(",").map((s) => s.toUpperCase());
   Logger.log(`Parse options for symbol '${what}'`, options);
-  const news = options.includes("NEWS");
-  return { news };
+  const news = parseNewsOption(options);
+  const watch = parseWatchOption(options);
+  return { news, watch };
 }
 
 module.exports = {
-  handle: function handle({ prefix, content, id }, callback) {
+  handle: function handle({ prefix, content, id, respond, postNewMessage }) {
     if (isReverseLookupCommand(prefix, content)) {
       const rawQuery = contentToQuery(prefix, content);
+      Logger.log("Raw query is: ", rawQuery);
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
-      const { news } = parseOptions(query, rawOptions);
-      reverseLookup(
-        query,
-        {
-          prefix,
-          id,
-          includeNews: !!news,
-        },
-        callback
-      );
+      const { news, watch } = parseOptions(query, rawOptions);
+      reverseLookup(query, prefix, id, respond, postNewMessage, {
+        includeNews: !!news,
+        watchSymbols: !!watch,
+      });
       return;
     }
 
     const rawSymbols = contentToSymbols(prefix, content);
-    const includeNews = {};
     const symbols = [];
+
+    const includeNews = {};
+    const watchSymbols = {};
+
+    Logger.log("Raw symbols are: ", rawSymbols);
     for (const rawSymbol of rawSymbols) {
       const splitSymbol = rawSymbol.split(":").map((s) => s.toUpperCase());
       const [symbol, rawOptions] = splitSymbol;
-      const { news } = parseOptions(symbol, rawOptions);
       symbols.push(symbol);
+
+      const { news, watch } = parseOptions(symbol, rawOptions);
       includeNews[symbol] = !!news;
+      watchSymbols[symbol] = !!watch;
     }
-    lookupSymbols(symbols, { prefix, id, includeNews }, callback);
+    lookupSymbols(symbols, prefix, id, respond, postNewMessage, {
+      includeNews,
+      watchSymbols,
+    });
   },
 };
