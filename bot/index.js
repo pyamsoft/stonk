@@ -12,9 +12,14 @@ function botWatchReady(client) {
   client.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
     Logger.print(`Bot has started!`);
-    Status.watchStatus(client, (message) => {
+    Status.watchStatus(client, ({ open, message }) => {
       Logger.log("Setting bot activity: ", message);
       client.user.setActivity(message);
+
+      if (!open) {
+        Logger.log("Clear watch list when market is closed");
+        WatchList.clearWatchList(client);
+      }
     });
   });
 
@@ -23,7 +28,10 @@ function botWatchReady(client) {
     client.user.setActivity("WEE WOO ERROR");
 
     // Clear all the handlers
+    Logger.log("Stop watching status on error");
     Status.stopWatchingStatus(client);
+
+    Logger.log("Clear watch list on error");
     WatchList.clearWatchList(client);
   });
 }

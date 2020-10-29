@@ -71,11 +71,13 @@ function isMarketOpen(date, holiday) {
 function updateActivity(callback) {
   const now = DateTime.local().setZone(NYSE_ZONE);
   const holiday = whichHoliday(now);
-  callback(
-    `Market ${isMarketOpen(now, holiday) ? "Open" : "Closed"}${
+  const open = isMarketOpen(now, holiday);
+  callback({
+    open,
+    message: `Market ${open ? "Open" : "Closed"}${
       holiday ? ` for ${holiday}` : ""
-    }`
-  );
+    }`,
+  });
 }
 
 function stopWatchingStatus(client) {
