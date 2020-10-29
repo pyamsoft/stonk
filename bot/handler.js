@@ -2,6 +2,7 @@ const Commands = require("./commands");
 const Logger = require("../logger");
 const MessageParser = require("./core/message");
 const { codeBlock } = require("../util/format");
+const { safeParseNumber } = require("../util/number");
 
 const TYPE_OBJECT = typeof {};
 
@@ -88,7 +89,9 @@ function attachNews(include, addStockToQuery) {
 
 function listenSymbols(watch, postNewMessage) {
   return function newWatcher(result) {
-    Logger.log("Begin watching: ", watch, result);
+    if (result.symbols) {
+      Logger.log("Start watching symbols: ", watch);
+    }
     return result;
   };
 }
@@ -108,7 +111,21 @@ function reverseLookup(
       id,
       Commands.query({ query, fuzzy: true })
         .then(attachNews(includeNews, true))
-        .then(listenSymbols(watchSymbols, postNewMesage)),
+        .then((result) => {
+          if (result.symbols) {
+            if (watchSymbols) {
+              const correctlyFormattedWatchSymbols = {};
+              correctlyFormattedWatchSymbols[result.symbols[0]] = watchSymbols;
+              const resultParser = listenSymbols(
+                correctlyFormattedWatchSymbols,
+                postNewMesage
+              );
+              return resultParser(result);
+            }
+          }
+
+          return result;
+        }),
       respond
     );
   }
@@ -160,7 +177,7 @@ function contentToArray(sliceOut, content) {
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // symbol = say
   // args = ["Is", "this", "the", "real", "life?"]
-  const args = content.slice(sliceOut).trim().split(/ +/g);
+  const args = content.slice(sliceOut).trim().split(/\s+/g);
   const symbol = args.shift();
   let symbols = [];
   if (symbol) {
@@ -175,7 +192,48 @@ function parseNewsOption(options) {
 }
 
 function parseWatchOption(options) {
-  return options.includes("WATCH");
+  const possibleWatch = options.find((o) => o.indexOf("WATCH") >= 0);
+  // WATCH[LOW|HIGH]
+  if (possibleWatch) {
+    const valuesSection = possibleWatch.replace(/WATCH/g, "");
+    if (!valuesSection) {
+      Logger.warn("WATCH missing values section", possibleWatch);
+      return null;
+    }
+    // [LOW|HIGH]
+    const values = valuesSection
+      .replace(/\[/g, " ")
+      .replace(/\]/g, " ")
+      .replace(/\|/g, " ")
+      .trim()
+      .split(/\s+/g);
+
+    if (!values || values.length <= 0) {
+      Logger.warn("WATCH missing values", possibleWatch, valuesSection);
+      return null;
+    }
+
+    // [ LOW, HIGH ]
+    const [low, high] = values;
+    if (!low || !high) {
+      Logger.warn("WATCH missing low high", possibleWatch, values);
+      return null;
+    }
+
+    const lowNumber = safeParseNumber(low);
+    const highNumber = safeParseNumber(high);
+    if (lowNumber < 0 || highNumber < 0) {
+      Logger.warn("WATCH invalid low high", possibleWatch, low, high);
+      return null;
+    }
+
+    return {
+      low: lowNumber,
+      high: highNumber,
+    };
+  }
+
+  return null;
 }
 
 function parseOptions(what, rawOptions) {
@@ -198,10 +256,12 @@ module.exports = {
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
       const { news, watch } = parseOptions(query, rawOptions);
-      reverseLookup(query, prefix, id, respond, postNewMessage, {
-        includeNews: !!news,
-        watchSymbols: !!watch,
-      });
+      const options = {
+        includeNews: news,
+        watchSymbols: watch,
+      };
+      Logger.log(`Perform reverse lookup: '${query}'`, options);
+      reverseLookup(query, prefix, id, respond, postNewMessage, options);
       return;
     }
 
@@ -219,11 +279,15 @@ module.exports = {
 
       const { news, watch } = parseOptions(symbol, rawOptions);
       includeNews[symbol] = !!news;
-      watchSymbols[symbol] = !!watch;
+      watchSymbols[symbol] = watch;
     }
-    lookupSymbols(symbols, prefix, id, respond, postNewMessage, {
+
+    const options = {
       includeNews,
       watchSymbols,
-    });
+    };
+
+    Logger.log(`Perform symbol lookup: '${symbols}'`, options);
+    lookupSymbols(symbols, prefix, id, respond, postNewMessage, options);
   },
 };
