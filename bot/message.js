@@ -3,7 +3,7 @@ const { code, codeBlock, bold, italic } = require("../util/format");
 const NBSP = "\u00a0";
 
 function formatSymbol(symbol) {
-  return symbol;
+  return `${symbol}`;
 }
 
 function formatCompany(company) {
@@ -26,6 +26,10 @@ function formatChangeAmount(change) {
   return `${Math.abs(change).toFixed(2)}`;
 }
 
+function formatUserId(user) {
+  return `<@!${user.id}>`;
+}
+
 function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
   return `
 ${bold(formatSymbol(symbol))}${NBSP}${NBSP}${NBSP}${NBSP}${italic(
@@ -41,6 +45,11 @@ ${formatAmountDirection(changeAmount)} ${formatChangeAmount(
 }
 
 module.exports = {
+  notify: function notify(author, { symbol, point, price, notifyAbove }) {
+    return `${formatUserId(author)} ${formatSymbol(symbol)} has passed the ${
+      notifyAbove ? "high" : "low"
+    } point of ${formatPrice(point)}, reaching ${formatPrice(price)}`;
+  },
   parse: function parse({ query, symbols, data, news }) {
     let message = "";
     if (query) {

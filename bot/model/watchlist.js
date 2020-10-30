@@ -47,19 +47,18 @@ function newWatchList() {
         low,
         high,
         stopwatch.setInterval(() => {
-          const entry = watchList[symbol];
-          if (!entry) {
-            Logger.warn(
-              "WatchList interval found no entry for symbol: ",
-              symbol
-            );
-            return;
-          }
-
+          const entry = getEntry(symbol);
           const { low, high } = entry;
-          onInterval(symbol, low, high);
-        }, interval * 60 * 1000)
+          if (!low && !high) {
+            Logger.log("Watch is complete, no points exist");
+          } else {
+            onInterval(symbol, low, high);
+          }
+        }, 5000)
       );
+
+      // Run it immediately
+      onInterval(symbol, low, high);
     },
     passedLow: function passedLow(stopwatch, { symbol }) {
       const entry = getEntry(symbol);

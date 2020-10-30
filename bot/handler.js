@@ -1,6 +1,7 @@
 const Commands = require("./command");
 const Logger = require("../logger");
 const MessageParser = require("./message");
+const WatchList = require("./watch");
 const { codeBlock } = require("../util/format");
 const { safeParseNumber } = require("../util/number");
 
@@ -14,6 +15,7 @@ function handleCommand(id, command, callback) {
       const parsed = MessageParser.parse(result);
       callback(
         {
+          result,
           skipCache: false,
           messageId: id,
           messageText: parsed,
@@ -24,6 +26,7 @@ function handleCommand(id, command, callback) {
     .catch((error) => {
       callback(
         {
+          error,
           skipCache: true,
           messageId: id,
           messageText: error.message,
@@ -256,8 +259,87 @@ function parseOptions(what, rawOptions) {
   return { news, watch };
 }
 
+function isValidPrice(price) {
+  return price && price >= 0;
+}
+
+function isPassedPoint(point, originalPrice, newPrice, notifyAbove) {
+  if (
+    !isValidPrice(point) ||
+    !isValidPrice(originalPrice) ||
+    !isValidPrice(newPrice)
+  ) {
+    return false;
+  }
+
+  // If the original price is lower/higher than the watch point, this will fire.
+  // That's what you want right?
+  return notifyAbove
+    ? newPrice > originalPrice && newPrice > point
+    : newPrice < originalPrice && newPrice < point;
+}
+
+function parseWatchLookupResult(
+  author,
+  { stopWatch, result, symbol, low, high, original },
+  respond
+) {
+  if (!result || !result.data) {
+    Logger.warn("Watch command lookup returned error");
+    return;
+  }
+
+  if (!original || !original.data) {
+    Logger.warn("Watch missing original result data");
+    return;
+  }
+
+  // Parse results
+  const resultData = result.data[symbol];
+  const originalData = original.data[symbol];
+  Logger.log(
+    "Lookup result for watch event",
+    symbol,
+    low,
+    high,
+    resultData,
+    originalData
+  );
+
+  const originalPrice = originalData.price;
+  const newPrice = resultData.price;
+
+  // Fire if low is passed
+  if (isPassedPoint(low, originalPrice, newPrice, false)) {
+    Logger.log("Low point passed: ", symbol, low, newPrice);
+    WatchList.markLowPassed(stopWatch, { symbol });
+    respond(
+      MessageParser.notify(author, {
+        symbol,
+        point: low,
+        price: newPrice,
+        notifyAbove: false,
+      })
+    );
+  }
+
+  // Fire if high is passed
+  if (isPassedPoint(high, originalPrice, newPrice, true)) {
+    Logger.log("High point passed: ", symbol, high, newPrice);
+    WatchList.markHighPassed(stopWatch, { symbol });
+    respond(
+      MessageParser.notify(author, {
+        symbol,
+        point: high,
+        price: newPrice,
+        notifyAbove: true,
+      })
+    );
+  }
+}
+
 module.exports = {
-  handle: function handle({ prefix, content, id }, respond) {
+  handle: function handle(prefix, { content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
       const rawQuery = contentToQuery(prefix, content);
       Logger.log("Raw query is: ", rawQuery);
@@ -297,5 +379,46 @@ module.exports = {
 
     Logger.log(`Perform symbol lookup: '${symbols}'`, options);
     lookupSymbols(symbols, prefix, id, respond, options);
+  },
+
+  notify: function notify(
+    prefix,
+    { author, stopWatch, symbol, low, high, original },
+    respond
+  ) {
+    // Rebuild content
+    const content = `${prefix}${symbol.toUpperCase()}`;
+    return this.handle(prefix, { content, id: null }, (payload) => {
+      const { result } = payload;
+      parseWatchLookupResult(
+        author,
+        {
+          stopWatch,
+          result,
+          symbol,
+          low,
+          high,
+          original,
+        },
+        (message) => {
+          // Send the notify message to the user directly
+          respond({
+            result,
+            skipCache: true,
+            messageId: null,
+            messageText: message,
+          });
+
+          // And send the new price info
+          const parsed = MessageParser.parse(result);
+          respond({
+            result,
+            skipCache: true,
+            messageId: null,
+            messageText: parsed,
+          });
+        }
+      );
+    });
   },
 };

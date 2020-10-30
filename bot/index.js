@@ -43,7 +43,7 @@ function cacheMessage(cache, skipCache, id, message) {
   cache.invalidate();
 }
 
-function sendMessage(cache, channel, { skipCache, messageId, messageText }) {
+function sendMessage(channel, { cache, skipCache, messageId, messageText }) {
   // Edit an existing message
   if (messageId) {
     const oldMessage = cache.get(messageId);
@@ -69,7 +69,11 @@ function sendMessage(cache, channel, { skipCache, messageId, messageText }) {
     });
 }
 
-function handleWatchSymbols(stopWatch, channel, symbols) {
+function handleWatchSymbols(
+  prefix,
+  channel,
+  { author, cache, stopWatch, data, symbols }
+) {
   for (const symbol of Object.keys(symbols)) {
     const bounds = symbols[symbol];
     if (!bounds) {
@@ -88,16 +92,41 @@ function handleWatchSymbols(stopWatch, channel, symbols) {
       interval: 15,
       command: (s, l, h) => {
         Logger.log("Perform watch command lookup: ", s, l, h);
+        Handler.notify(
+          prefix,
+          {
+            author,
+            stopWatch,
+            symbol: s,
+            low: l,
+            high: h,
+            original: data,
+          },
+          (message) => {
+            const { result, ...messagePayload } = message;
+            sendMessage(channel, { cache, ...messagePayload });
+          }
+        );
       },
     });
   }
 }
 
-function handleExtras(stopWatch, channel, extras) {
+function handleExtras(
+  prefix,
+  channel,
+  { author, cache, stopWatch, data, extras }
+) {
   Logger.log("Handle result extras", extras);
   const { watchSymbols } = extras;
   if (watchSymbols) {
-    handleWatchSymbols(stopWatch, channel, watchSymbols);
+    handleWatchSymbols(prefix, channel, {
+      author,
+      cache,
+      stopWatch,
+      data,
+      symbols: watchSymbols,
+    });
   }
 }
 
@@ -127,16 +156,13 @@ function spaceOutMessageLogs() {
   Logger.log("=============");
 }
 
-function botWatchMessageUpdates({
+function botWatchMessageUpdates(
   prefix,
-  cache,
-  emitter,
-  stopWatch,
-  marketCallback,
-}) {
+  { cache, emitter, stopWatch, marketCallback }
+) {
   Logger.log("Watching for message updates");
   emitter.on("messageUpdate", (oldMessage, newMessage) => {
-    const { id, content, channel } = newMessage;
+    const { id, content, channel, author } = newMessage;
     if (!validateMessage(prefix, newMessage)) {
       return;
     }
@@ -145,14 +171,21 @@ function botWatchMessageUpdates({
 
     // Handle the message
     Handler.handle(
+      prefix,
       {
-        prefix,
         content,
         id,
       },
       (payload, extras) => {
-        sendMessage(cache, channel, payload);
-        handleExtras(stopWatch, channel, extras);
+        const { result, ...messagePayload } = payload;
+        sendMessage(channel, { cache, ...messagePayload });
+        handleExtras(prefix, channel, {
+          author,
+          cache,
+          stopWatch,
+          data: result,
+          extras,
+        });
 
         // Update the bot status
         Market.updateMarket(marketCallback);
@@ -161,16 +194,13 @@ function botWatchMessageUpdates({
   });
 }
 
-function botWatchMessages({
+function botWatchMessages(
   prefix,
-  cache,
-  emitter,
-  stopWatch,
-  marketCallback,
-}) {
+  { cache, emitter, stopWatch, marketCallback }
+) {
   Logger.log("Watching for messages");
   emitter.on("message", (message) => {
-    const { id, content, channel } = message;
+    const { id, content, channel, author } = message;
 
     // This event will run on every single message received, from any channel or DM.
     if (!validateMessage(prefix, message)) {
@@ -181,14 +211,21 @@ function botWatchMessages({
 
     // Handle the message
     Handler.handle(
+      prefix,
       {
-        prefix,
         content,
         id,
       },
       (payload, extras) => {
-        sendMessage(cache, channel, payload);
-        handleExtras(stopWatch, channel, extras);
+        const { result, ...messagePayload } = payload;
+        sendMessage(channel, { cache, ...messagePayload });
+        handleExtras(prefix, channel, {
+          author,
+          cache,
+          stopWatch,
+          data: result,
+          extras,
+        });
 
         // Update the bot status
         Market.updateMarket(marketCallback);
@@ -208,8 +245,8 @@ function initializeBot(prefix) {
 
   // Event listeners
   botWatchReady({ emitter, status, stopWatch, marketCallback });
-  botWatchMessages({ prefix, cache, emitter, stopWatch, marketCallback });
-  botWatchMessageUpdates({ prefix, cache, emitter, stopWatch, marketCallback });
+  botWatchMessages(prefix, { cache, emitter, stopWatch, marketCallback });
+  botWatchMessageUpdates(prefix, { cache, emitter, stopWatch, marketCallback });
 
   // Login
   return function loginBot(token) {

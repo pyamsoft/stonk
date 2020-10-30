@@ -19,6 +19,12 @@ module.exports = {
       command(s, l, h)
     );
   },
+  markLowPassed: function markLowPassed(stopwatch, { symbol }) {
+    return watchList.passedLow(stopwatch, { symbol });
+  },
+  markHighPassed: function markHighPassed(stopwatch, { symbol }) {
+    return watchList.passedHigh(stopwatch, { symbol });
+  },
   stopWatchingSymbol: function stopWatchingSymbol(stopwatch, { symbol }) {
     stopWatching(stopwatch, symbol);
   },
