@@ -37,8 +37,8 @@ function validateMessage(prefix, { id, author, content }) {
 }
 
 function cacheMessage(cache, skipCache, id, message) {
-  if (!skipCache && id) {
-    cache.insert(id, message);
+  if (!skipCache) {
+    cache.insert(id || message.id, message);
   }
   cache.invalidate();
 }
@@ -89,9 +89,8 @@ function handleWatchSymbols(
       symbol,
       low,
       high,
-      interval: 15,
+      interval: 45,
       command: (s, l, h) => {
-        Logger.log("Perform watch command lookup: ", s, l, h);
         Handler.notify(
           prefix,
           {
@@ -104,7 +103,9 @@ function handleWatchSymbols(
           },
           (message) => {
             const { result, ...messagePayload } = message;
-            sendMessage(channel, { cache, ...messagePayload });
+            if (result) {
+              sendMessage(channel, { cache, ...messagePayload });
+            }
           }
         );
       },

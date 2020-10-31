@@ -34,14 +34,6 @@ function newWatchList() {
       { symbol, low, high, interval },
       onInterval
     ) {
-      Logger.log(
-        "Begin watching symbol at interval(minutes) ",
-        symbol,
-        low,
-        high,
-        interval
-      );
-
       setEntry(
         symbol,
         low,
@@ -54,7 +46,7 @@ function newWatchList() {
           } else {
             onInterval(symbol, low, high);
           }
-        }, 5000)
+        }, interval * 1000)
       );
 
       // Run it immediately

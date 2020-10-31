@@ -11,7 +11,6 @@ const EMPTY_OBJECT = {};
 function handleCommand(id, command, callback) {
   command
     .then(({ result, extras }) => {
-      Logger.log("Command result: ", result);
       const parsed = MessageParser.parse(result);
       callback(
         {
@@ -89,7 +88,6 @@ function attachNews(include, addStockToQuery) {
           symbols: includeSymbols,
           addStockToQuery,
         }).then((news) => {
-          Logger.log("Attaching news to result");
           return { ...result, news };
         });
     }
@@ -297,15 +295,6 @@ function parseWatchLookupResult(
   // Parse results
   const resultData = result.data[symbol];
   const originalData = original.data[symbol];
-  Logger.log(
-    "Lookup result for watch event",
-    symbol,
-    low,
-    high,
-    resultData,
-    originalData
-  );
-
   const originalPrice = originalData.price;
   const newPrice = resultData.price;
 
@@ -342,7 +331,6 @@ module.exports = {
   handle: function handle(prefix, { content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
       const rawQuery = contentToQuery(prefix, content);
-      Logger.log("Raw query is: ", rawQuery);
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
       const { news, watch } = parseOptions(query, rawOptions);
@@ -350,7 +338,6 @@ module.exports = {
         includeNews: news,
         watchSymbols: watch,
       };
-      Logger.log(`Perform reverse lookup: '${query}'`, options);
       reverseLookup(query, prefix, id, respond, options);
       return;
     }
@@ -361,7 +348,6 @@ module.exports = {
     const includeNews = {};
     const watchSymbols = {};
 
-    Logger.log("Raw symbols are: ", rawSymbols);
     for (const rawSymbol of rawSymbols) {
       const splitSymbol = rawSymbol.split(":").map((s) => s.toUpperCase());
       const [symbol, rawOptions] = splitSymbol;
@@ -377,7 +363,6 @@ module.exports = {
       watchSymbols,
     };
 
-    Logger.log(`Perform symbol lookup: '${symbols}'`, options);
     lookupSymbols(symbols, prefix, id, respond, options);
   },
 
