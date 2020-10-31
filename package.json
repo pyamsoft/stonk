@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "node ./index.js",
-    "deploy": "bash ./bin/deploy"
+    "start": "yarn lint && node ./index.js",
+    "deploy": "bash ./bin/deploy",
+    "lint": "eslint ."
   },
   "dependencies": {
     "discord.js": "12.4.0",
