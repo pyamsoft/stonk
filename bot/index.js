@@ -69,12 +69,31 @@ function sendMessage(channel, { cache, skipCache, messageId, messageText }) {
     });
 }
 
+function handleStopWatchSymbols({ stopWatch, stopWatching }) {
+  for (const symbol of Object.keys(stopWatching)) {
+    const stop = stopWatching[symbol];
+    if (!stop) {
+      continue;
+    }
+
+    Logger.log("Stop watching symbol for price points: ", symbol);
+    WatchList.stopWatchingSymbol(stopWatch, { symbol });
+  }
+}
+
 function handleWatchSymbols(
   prefix,
   channel,
-  { author, cache, stopWatch, data, symbols }
+  { author, cache, stopWatch, data, symbols, stopWatching }
 ) {
   for (const symbol of Object.keys(symbols)) {
+    const stop = stopWatching[symbol];
+    // If we want this to stop watching, we unregister it instead of registering it here.
+    if (stop) {
+      WatchList.stopWatchingSymbol(stopWatch, { symbol });
+      continue;
+    }
+
     const bounds = symbols[symbol];
     if (!bounds) {
       continue;
@@ -85,11 +104,13 @@ function handleWatchSymbols(
       continue;
     }
 
+    const interval = 45;
+    Logger.log("Watch symbol for price points: ", symbol, low, high, interval);
     WatchList.watchSymbol(stopWatch, {
       symbol,
       low,
       high,
-      interval: 45,
+      interval,
       command: (s, l, h) => {
         Handler.notify(
           prefix,
@@ -119,7 +140,14 @@ function handleExtras(
   { author, cache, stopWatch, data, extras }
 ) {
   Logger.log("Handle result extras", extras);
-  const { watchSymbols } = extras;
+  const { watchSymbols, stopWatchSymbols } = extras;
+  if (stopWatchSymbols) {
+    handleStopWatchSymbols({
+      stopWatch,
+      stopWatching: stopWatchSymbols,
+    });
+  }
+
   if (watchSymbols) {
     handleWatchSymbols(prefix, channel, {
       author,
@@ -127,6 +155,7 @@ function handleExtras(
       stopWatch,
       data,
       symbols: watchSymbols,
+      stopWatching: stopWatchSymbols,
     });
   }
 }

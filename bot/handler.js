@@ -47,7 +47,8 @@ function handleHelp(prefix, id, callback) {
   
   [OPTIONS]
   news                      Get recent news for a <SYMBOL> or <QUERY>
-  watch[LOW|HIGH]           Watch the symbol for if/when it crosses the <LOW> or <HIGH> points
+  watch[LOW|HIGH]           Watch the <SYMBOL> for if/when it crosses the <LOW> or <HIGH> points
+  stopwatch                 Stop watching the <SYMBOL>
   
   An OPTION can be added to a COMMAND by appending it with ':'
   
@@ -101,7 +102,7 @@ function reverseLookup(
   prefix,
   id,
   respond,
-  { includeNews, watchSymbols }
+  { includeNews, watchSymbols, stopWatchSymbols }
 ) {
   if (!query || query.length <= 0) {
     handleHelp(prefix, id, respond);
@@ -117,10 +118,13 @@ function reverseLookup(
             if (symbol) {
               const correctWatchSymbols = {};
               correctWatchSymbols[symbol] = watchSymbols;
+              const correctStopWatchSymbols = {};
+              correctStopWatchSymbols[symbol] = stopWatchSymbols;
               return {
                 result,
                 extras: {
                   watchSymbols: correctWatchSymbols,
+                  stopWatchSymbols: correctStopWatchSymbols,
                 },
               };
             }
@@ -141,7 +145,7 @@ function lookupSymbols(
   prefix,
   id,
   respond,
-  { includeNews, watchSymbols }
+  { includeNews, watchSymbols, stopWatchSymbols }
 ) {
   if (!symbols || symbols.length <= 0) {
     handleHelp(prefix, id, respond);
@@ -153,7 +157,7 @@ function lookupSymbols(
         .then((result) => {
           return {
             result,
-            extras: { watchSymbols },
+            extras: { watchSymbols, stopWatchSymbols },
           };
         }),
       respond
@@ -200,8 +204,12 @@ function parseNewsOption(options) {
   return options.includes("NEWS");
 }
 
+function parseStopWatchOption(options) {
+  return options.includes("STOPWATCH");
+}
+
 function parseWatchOption(options) {
-  const possibleWatch = options.find((o) => o.indexOf("WATCH") >= 0);
+  const possibleWatch = options.find((o) => o.indexOf("WATCH[") >= 0);
   // WATCH[LOW|HIGH]
   if (possibleWatch) {
     const valuesSection = possibleWatch.replace(/WATCH/g, "");
@@ -254,7 +262,8 @@ function parseOptions(what, rawOptions) {
   Logger.log(`Parse options for symbol '${what}'`, options);
   const news = parseNewsOption(options);
   const watch = parseWatchOption(options);
-  return { news, watch };
+  const stopWatch = parseStopWatchOption(options);
+  return { news, watch, stopWatch };
 }
 
 function isValidPrice(price) {
@@ -333,10 +342,11 @@ module.exports = {
       const rawQuery = contentToQuery(prefix, content);
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
-      const { news, watch } = parseOptions(query, rawOptions);
+      const { news, watch, stopWatch } = parseOptions(query, rawOptions);
       const options = {
-        includeNews: news,
+        includeNews: !!news,
         watchSymbols: watch,
+        stopWatchSymbols: !!stopWatch,
       };
       reverseLookup(query, prefix, id, respond, options);
       return;
@@ -345,23 +355,22 @@ module.exports = {
     const rawSymbols = contentToSymbols(prefix, content);
     const symbols = [];
 
-    const includeNews = {};
-    const watchSymbols = {};
+    const options = {
+      includeNews: {},
+      watchSymbols: {},
+      stopWatchSymbols: {},
+    };
 
     for (const rawSymbol of rawSymbols) {
       const splitSymbol = rawSymbol.split(":").map((s) => s.toUpperCase());
       const [symbol, rawOptions] = splitSymbol;
       symbols.push(symbol);
 
-      const { news, watch } = parseOptions(symbol, rawOptions);
-      includeNews[symbol] = !!news;
-      watchSymbols[symbol] = watch;
+      const { news, watch, stopWatch } = parseOptions(symbol, rawOptions);
+      options.includeNews[symbol] = !!news;
+      options.watchSymbols[symbol] = watch;
+      options.stopWatchSymbols[symbol] = !!stopWatch;
     }
-
-    const options = {
-      includeNews,
-      watchSymbols,
-    };
 
     lookupSymbols(symbols, prefix, id, respond, options);
   },

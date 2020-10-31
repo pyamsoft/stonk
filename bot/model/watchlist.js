@@ -73,11 +73,9 @@ function newWatchList() {
       }
     },
     stop: function stop(stopwatch, { symbol }) {
-      Logger.log("Stop watching symbol: ", symbol);
       return stopWatching(stopwatch, symbol);
     },
     clear: function clear(stopwatch) {
-      Logger.log("Clear watch list");
       for (const symbol of Object.keys(watchList)) {
         stopWatching(stopwatch, symbol);
       }
