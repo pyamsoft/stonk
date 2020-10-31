@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "yarn lint && node ./index.js",
-    "deploy": "bash ./bin/deploy",
+    "deploy": "yarn lint && bash ./bin/deploy",
     "lint": "eslint ."
   },
   "dependencies": {
