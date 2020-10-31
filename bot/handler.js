@@ -270,25 +270,19 @@ function isValidPrice(price) {
   return price && price >= 0;
 }
 
-function isPassedPoint(point, originalPrice, newPrice, notifyAbove) {
-  if (
-    !isValidPrice(point) ||
-    !isValidPrice(originalPrice) ||
-    !isValidPrice(newPrice)
-  ) {
+function isPassedPoint(point, price, notifyAbove) {
+  if (!isValidPrice(point) || !isValidPrice(price)) {
     return false;
   }
 
   // If the original price is lower/higher than the watch point, this will fire.
   // That's what you want right?
-  return notifyAbove
-    ? newPrice > originalPrice && newPrice > point
-    : newPrice < originalPrice && newPrice < point;
+  return notifyAbove ? price > point : price < point;
 }
 
 function parseWatchLookupResult(
   author,
-  { stopWatch, result, symbol, low, high, original },
+  { stopWatch, result, symbol, low, high },
   respond
 ) {
   if (!result || !result.data) {
@@ -296,19 +290,12 @@ function parseWatchLookupResult(
     return;
   }
 
-  if (!original || !original.data) {
-    Logger.warn("Watch missing original result data");
-    return;
-  }
-
   // Parse results
   const resultData = result.data[symbol];
-  const originalData = original.data[symbol];
-  const originalPrice = originalData.price;
   const newPrice = resultData.price;
 
   // Fire if low is passed
-  if (isPassedPoint(low, originalPrice, newPrice, false)) {
+  if (isPassedPoint(low, newPrice, false)) {
     Logger.log("Low point passed: ", symbol, low, newPrice);
     WatchList.markLowPassed(stopWatch, { symbol });
     respond(
@@ -322,7 +309,7 @@ function parseWatchLookupResult(
   }
 
   // Fire if high is passed
-  if (isPassedPoint(high, originalPrice, newPrice, true)) {
+  if (isPassedPoint(high, newPrice, true)) {
     Logger.log("High point passed: ", symbol, high, newPrice);
     WatchList.markHighPassed(stopWatch, { symbol });
     respond(
@@ -377,7 +364,7 @@ module.exports = {
 
   notify: function notify(
     prefix,
-    { author, stopWatch, symbol, low, high, original },
+    { author, stopWatch, symbol, low, high },
     respond
   ) {
     // Rebuild content
@@ -392,7 +379,6 @@ module.exports = {
           symbol,
           low,
           high,
-          original,
         },
         (message) => {
           // Send the notify message to the user directly

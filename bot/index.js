@@ -84,7 +84,7 @@ function handleStopWatchSymbols({ stopWatch, stopWatching }) {
 function handleWatchSymbols(
   prefix,
   channel,
-  { author, cache, stopWatch, data, symbols, stopWatching }
+  { author, cache, stopWatch, symbols, stopWatching }
 ) {
   for (const symbol of Object.keys(symbols)) {
     const stop = stopWatching[symbol];
@@ -120,7 +120,6 @@ function handleWatchSymbols(
             symbol: s,
             low: l,
             high: h,
-            original: data,
           },
           (message) => {
             const { result, ...messagePayload } = message;
@@ -134,11 +133,7 @@ function handleWatchSymbols(
   }
 }
 
-function handleExtras(
-  prefix,
-  channel,
-  { author, cache, stopWatch, data, extras }
-) {
+function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
   Logger.log("Handle result extras", extras);
   const { watchSymbols, stopWatchSymbols } = extras;
   if (stopWatchSymbols) {
@@ -153,7 +148,6 @@ function handleExtras(
       author,
       cache,
       stopWatch,
-      data,
       symbols: watchSymbols,
       stopWatching: stopWatchSymbols,
     });
@@ -207,8 +201,11 @@ function botWatchMessageUpdates(
         id,
       },
       (payload, extras) => {
-        const { result, ...messagePayload } = payload;
-        sendMessage(channel, { cache, ...messagePayload });
+        // Update the bot status
+        Market.updateMarket(marketCallback);
+
+        const { result } = payload;
+        sendMessage(channel, { cache, ...payload });
         handleExtras(prefix, channel, {
           author,
           cache,
@@ -216,9 +213,6 @@ function botWatchMessageUpdates(
           data: result,
           extras,
         });
-
-        // Update the bot status
-        Market.updateMarket(marketCallback);
       }
     );
   });
@@ -247,18 +241,16 @@ function botWatchMessages(
         id,
       },
       (payload, extras) => {
-        const { result, ...messagePayload } = payload;
-        sendMessage(channel, { cache, ...messagePayload });
+        // Update the bot status
+        Market.updateMarket(marketCallback);
+
+        sendMessage(channel, { cache, ...payload });
         handleExtras(prefix, channel, {
           author,
           cache,
           stopWatch,
-          data: result,
           extras,
         });
-
-        // Update the bot status
-        Market.updateMarket(marketCallback);
       }
     );
   });
