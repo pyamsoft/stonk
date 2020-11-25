@@ -1,12 +1,7 @@
-let config;
-try {
-  config = require("./.env");
-} catch (e) {
-  // No config, running on heroku?
-  config = {
-    prefix: process.env.BOT_PREFIX || "$",
-    token: process.env.BOT_TOKEN || null,
-  };
-}
+// Parse the .env file if one exists
+require("dotenv").config();
 
-module.exports = config;
+module.exports = {
+  prefix: process.env.BOT_PREFIX || "$",
+  token: process.env.BOT_TOKEN || null,
+};
