@@ -6,8 +6,10 @@ Given a stock symbol, returns price information
 
 This is not currently a public bot, you need
 to make your own Discord App in the developer portal,
-and then pass your own bot tokens into `config.json`
+and then pass your own bot tokens into `.env`
 along with a `prefix` (I use `$`)
+
+See the `env.default` file for the expected format.
 
 # Running
 ```
