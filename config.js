@@ -1,6 +1,6 @@
 let config;
 try {
-  config = require("./config.json");
+  config = require("./.env");
 } catch (e) {
   // No config, running on heroku?
   config = {
