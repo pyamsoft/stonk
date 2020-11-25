@@ -9,9 +9,7 @@
     "lint": "eslint ."
   },
   "engines": {
-    "node": "12.x",
-    "npm": "*",
-    "yarn": "*"
+    "node": ">=12.x"
   },
   "dependencies": {
     "discord.js": "12.4.0",
