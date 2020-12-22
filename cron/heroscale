@@ -1,0 +1,30 @@
+#!/bin/sh
+
+cd "${HOME}/pyamsoft/stonk-bot" || {
+  printf -- 'Failed to cd into bot directory\n'
+  exit 1
+}
+
+CONFIG_1="main"
+CONFIG_2="back"
+
+config="$1"
+if [ "${config}" = "${CONFIG_1}" ]; then
+  yarn scale:back disable || {
+    printf -- 'Failed to scale down back\n'
+  }
+  yarn scale:main enable || {
+    printf -- 'Failed to scale up main\n'
+  }
+elif [ "${config}" = "${CONFIG_2}" ]; then
+  yarn scale:main disable || {
+    printf -- 'Failed to scale down main\n'
+  }
+  yarn scale:back enable || {
+    printf -- 'Failed to scale up back\n'
+  }
+else
+  printf -- 'Unknown config: %s\n' "${config}"
+  exit 1
+fi
+
