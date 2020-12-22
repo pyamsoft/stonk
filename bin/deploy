@@ -14,8 +14,8 @@ if ! [ -r "${HOME}/.local/share/heroku/config.json" ]; then
     exit 0
 fi
 
-git push heroku main || {
-    printf -- 'Unable to push to heroku.\n'
+git push "heroku${1}" main || {
+    printf -- 'Unable to push to heroku%s.\n' "$1"
 
     # Exit 0 so yarn doesn't complain
     exit 0
