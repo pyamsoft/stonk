@@ -5,8 +5,8 @@ cd "${HOME}/pyamsoft/stonk-bot" || {
   exit 1
 }
 
-CONFIG_1="main"
-CONFIG_2="back"
+readonly CONFIG_1="main"
+readonly CONFIG_2="back"
 
 config="$1"
 if [ "${config}" = "${CONFIG_1}" ]; then
