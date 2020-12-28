@@ -15,14 +15,14 @@
     "node": ">=12.x"
   },
   "dependencies": {
-    "discord.js": "12.4.0",
+    "discord.js": "12.5.1",
     "dotenv": "8.2.0",
-    "eslint": "7.12.1",
-    "fast-xml-parser": "3.17.4",
+    "fast-xml-parser": "3.17.6",
     "luxon": "1.25.0",
     "node-fetch": "2.6.1"
   },
   "devDependencies": {
-    "prettier": "2.1.2"
+    "eslint": "7.16.0",
+    "prettier": "2.2.1"
   }
 }
