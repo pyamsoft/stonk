@@ -1,169 +1,8 @@
-const Commands = require("./command");
+const Command = require("./command");
 const Logger = require("../logger");
 const MessageParser = require("./message");
 const WatchList = require("./watch");
-const { codeBlock } = require("../util/format");
 const { safeParseNumber } = require("../util/number");
-
-const TYPE_OBJECT = typeof {};
-const EMPTY_OBJECT = {};
-
-function handleCommand(id, command, callback) {
-  command
-    .then(({ result, extras }) => {
-      const parsed = MessageParser.parse(result);
-      callback(
-        {
-          result,
-          skipCache: false,
-          messageId: id,
-          messageText: parsed,
-        },
-        extras
-      );
-    })
-    .catch((error) => {
-      callback(
-        {
-          error,
-          skipCache: true,
-          messageId: id,
-          messageText: error.message,
-        },
-        EMPTY_OBJECT
-      );
-    });
-}
-
-function handleHelp(prefix, id, callback) {
-  // Looks weird but this lines up.
-  const message = codeBlock(`Beep Boop.
-
-  [COMMANDS]
-  ${prefix}                         This help.
-  ${prefix}${prefix}                        This help.
-  ${prefix} SYMBOL... [OPTION...]   Price information for <SYMBOL>
-  ${prefix}${prefix} QUERY [OPTION...]      Query results for <QUERY>
-  
-  [OPTIONS]
-  news                      Get recent news for a <SYMBOL> or <QUERY>
-  watch[LOW|HIGH]           Watch the <SYMBOL> for if/when it crosses the <LOW> or <HIGH> points
-  stopwatch                 Stop watching the <SYMBOL>
-  
-  An OPTION can be added to a COMMAND by appending it with ':'
-  
-  [EXAMPLE]
-  ${prefix}MSFT                     Gets price information for MSFT
-  ${prefix}${prefix}Microsoft Corporation   Reverse lookup a symbol for 'Microsoft Corporation' and gets price information.
-  ${prefix}AAPL:news                Gets price information and news for AAPL
-  ${prefix}${prefix}Tesla:news              Reverse lookup a symbol for 'Tesla' and gets price information.
-  `);
-  callback(
-    {
-      skipCache: false,
-      messageId: id,
-      messageText: message,
-    },
-    EMPTY_OBJECT
-  );
-}
-
-function attachNews(include, addStockToQuery) {
-  return function newAppender(result) {
-    if (result.symbols) {
-      let includeSymbols = [];
-
-      // Include news if true or symbol contained in news object payload
-      if (include === true) {
-        includeSymbols = result.symbols;
-      } else if (typeof include === TYPE_OBJECT) {
-        for (const symbol of Object.keys(include)) {
-          if (include[symbol]) {
-            includeSymbols.push(symbol);
-          }
-        }
-      }
-
-      if (includeSymbols.length > 0)
-        return Commands.news({
-          symbols: includeSymbols,
-          addStockToQuery,
-        }).then((news) => {
-          return { ...result, news };
-        });
-    }
-
-    return result;
-  };
-}
-
-function reverseLookup(
-  query,
-  prefix,
-  id,
-  respond,
-  { includeNews, watchSymbols, stopWatchSymbols }
-) {
-  if (!query || query.length <= 0) {
-    handleHelp(prefix, id, respond);
-  } else {
-    handleCommand(
-      id,
-      Commands.query({ query, fuzzy: true })
-        .then(attachNews(includeNews, true))
-        .then((result) => {
-          // Turn the watchSymbols payload into the expected format
-          if (result.symbols) {
-            const [symbol] = result.symbols;
-            if (symbol) {
-              const correctWatchSymbols = {};
-              correctWatchSymbols[symbol] = watchSymbols;
-              const correctStopWatchSymbols = {};
-              correctStopWatchSymbols[symbol] = stopWatchSymbols;
-              return {
-                result,
-                extras: {
-                  watchSymbols: correctWatchSymbols,
-                  stopWatchSymbols: correctStopWatchSymbols,
-                },
-              };
-            }
-          }
-
-          return {
-            result,
-            extras: EMPTY_OBJECT,
-          };
-        }),
-      respond
-    );
-  }
-}
-
-function lookupSymbols(
-  symbols,
-  prefix,
-  id,
-  respond,
-  { includeNews, watchSymbols, stopWatchSymbols }
-) {
-  if (!symbols || symbols.length <= 0) {
-    handleHelp(prefix, id, respond);
-  } else {
-    handleCommand(
-      id,
-      Commands.lookup({ symbols })
-        .then(attachNews(includeNews, true))
-        .then((result) => {
-          return {
-            result,
-            extras: { watchSymbols, stopWatchSymbols },
-          };
-        }),
-      respond
-    );
-  }
-}
 
 function isReverseLookupCommand(prefix, content) {
   return content.startsWith(prefix) && content.slice(1).startsWith(prefix);
@@ -335,7 +174,7 @@ module.exports = {
         watchSymbols: watch,
         stopWatchSymbols: !!stopWatch,
       };
-      reverseLookup(query, prefix, id, respond, options);
+      Command.Reverse(query, prefix, id, respond, options);
       return;
     }
 
@@ -359,7 +198,7 @@ module.exports = {
       options.stopWatchSymbols[symbol] = !!stopWatch;
     }
 
-    lookupSymbols(symbols, prefix, id, respond, options);
+    Command.Lookup(symbols, prefix, id, respond, options);
   },
 
   notify: function notify(
