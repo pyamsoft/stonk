@@ -1,7 +1,6 @@
 const Command = require("./command");
-const Logger = require("../logger");
+const Option = require("./option");
 const MessageParser = require("./message");
-const { safeParseNumber } = require("../util/number");
 
 function isReverseLookupCommand(prefix, content) {
   return content.startsWith(prefix) && content.slice(1).startsWith(prefix);
@@ -38,78 +37,13 @@ function contentToArray(sliceOut, content) {
   return symbols;
 }
 
-function parseNewsOption(options) {
-  return options.includes("NEWS");
-}
-
-function parseStopWatchOption(options) {
-  return options.includes("STOPWATCH");
-}
-
-function parseWatchOption(options) {
-  const possibleWatch = options.find((o) => o.indexOf("WATCH[") >= 0);
-  // WATCH[LOW|HIGH]
-  if (possibleWatch) {
-    const valuesSection = possibleWatch.replace(/WATCH/g, "");
-    if (!valuesSection) {
-      Logger.warn("WATCH missing values section", possibleWatch);
-      return null;
-    }
-    // [LOW|HIGH]
-    const values = valuesSection
-      .replace(/\[/g, " ")
-      .replace(/\]/g, " ")
-      .replace(/\|/g, " ")
-      .trim()
-      .split(/\s+/g);
-
-    if (!values || values.length <= 0) {
-      Logger.warn("WATCH missing values", possibleWatch, valuesSection);
-      return null;
-    }
-
-    // [ LOW, HIGH ]
-    const [low, high] = values;
-    if (!low || !high) {
-      Logger.warn("WATCH missing low high", possibleWatch, values);
-      return null;
-    }
-
-    const lowNumber = safeParseNumber(low);
-    const highNumber = safeParseNumber(high);
-    if (lowNumber < 0 || highNumber < 0) {
-      Logger.warn("WATCH invalid low high", possibleWatch, low, high);
-      return null;
-    }
-
-    return {
-      low: lowNumber,
-      high: highNumber,
-    };
-  }
-
-  return null;
-}
-
-function parseOptions(what, rawOptions) {
-  if (!what || !rawOptions) {
-    return {};
-  }
-
-  const options = rawOptions.split(",").map((s) => s.toUpperCase());
-  Logger.log(`Parse options for symbol '${what}'`, options);
-  const news = parseNewsOption(options);
-  const watch = parseWatchOption(options);
-  const stopWatch = parseStopWatchOption(options);
-  return { news, watch, stopWatch };
-}
 module.exports = {
   handle: function handle(prefix, { content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
       const rawQuery = contentToQuery(prefix, content);
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
-      const { news, watch, stopWatch } = parseOptions(query, rawOptions);
+      const { news, watch, stopWatch } = Option.process(query, rawOptions);
       const options = {
         includeNews: !!news,
         watchSymbols: watch,
@@ -133,7 +67,7 @@ module.exports = {
       const [symbol, rawOptions] = splitSymbol;
       symbols.push(symbol);
 
-      const { news, watch, stopWatch } = parseOptions(symbol, rawOptions);
+      const { news, watch, stopWatch } = Option.process(symbol, rawOptions);
       options.includeNews[symbol] = !!news;
       options.watchSymbols[symbol] = watch;
       options.stopWatchSymbols[symbol] = !!stopWatch;
