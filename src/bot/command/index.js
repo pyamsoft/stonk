@@ -3,5 +3,5 @@ const Reverse = require("./reverse");
 
 module.exports = {
   lookup: Lookup,
-  reverse: Reverse,
+  reverseLookup: Reverse,
 };

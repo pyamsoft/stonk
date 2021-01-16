@@ -30,14 +30,14 @@ module.exports = function Reverse(
   { includeNews, watchSymbols, stopWatchSymbols }
 ) {
   if (!query || query.length <= 0) {
-    Help.PrintHelp(prefix, id, respond);
+    Help.printHelp(prefix, id, respond);
     return;
   }
 
-  Command.Process(
+  Command.process(
     id,
     reverseLookupSymbols(query, true)
-      .then(News.AttachNews(includeNews, true))
+      .then(News.attachNews(includeNews, true))
       .then((result) => {
         // Turn the watchSymbols payload into the expected format
         if (result.symbols) {

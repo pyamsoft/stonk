@@ -32,7 +32,7 @@ module.exports = function Lookup(
   Command.process(
     id,
     lookupSymbols(symbols)
-      .then(News.AttachNews(includeNews, true))
+      .then(News.attachNews(includeNews, true))
       .then((result) => {
         return {
           result,

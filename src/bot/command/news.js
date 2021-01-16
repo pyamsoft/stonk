@@ -18,8 +18,8 @@ module.exports = {
    * @param {Boolean|Object} include
    * @param {Boolean} addStockToQuery
    */
-  AttachNews: function AttachNews(include, addStockToQuery) {
-    return function NewsAppender(result) {
+  attachNews: function attachNews(include, addStockToQuery) {
+    return function newsAppender(result) {
       if (result.symbols) {
         let includeSymbols = [];
 

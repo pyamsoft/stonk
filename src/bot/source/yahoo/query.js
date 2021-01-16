@@ -1,7 +1,7 @@
 const { jsonApi } = require("../../../util/api");
 const { asArray } = require("../../../util/array");
 const Logger = require("../../../logger");
-const Lookup = require(".");
+const Lookup = require("./lookup");
 
 function generateQueryUrl(query, fuzzy) {
   return `https://query1.finance.yahoo.com/v1/finance/search?q=${query}&lang=en-US&region=US&quotesCount=6&newsCount=1&enableFuzzyQuery=${!!fuzzy}&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&newsQueryId=news_cie_vespa&enableCb=true&enableNavLinks=true&enableEnhancedTrivialQuery=true`;
@@ -39,12 +39,14 @@ module.exports = {
       }
 
       const ticker = symbol.toUpperCase();
-      return Lookup.lookup({ symbols: asArray(ticker) }).then((data) => {
-        return {
-          query,
-          ...data,
-        };
-      });
+      return Lookup.lookup(asArray(ticker).map((s) => s.toUpperCase())).then(
+        (data) => {
+          return {
+            query,
+            ...data,
+          };
+        }
+      );
     });
   },
 };

@@ -174,7 +174,7 @@ module.exports = {
         watchSymbols: watch,
         stopWatchSymbols: !!stopWatch,
       };
-      Command.Reverse(query, prefix, id, respond, options);
+      Command.reverseLookup(query, prefix, id, respond, options);
       return;
     }
 
@@ -198,7 +198,7 @@ module.exports = {
       options.stopWatchSymbols[symbol] = !!stopWatch;
     }
 
-    Command.Lookup(symbols, prefix, id, respond, options);
+    Command.lookup(symbols, prefix, id, respond, options);
   },
 
   notify: function notify(
