@@ -22,7 +22,7 @@ function reverseLookupSymbols(query, fuzzy) {
  * @param {Function} respond
  * @param {Object} options
  */
-module.exports = function Reverse(
+module.exports = function reverse(
   query,
   prefix,
   id,
