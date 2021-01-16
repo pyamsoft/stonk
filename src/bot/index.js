@@ -256,7 +256,7 @@ function botWatchMessages(
   });
 }
 
-function initializeBot(prefix) {
+function initializeBot(prefix, options) {
   // Models
   const client = new Discord.Client();
   const cache = Cache.create(2 * 60 * 60 * 1000);
@@ -289,7 +289,8 @@ function printEnv(config) {
 module.exports = {
   login: function login(config) {
     printEnv(config);
-    const loginBot = initializeBot(config.prefix);
-    loginBot(config.token);
+    const { prefix, token, ...rest } = config;
+    const loginBot = initializeBot(prefix, rest);
+    loginBot(token);
   },
 };
