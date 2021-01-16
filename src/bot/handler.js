@@ -1,7 +1,6 @@
 const Command = require("./command");
 const Logger = require("../logger");
 const MessageParser = require("./message");
-const WatchList = require("./watch");
 const { safeParseNumber } = require("../util/number");
 
 function isReverseLookupCommand(prefix, content) {
@@ -104,64 +103,6 @@ function parseOptions(what, rawOptions) {
   const stopWatch = parseStopWatchOption(options);
   return { news, watch, stopWatch };
 }
-
-function isValidPrice(price) {
-  return price && price >= 0;
-}
-
-function isPassedPoint(point, price, notifyAbove) {
-  if (!isValidPrice(point) || !isValidPrice(price)) {
-    return false;
-  }
-
-  // If the original price is lower/higher than the watch point, this will fire.
-  // That's what you want right?
-  return notifyAbove ? price > point : price < point;
-}
-
-function parseWatchLookupResult(
-  author,
-  { stopWatch, result, symbol, low, high },
-  respond
-) {
-  if (!result || !result.data) {
-    Logger.warn("Watch command lookup returned error");
-    return;
-  }
-
-  // Parse results
-  const resultData = result.data[symbol];
-  const newPrice = resultData.price;
-
-  // Fire if low is passed
-  if (isPassedPoint(low, newPrice, false)) {
-    Logger.log("Low point passed: ", symbol, low, newPrice);
-    WatchList.markLowPassed(stopWatch, { symbol });
-    respond(
-      MessageParser.notify(author, {
-        symbol,
-        point: low,
-        price: newPrice,
-        notifyAbove: false,
-      })
-    );
-  }
-
-  // Fire if high is passed
-  if (isPassedPoint(high, newPrice, true)) {
-    Logger.log("High point passed: ", symbol, high, newPrice);
-    WatchList.markHighPassed(stopWatch, { symbol });
-    respond(
-      MessageParser.notify(author, {
-        symbol,
-        point: high,
-        price: newPrice,
-        notifyAbove: true,
-      })
-    );
-  }
-}
-
 module.exports = {
   handle: function handle(prefix, { content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
@@ -210,7 +151,7 @@ module.exports = {
     const content = `${prefix}${symbol.toUpperCase()}`;
     return this.handle(prefix, { content, id: null }, (payload) => {
       const { result } = payload;
-      parseWatchLookupResult(
+      Command.watchSymbols(
         author,
         {
           stopWatch,

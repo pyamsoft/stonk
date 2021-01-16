@@ -17,7 +17,7 @@ function lookupSymbols(symbols) {
   });
 }
 
-module.exports = function Lookup(
+module.exports = function lookup(
   symbols,
   prefix,
   id,
