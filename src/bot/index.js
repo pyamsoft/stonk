@@ -256,7 +256,7 @@ function botWatchMessages(
   });
 }
 
-function initializeBot(prefix, options) {
+function initializeBot(prefix) {
   // Models
   const client = new Discord.Client();
   const cache = Cache.create(2 * 60 * 60 * 1000);
@@ -267,8 +267,18 @@ function initializeBot(prefix, options) {
 
   // Event listeners
   botWatchReady({ emitter, status, stopWatch, marketCallback });
-  botWatchMessages(prefix, { cache, emitter, stopWatch, marketCallback });
-  botWatchMessageUpdates(prefix, { cache, emitter, stopWatch, marketCallback });
+  botWatchMessages(prefix, {
+    cache,
+    emitter,
+    stopWatch,
+    marketCallback,
+  });
+  botWatchMessageUpdates(prefix, {
+    cache,
+    emitter,
+    stopWatch,
+    marketCallback,
+  });
 
   // Login
   return function loginBot(token) {
