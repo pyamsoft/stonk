@@ -3,7 +3,7 @@ const Option = require("./option");
 const MessageParser = require("./message");
 
 function isReverseLookupCommand(prefix, content) {
-  return content.startsWith(prefix) && content.slice(1).startsWith(prefix);
+  return content.startsWith(`${prefix}${prefix}`);
 }
 
 function contentToSymbols(prefix, content) {
@@ -11,36 +11,64 @@ function contentToSymbols(prefix, content) {
   // noinspection RegExpRedundantEscape
   const regex = new RegExp(`\\${prefix}`, "g");
 
-  return contentToArray(prefix.length, content).map((s) =>
-    s.replace(regex, "")
-  );
+  const { isHelp, symbols } = contentToArray(prefix, 0, content);
+  const result = symbols
+    .filter((s) => s.indexOf(prefix) >= 0)
+    .filter((s) => !/\d/.test(s))
+    .map((s) => s.replace(regex, ""));
+
+  return {
+    shouldRespond: isHelp || result.length > 0,
+    symbols: result,
+  };
 }
 
 function contentToQuery(prefix, content) {
-  return contentToArray(2 * prefix.length, content)
-    .join(" ")
-    .trim();
+  const { isHelp, symbols } = contentToArray(
+    prefix,
+    2 * prefix.length,
+    content
+  );
+  const result = symbols.join(" ").trim();
+
+  return {
+    shouldRespond: isHelp || result.length > 0,
+    query: result,
+  };
 }
 
-function contentToArray(sliceOut, content) {
+function contentToArray(prefix, sliceOut, content) {
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // symbol = say
   // args = ["Is", "this", "the", "real", "life?"]
   const args = content.slice(sliceOut).trim().split(/\s+/g);
   const symbol = args.shift();
-  let symbols = [];
-  if (symbol) {
-    symbols.push(symbol);
+
+  // This is just plain ${prefix}, this is no longer a valid command
+  if (symbol === prefix) {
+    return {
+      isHelp: true,
+      symbols: [],
+    };
   }
-  symbols = [...symbols, ...args];
-  return symbols;
+
+  return {
+    isHelp: false,
+    symbols: [...(symbol ? [symbol] : []), ...args],
+  };
 }
 
 module.exports = {
   handle: function handle(prefix, { content, id }, respond) {
     if (isReverseLookupCommand(prefix, content)) {
-      const rawQuery = contentToQuery(prefix, content);
+      const { shouldRespond, query: rawQuery } = contentToQuery(
+        prefix,
+        content
+      );
+      if (!shouldRespond) {
+        return;
+      }
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
       const { news, watch, stopWatch } = Option.process(query, rawOptions);
@@ -53,7 +81,14 @@ module.exports = {
       return;
     }
 
-    const rawSymbols = contentToSymbols(prefix, content);
+    const { shouldRespond, symbols: rawSymbols } = contentToSymbols(
+      prefix,
+      content
+    );
+    if (!shouldRespond) {
+      return;
+    }
+
     const symbols = [];
 
     const options = {
