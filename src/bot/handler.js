@@ -13,7 +13,7 @@ function contentToSymbols(prefix, content) {
 
   const { isHelp, symbols } = contentToArray(prefix, 0, content);
   const result = symbols
-    .filter((s) => s.indexOf(prefix) >= 0)
+    .filter((s) => s.indexOf(prefix) >= 0 && s.length > 1)
     .filter((s) => !/\d/.test(s))
     .map((s) => s.replace(regex, ""));
 
