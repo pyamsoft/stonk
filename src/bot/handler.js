@@ -11,10 +11,25 @@ function contentToSymbols(prefix, content) {
   // noinspection RegExpRedundantEscape
   const regex = new RegExp(`\\${prefix}`, "g");
 
+  // A symbol cannot be numbers
+  const numberRegex = /\d/;
   const { isHelp, symbols } = contentToArray(prefix, 0, content);
   const result = symbols
     .filter((s) => s.indexOf(prefix) >= 0 && s.length > 1)
-    .filter((s) => !/\d/.test(s))
+    .filter((s) => {
+      // Has options, split up first then check symbol
+      if (s.indexOf(":") > 0) {
+        const splitUp = s.split(":");
+        if (splitUp.length <= 0) {
+          return false;
+        }
+
+        const symbol = s.split(":")[0];
+        return !numberRegex.test(symbol);
+      } else {
+        return !numberRegex.test(s);
+      }
+    })
     .map((s) => s.replace(regex, ""));
 
   return {
