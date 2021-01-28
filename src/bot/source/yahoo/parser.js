@@ -1,3 +1,4 @@
+const Market = require("../../market");
 const { newQuote } = require("../../model/quote");
 
 function symbol(quote) {
@@ -5,15 +6,27 @@ function symbol(quote) {
 }
 
 function price(quote) {
-  return quote.regularMarketPrice;
+  if (Market.isMarketOpenToday()) {
+    return quote.regularMarketPrice;
+  } else {
+    return quote.postMarketPrice;
+  }
 }
 
 function percentChange(quote) {
-  return quote.regularMarketChangePercent;
+  if (Market.isMarketOpenToday()) {
+    return quote.regularMarketChangePercent;
+  } else {
+    return quote.postMarketChangePercent;
+  }
 }
 
 function priceChange(quote) {
-  return quote.regularMarketChange;
+  if (Market.isMarketOpenToday()) {
+    return quote.regularMarketChange;
+  } else {
+    return quote.postMarketChange;
+  }
 }
 
 function company(quote) {

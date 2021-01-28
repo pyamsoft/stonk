@@ -1,4 +1,5 @@
 const { code, codeBlock, bold, italic } = require("../util/format");
+const Market = require("./market");
 
 const NBSP = "\u00a0";
 
@@ -34,7 +35,7 @@ function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
   return `
 ${bold(formatSymbol(symbol))}${NBSP}${NBSP}${NBSP}${NBSP}${italic(
     formatCompany(company)
-  )}
+  )}${Market.isMarketOpenToday() ? "" : "     -- after hours --"}
 ${codeBlock(`diff
 ${formatPrice(price)}
 
