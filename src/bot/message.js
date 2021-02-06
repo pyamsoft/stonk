@@ -1,5 +1,4 @@
 const { code, codeBlock, bold, italic } = require("../util/format");
-const Market = require("./market");
 
 const NBSP = "\u00a0";
 
@@ -31,17 +30,44 @@ function formatUserId(user) {
   return `<@!${user.id}>`;
 }
 
-function formatQuote({ symbol, company, price, changeAmount, changePercent }) {
-  return `
-${bold(formatSymbol(symbol))}${NBSP}${NBSP}${NBSP}${NBSP}${italic(
-    formatCompany(company)
-  )}${Market.isMarketOpenToday() ? "" : "     -- after hours --"}
-${codeBlock(`diff
-${formatPrice(price)}
+function formatQuote(quote) {
+  const { symbol, company, normal, afterHours } = quote;
 
-${formatAmountDirection(changeAmount)} ${formatChangeAmount(
-  changeAmount
-)} (${formatChangePercent(changePercent)})
+  const messageSymbol = bold(formatSymbol(symbol));
+  const messageCompany = italic(formatCompany(company));
+
+  const messageNormalPrice = formatPrice(normal.price);
+  const messageNormalDirection = formatAmountDirection(normal.amount);
+  const messageNormalChangeAmount = formatChangeAmount(normal.amount);
+  const messageNormalPercent = formatChangePercent(normal.percent);
+
+  const messageAfterHoursPrice = afterHours
+    ? formatPrice(afterHours.price)
+    : "";
+  const messageAfterHoursDirection = afterHours
+    ? formatAmountDirection(afterHours.amount)
+    : "";
+  const messageAfterHoursChangeAmount = afterHours
+    ? formatChangeAmount(afterHours.amount)
+    : "";
+  const messageAfterHoursPercent = afterHours
+    ? formatChangePercent(afterHours.percent)
+    : "";
+  return `
+${messageSymbol}${NBSP}${NBSP}${NBSP}${NBSP}${messageCompany}
+${codeBlock(`diff
+${messageNormalPrice}
+${messageNormalDirection} ${messageNormalChangeAmount} [${messageNormalPercent}]
+${
+  afterHours
+    ? `
+
+(After Hours)
+${messageAfterHoursPrice}
+${messageAfterHoursDirection} ${messageAfterHoursChangeAmount} [${messageAfterHoursPercent}]
+`
+    : ""
+}
 `)}`;
 }
 

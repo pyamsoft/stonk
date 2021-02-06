@@ -1,10 +1,9 @@
-function newQuote({ symbol, company, price, changeAmount, changePercent }) {
+function newQuote({ symbol, company, normal, afterHours }) {
   return {
     company,
     symbol,
-    price,
-    changeAmount,
-    changePercent,
+    normal,
+    afterHours,
   };
 }
 

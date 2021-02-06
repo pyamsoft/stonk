@@ -92,7 +92,7 @@ function stopWatchingStatus(stopwatch) {
 }
 
 module.exports = {
-  isMarketOpenToday: function isMarketOpenToday() {
+  isRegularMarket: function isRegularMarket() {
     const now = DateTime.local().setZone(NYSE_ZONE);
     const holiday = whichHoliday(now);
     return isMarketOpen(now, holiday);
