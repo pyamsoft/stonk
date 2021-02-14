@@ -4,9 +4,23 @@ const Logger = require("../../../logger");
 const { jsonApi } = require("../../../util/api");
 
 function generateUrl(symbols) {
-  return `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsToString(
-    symbols
-  )}&format=json&fields=symbol,regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketTime,postMarketPrice,postMarketChange,postMarketChangePercent,postMarketTime,regularMarketVolume,shortName,currency,trailingAnnualDividendRate,trailingAnnualDividendYield`;
+  const params = new URLSearchParams();
+  params.append("format", "json");
+  params.append(
+    "fields",
+    [
+      "symbol",
+      "regularMarketPrice",
+      "regularMarketChange",
+      "regularMarketChangePercent",
+      "postMarketPrice",
+      "postMarketChange",
+      "postMarketChangePercent",
+      "shortName",
+    ].join(",")
+  );
+  params.append("symbols", symbolsToString(symbols));
+  return `https://query1.finance.yahoo.com/v7/finance/quote?${params.toString()}`;
 }
 
 module.exports = {
