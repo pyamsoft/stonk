@@ -2,11 +2,13 @@ const Command = require("./command");
 const Logger = require("../../logger");
 const GoogleNews = require("../source/google");
 
+const logger = Logger.tag("bot/command/news");
+
 function lookupNews(symbols, addStockToQuery) {
-  Logger.log(`Perform news for symbols: '${symbols}'`);
+  logger.log(`Perform news for symbols: '${symbols}'`);
   return GoogleNews.news({ symbols, addStockToQuery }).catch((error) => {
     const msg = `Error doing news lookup: ${error.message}`;
-    Logger.error(error, msg);
+    logger.error(error, msg);
     throw new Error(msg);
   });
 }

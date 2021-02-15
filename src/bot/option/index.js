@@ -4,6 +4,8 @@ const Watch = require("./watch");
 const StopWatch = require("./stopwatch");
 const Options = require("./options");
 
+const logger = Logger.tag("bot/option/index");
+
 module.exports = {
   process: function process(what, rawOptions) {
     if (!what || !rawOptions) {
@@ -11,7 +13,7 @@ module.exports = {
     }
 
     const opts = rawOptions.split(",").map((s) => s.toUpperCase());
-    Logger.log(`Parse options for symbol '${what}'`, opts);
+    logger.log(`Parse options for symbol '${what}'`, opts);
     const news = News.process(opts);
     const watch = Watch.process(opts);
     const stopWatch = StopWatch.process(opts);

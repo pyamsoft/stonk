@@ -1,28 +1,47 @@
 const isDebug = process.env.BOT_ENV !== "production";
 
-function print(...args) {
-  console.log(...args);
+function logTag(prefix) {
+  return `<${prefix}>`;
 }
 
-function log(...args) {
-  if (isDebug) {
-    print(...args);
+function createLogger(prefix) {
+  const logger = {
+    print: function print(...args) {
+      if (prefix) {
+        console.log(logTag(prefix), ...args);
+      } else {
+        console.log(...args);
+      }
+    },
+
+    log: function log(...args) {
+      if (isDebug) {
+        this.print(...args);
+      }
+    },
+
+    warn: function warn(...args) {
+      if (isDebug) {
+        if (prefix) {
+          console.warn(logTag(prefix), ...args);
+        } else {
+          console.warn(...args);
+        }
+      }
+    },
+
+    error: function error(e, ...args) {
+      console.error(prefix, e, ...args);
+    },
+  };
+
+  if (!prefix) {
+    logger.tag = function tag(tag) {
+      return createLogger(tag);
+    };
   }
+
+  return logger;
 }
 
-function warn(...args) {
-  if (isDebug) {
-    console.warn(...args);
-  }
-}
-
-function error(e, ...args) {
-  console.error(e, ...args);
-}
-
-module.exports = {
-  print,
-  log,
-  warn,
-  error,
-};
+module.exports = createLogger(null);

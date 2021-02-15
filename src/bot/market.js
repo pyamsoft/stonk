@@ -1,6 +1,8 @@
 const { DateTime, Interval } = require("luxon");
 const Logger = require("../logger");
 
+const logger = Logger.tag("bot/market");
+
 let statusInterval = null;
 const NYSE_ZONE = "America/New_York";
 
@@ -44,14 +46,14 @@ function whichHoliday(date) {
 function isMarketOpen(date, holiday) {
   // Closed on recognized holidays
   if (holiday) {
-    Logger.log("Market is closed on holidays: ", holiday);
+    logger.log("Market is closed on holidays: ", holiday);
     return false;
   }
 
   // Closed on weekends
   const weekday = date.weekday;
   if (weekday <= 0 || weekday >= 6) {
-    Logger.log("Market is closed on weekends: ", weekday);
+    logger.log("Market is closed on weekends: ", weekday);
     return false;
   }
 
@@ -82,7 +84,7 @@ function updateActivity(callback) {
 
 function stopWatchingStatus(stopwatch) {
   if (statusInterval) {
-    Logger.log("Clear interval for STATUS");
+    logger.log("Clear interval for STATUS");
     stopwatch.clearInterval(statusInterval);
     statusInterval = null;
     return true;
@@ -102,7 +104,7 @@ module.exports = {
     updateActivity(callback);
 
     const timeout = 5 * 60 * 1000;
-    Logger.log("Begin watching MARKET");
+    logger.log("Begin watching MARKET");
     statusInterval = stopwatch.setInterval(() => {
       updateActivity(callback);
     }, timeout);

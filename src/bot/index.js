@@ -8,13 +8,15 @@ const StopWatch = require("./model/stopwatch");
 const EventEmitter = require("./model/eventemitter");
 const Status = require("./model/status");
 
+const logger = Logger.tag("bot/index");
+
 function createMarketCallback(status, stopWatch) {
   return function onMarketUpdated({ open, message }) {
-    Logger.log("Setting bot activity: ", message);
+    logger.log("Setting bot activity: ", message);
     status.setActivity(message);
 
     if (!open) {
-      Logger.log("Clear watch list when market is closed");
+      logger.log("Clear watch list when market is closed");
       WatchList.clearWatchList(stopWatch);
     }
   };
@@ -48,24 +50,24 @@ function sendMessage(channel, { cache, skipCache, messageId, messageText }) {
   if (messageId) {
     const oldMessage = cache.get(messageId);
     if (oldMessage) {
-      Logger.log("Update old message with new content: ", messageId);
+      logger.log("Update old message with new content: ", messageId);
       oldMessage
         .edit(messageText)
         .then((message) => cacheMessage(cache, skipCache, messageId, message))
         .catch((error) => {
-          Logger.error(error, "Unable to update message: ", messageId);
+          logger.error(error, "Unable to update message: ", messageId);
         });
       return;
     }
   }
 
   // Send a new message
-  Logger.log("Send new message for id: ", messageId);
+  logger.log("Send new message for id: ", messageId);
   channel
     .send(messageText)
     .then((message) => cacheMessage(cache, skipCache, messageId, message))
     .catch((error) => {
-      Logger.error(error, `Unable to send message: "${messageText}"`);
+      logger.error(error, `Unable to send message: "${messageText}"`);
     });
 }
 
@@ -76,7 +78,7 @@ function handleStopWatchSymbols({ stopWatch, stopWatching }) {
       continue;
     }
 
-    Logger.log("Stop watching symbol for price points: ", symbol);
+    logger.log("Stop watching symbol for price points: ", symbol);
     WatchList.stopWatchingSymbol(stopWatch, { symbol });
   }
 }
@@ -105,7 +107,7 @@ function handleWatchSymbols(
     }
 
     const interval = 45;
-    Logger.log("Watch symbol for price points: ", symbol, low, high, interval);
+    logger.log("Watch symbol for price points: ", symbol, low, high, interval);
     WatchList.watchSymbol(stopWatch, {
       symbol,
       low,
@@ -134,7 +136,7 @@ function handleWatchSymbols(
 }
 
 function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
-  Logger.log("Handle result extras", extras);
+  logger.log("Handle result extras", extras);
   const { watchSymbols, stopWatchSymbols } = extras;
   if (stopWatchSymbols) {
     handleStopWatchSymbols({
@@ -157,34 +159,34 @@ function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
 function botWatchReady({ emitter, status, stopWatch, marketCallback }) {
   emitter.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
-    Logger.print(`Bot has started!`);
+    logger.print(`Bot has started!`);
     Market.watchMarket(stopWatch, marketCallback);
   });
 
   emitter.on("error", (error) => {
-    Logger.error(error, "Bot has encountered an error!");
+    logger.error(error, "Bot has encountered an error!");
     status.setActivity("WEE WOO ERROR");
 
     // Clear all the handlers
-    Logger.log("Stop watching status on error");
+    logger.log("Stop watching status on error");
     Market.stopWatchingMarket(stopWatch);
 
-    Logger.log("Clear watch list on error");
+    logger.log("Clear watch list on error");
     WatchList.clearWatchList(stopWatch);
   });
 }
 
 function spaceOutMessageLogs() {
-  Logger.log();
-  Logger.log();
-  Logger.log("=============");
+  logger.log();
+  logger.log();
+  logger.log("=============");
 }
 
 function botWatchMessageUpdates(
   prefix,
   { cache, emitter, stopWatch, marketCallback }
 ) {
-  Logger.log("Watching for message updates");
+  logger.log("Watching for message updates");
   emitter.on("messageUpdate", (oldMessage, newMessage) => {
     const { id, content, channel, author } = newMessage;
     if (!validateMessage(prefix, newMessage)) {
@@ -222,7 +224,7 @@ function botWatchMessages(
   prefix,
   { cache, emitter, stopWatch, marketCallback }
 ) {
-  Logger.log("Watching for messages");
+  logger.log("Watching for messages");
   emitter.on("message", (message) => {
     const { id, content, channel, author } = message;
 
@@ -287,12 +289,12 @@ function initializeBot(prefix) {
 }
 
 function printEnv(config) {
-  Logger.print(`Starting bot...`);
-  Logger.print(`Responds to: '${config.prefix}'`);
+  logger.print(`Starting bot...`);
+  logger.print(`Responds to: '${config.prefix}'`);
   config.token
-    ? Logger.print(`Has authentication token`)
-    : Logger.error(`Missing authentication token!!`);
-  Logger.print();
+    ? logger.print(`Has authentication token`)
+    : logger.error(`Missing authentication token!!`);
+  logger.print();
 }
 
 // Log the bot in

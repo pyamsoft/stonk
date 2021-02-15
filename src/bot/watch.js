@@ -1,5 +1,4 @@
 const WatchList = require("./model/watchlist");
-const Logger = require("../logger");
 
 const watchList = WatchList.create();
 
@@ -12,9 +11,7 @@ module.exports = {
     stopwatch,
     { symbol, low, high, interval, command }
   ) {
-    if (stopWatching(stopwatch, symbol)) {
-      Logger.log("Cleared old watch interval for symbol: ", symbol);
-    }
+    stopWatching(stopwatch, symbol);
     watchList.start(stopwatch, { symbol, low, high, interval }, (s, l, h) =>
       command(s, l, h)
     );

@@ -2,6 +2,8 @@ const Logger = require("../../logger");
 const MessageParser = require("../message");
 const WatchList = require("../watch");
 
+const logger = Logger.tag("bot/command/watch");
+
 function isValidPrice(price) {
   return price && price >= 0;
 }
@@ -22,7 +24,7 @@ module.exports = function watch(
   respond
 ) {
   if (!result || !result.data) {
-    Logger.warn("Watch command lookup returned error");
+    logger.warn("Watch command lookup returned error");
     return;
   }
 
@@ -32,7 +34,7 @@ module.exports = function watch(
 
   // Fire if low is passed
   if (isPassedPoint(low, newPrice, false)) {
-    Logger.log("Low point passed: ", symbol, low, newPrice);
+    logger.log("Low point passed: ", symbol, low, newPrice);
     WatchList.markLowPassed(stopWatch, { symbol });
     respond(
       MessageParser.notify(author, {
@@ -46,7 +48,7 @@ module.exports = function watch(
 
   // Fire if high is passed
   if (isPassedPoint(high, newPrice, true)) {
-    Logger.log("High point passed: ", symbol, high, newPrice);
+    logger.log("High point passed: ", symbol, high, newPrice);
     WatchList.markHighPassed(stopWatch, { symbol });
     respond(
       MessageParser.notify(author, {

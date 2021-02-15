@@ -1,6 +1,8 @@
 const Logger = require("../../logger");
 const { safeParseNumber } = require("../../util/number");
 
+const logger = Logger.tag("bot/option/watch");
+
 module.exports = {
   process: function process(options) {
     const possibleWatch = options.find((o) => o.indexOf("WATCH[") >= 0);
@@ -8,7 +10,7 @@ module.exports = {
     if (possibleWatch) {
       const valuesSection = possibleWatch.replace(/WATCH/g, "");
       if (!valuesSection) {
-        Logger.warn("WATCH missing values section", possibleWatch);
+        logger.warn("WATCH missing values section", possibleWatch);
         return null;
       }
       // [LOW|HIGH]
@@ -20,21 +22,21 @@ module.exports = {
         .split(/\s+/g);
 
       if (!values || values.length <= 0) {
-        Logger.warn("WATCH missing values", possibleWatch, valuesSection);
+        logger.warn("WATCH missing values", possibleWatch, valuesSection);
         return null;
       }
 
       // [ LOW, HIGH ]
       const [low, high] = values;
       if (!low || !high) {
-        Logger.warn("WATCH missing low high", possibleWatch, values);
+        logger.warn("WATCH missing low high", possibleWatch, values);
         return null;
       }
 
       const lowNumber = safeParseNumber(low);
       const highNumber = safeParseNumber(high);
       if (lowNumber < 0 || highNumber < 0) {
-        Logger.warn("WATCH invalid low high", possibleWatch, low, high);
+        logger.warn("WATCH invalid low high", possibleWatch, low, high);
         return null;
       }
 

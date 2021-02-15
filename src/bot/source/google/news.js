@@ -2,10 +2,15 @@ const { textApi } = require("../../../util/api");
 const XmlParser = require("fast-xml-parser");
 const Logger = require("../../../logger");
 
+const logger = Logger.tag("bot/source/google/news");
+
 function generateNewsUrl(query, addStockToQuery) {
-  return `https://news.google.com/rss/search?q=${query}${
-    addStockToQuery ? "%20stock" : ""
-  }&hl=en-US&gl=US&ceid=US%3Aen`;
+  const params = new URLSearchParams();
+  params.append("q", `${query}${addStockToQuery ? "%20stock" : ""}`);
+  params.append("hl", "en-US");
+  params.append("gl", "US");
+  params.append("ceid", "US%3Aen");
+  return `https://news.google.com/rss/search?${params.toString()}`;
 }
 
 const publicationDateComparator = (i1, i2) => {
@@ -19,6 +24,7 @@ const publicationDateComparator = (i1, i2) => {
 };
 
 function getNews(symbol, addStockToQuery) {
+  logger.log("Get news for: ", symbol);
   const url = generateNewsUrl(symbol, addStockToQuery);
   return textApi(url)
     .then((text) => XmlParser.parse(text))
@@ -36,7 +42,7 @@ function getNews(symbol, addStockToQuery) {
       };
     })
     .catch((error) => {
-      Logger.error(error, "Error getting news for symbol ", symbol);
+      logger.error(error, "Error getting news for symbol ", symbol);
       return {
         symbol,
         news: [],

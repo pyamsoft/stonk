@@ -2,12 +2,14 @@ const Command = require("./command");
 const Logger = require("../../logger");
 const YFinance = require("../source/yahoo");
 
+const logger = Logger.tag("bot/command/optionchain");
+
 function getOptionsChain(symbols) {
-  Logger.log(`Get Options for symbols: '${symbols}'`);
+  logger.log(`Get Options for symbols: '${symbols}'`);
   const results = [];
   const promises = [];
   for (const symbol of symbols) {
-    const promise = YFinance.options({ symbol })
+    const promise = YFinance.optionChain({ symbol })
       .then((result) => {
         results.push({
           symbol,
@@ -15,8 +17,8 @@ function getOptionsChain(symbols) {
         });
       })
       .catch((error) => {
-        const msg = `Error doing news lookup: ${error.message}`;
-        Logger.error(error, msg);
+        const msg = `Error doing options lookup: ${error.message}`;
+        logger.error(error, msg);
         throw new Error(msg);
       });
     promises.push(promise);

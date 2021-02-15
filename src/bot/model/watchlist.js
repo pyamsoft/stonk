@@ -1,5 +1,7 @@
 const Logger = require("../../logger");
 
+const logger = Logger.tag("bot/model/watchlist");
+
 function newWatchList() {
   const watchList = {};
 
@@ -19,7 +21,7 @@ function newWatchList() {
   function stopWatching(stopwatch, symbol) {
     const { interval } = getEntry(symbol);
     if (interval) {
-      Logger.log("Clear interval for symbol:", symbol);
+      logger.log("Stop watching for symbol:", symbol);
       stopwatch.clearInterval(interval);
       watchList[symbol] = null;
       return true;
@@ -34,6 +36,7 @@ function newWatchList() {
       { symbol, low, high, interval },
       onInterval
     ) {
+      logger.log("Begin watching", symbol, low, high, interval);
       setEntry(
         symbol,
         low,
@@ -42,7 +45,7 @@ function newWatchList() {
           const entry = getEntry(symbol);
           const { low, high } = entry;
           if (!low && !high) {
-            Logger.log("Watch is complete, no points exist");
+            logger.log("Watch is complete, no points exist");
           } else {
             onInterval(symbol, low, high);
           }
@@ -56,7 +59,7 @@ function newWatchList() {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (low) {
-        Logger.log("Symbol passed low point: ", symbol, low);
+        logger.log("Symbol passed low point: ", symbol, low);
         setEntry(symbol, null, high, interval);
       } else if (!low && !high) {
         stopWatching(stopwatch, symbol);
@@ -66,7 +69,7 @@ function newWatchList() {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (high) {
-        Logger.log("Symbol passed high point: ", symbol, high);
+        logger.log("Symbol passed high point: ", symbol, high);
         setEntry(symbol, low, null, interval);
       } else if (!low && !high) {
         stopWatching(stopwatch, symbol);

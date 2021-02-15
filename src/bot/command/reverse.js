@@ -1,15 +1,17 @@
-const Options = require("./options");
+const OptionChain = require("./optionchain");
 const News = require("./news");
 const Command = require("./command");
 const Help = require("./help");
 const Logger = require("../../logger");
 const YFinance = require("../source/yahoo");
 
+const logger = Logger.tag("bot/command/reverse");
+
 function reverseLookupSymbols(query, fuzzy) {
-  Logger.log(`Perform query for string: '${query}'`);
+  logger.log(`Perform query for string: '${query}'`);
   return YFinance.reverseLookup({ query, fuzzy }).catch((error) => {
     const msg = `Error doing reverse lookup: ${error.message}`;
-    Logger.error(error, msg);
+    logger.error(error, msg);
     throw new Error(msg);
   });
 }
@@ -39,7 +41,7 @@ module.exports = function reverse(
     id,
     reverseLookupSymbols(query, true)
       .then(News.attachNews(includeNews, true))
-      .then(Options.getOptionsChain(optionChain))
+      .then(OptionChain.getOptionsChain(optionChain))
       .then((result) => {
         // Turn the watchSymbols payload into the expected format
         if (result.symbols) {

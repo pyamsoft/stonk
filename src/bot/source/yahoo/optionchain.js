@@ -1,5 +1,8 @@
 const Logger = require("../../../logger");
 const { jsonApi } = require("../../../util/api");
+const { newOptionChain } = require("../../model/optionchain");
+
+const logger = Logger.tag("bot/source/yahoo/optionchain");
 
 function generateOptionsUrl(symbol) {
   const params = new URLSearchParams();
@@ -9,26 +12,18 @@ function generateOptionsUrl(symbol) {
 
 module.exports = {
   optionChain: function optionChain(symbol) {
+    logger.log("Lookup option chain for: ", symbol);
     return jsonApi(generateOptionsUrl(symbol)).then((data) => {
       const { optionChain } = data;
       const { result } = optionChain;
       for (const entry of result) {
         const { underlyingSymbol, options } = entry;
         if (underlyingSymbol !== symbol) {
-          Logger.warn("Options do not match", underlyingSymbol, symbol);
+          logger.warn("Options do not match", underlyingSymbol, symbol);
           return null;
         }
 
-        for (const option of options) {
-          const { expirationDate, calls, puts } = option;
-          for (const call of calls) {
-            Logger.log(call, expirationDate);
-          }
-
-          for (const put of puts) {
-            Logger.log(put, expirationDate);
-          }
-        }
+        return newOptionChain(options);
       }
     });
   },
