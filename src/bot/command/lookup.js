@@ -1,3 +1,4 @@
+const Options = require("./options");
 const News = require("./news");
 const Command = require("./command");
 const Help = require("./help");
@@ -22,7 +23,7 @@ module.exports = function lookup(
   prefix,
   id,
   respond,
-  { includeNews, watchSymbols, stopWatchSymbols }
+  { includeNews, watchSymbols, stopWatchSymbols, optionChain }
 ) {
   if (!symbols || symbols.length <= 0) {
     Help.printHelp(prefix, id, respond);
@@ -33,6 +34,7 @@ module.exports = function lookup(
     id,
     lookupSymbols(symbols)
       .then(News.attachNews(includeNews, true))
+      .then(Options.getOptionsChain(optionChain))
       .then((result) => {
         return {
           result,

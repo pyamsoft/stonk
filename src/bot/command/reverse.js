@@ -1,3 +1,4 @@
+const Options = require("./options");
 const News = require("./news");
 const Command = require("./command");
 const Help = require("./help");
@@ -27,7 +28,7 @@ module.exports = function reverse(
   prefix,
   id,
   respond,
-  { includeNews, watchSymbols, stopWatchSymbols }
+  { includeNews, watchSymbols, stopWatchSymbols, optionChain }
 ) {
   if (!query || query.length <= 0) {
     Help.printHelp(prefix, id, respond);
@@ -38,6 +39,7 @@ module.exports = function reverse(
     id,
     reverseLookupSymbols(query, true)
       .then(News.attachNews(includeNews, true))
+      .then(Options.getOptionsChain(optionChain))
       .then((result) => {
         // Turn the watchSymbols payload into the expected format
         if (result.symbols) {

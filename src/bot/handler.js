@@ -86,11 +86,15 @@ module.exports = {
       }
       const splitQuery = rawQuery.split(":");
       const [query, rawOptions] = splitQuery;
-      const { news, watch, stopWatch } = Option.process(query, rawOptions);
+      const { news, watch, stopWatch, optionChain } = Option.process(
+        query,
+        rawOptions
+      );
       const options = {
         includeNews: !!news,
         watchSymbols: watch,
         stopWatchSymbols: !!stopWatch,
+        optionChain: !!optionChain,
       };
       Command.reverseLookup(query, prefix, id, respond, options);
       return;
@@ -110,6 +114,7 @@ module.exports = {
       includeNews: {},
       watchSymbols: {},
       stopWatchSymbols: {},
+      optionChain: {},
     };
 
     for (const rawSymbol of rawSymbols) {
@@ -117,10 +122,14 @@ module.exports = {
       const [symbol, rawOptions] = splitSymbol;
       symbols.push(symbol);
 
-      const { news, watch, stopWatch } = Option.process(symbol, rawOptions);
+      const { news, watch, stopWatch, optionChain } = Option.process(
+        symbol,
+        rawOptions
+      );
       options.includeNews[symbol] = !!news;
       options.watchSymbols[symbol] = watch;
       options.stopWatchSymbols[symbol] = !!stopWatch;
+      options.optionChain[symbol] = !!optionChain;
     }
 
     Command.lookup(symbols, prefix, id, respond, options);
