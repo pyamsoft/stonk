@@ -1,8 +1,4 @@
-const Logger = require("../../logger");
-
-const logger = Logger.tag("model/optionchain.js");
-
-function bucketOtmItm(options) {
+function bucketOtmItm(options, isCall) {
   let otm = [];
   let itm = [];
   for (const opt of options) {
@@ -20,14 +16,22 @@ function bucketOtmItm(options) {
     // Out of the money sorts by lowest to highest
     const o1Strike = o1.strike;
     const o2Strike = o2.strike;
-    return o1Strike - o2Strike;
+    if (isCall) {
+      return o1Strike - o2Strike;
+    } else {
+      return o2Strike - o1Strike;
+    }
   });
 
   itm = itm.sort((o1, o2) => {
     // In the money sorts by highest to lowest
     const o1Strike = o1.strike;
     const o2Strike = o2.strike;
-    return o2Strike - o1Strike;
+    if (isCall) {
+      return o2Strike - o1Strike;
+    } else {
+      return o1Strike - o2Strike;
+    }
   });
 
   // Grab the 5 closest
@@ -41,8 +45,16 @@ function bucketOtmItm(options) {
 }
 
 function bucketByExpirationDate(options) {
-  const dates = [];
-  for (const opt of options) {
+  const dates = {};
+
+  const sortedOptions = options.sort((o1, o2) => {
+    // Sort by expiration date earliest to latest
+    const o1Expiration = o1.expiration;
+    const o2Expiration = o2.expiration;
+    return o1Expiration - o2Expiration;
+  });
+
+  for (const opt of sortedOptions) {
     const { option } = opt;
     const { expiration } = option;
     if (!dates[expiration]) {
@@ -51,19 +63,14 @@ function bucketByExpirationDate(options) {
     dates[expiration].push(opt);
   }
 
-  return dates.sort((o1, o2) => {
-    // Sort by expiration date earliest to latest
-    const o1Expiration = o1.expiration;
-    const o2Expiration = o2.expiration;
-    return o1Expiration - o2Expiration;
-  });
+  return dates;
 }
 
-function process(options) {
+function process(options, isCall) {
   const bucketed = bucketByExpirationDate(options);
 
   for (const date of Object.keys(bucketed)) {
-    bucketed[date] = bucketOtmItm(bucketed[date]);
+    bucketed[date] = bucketOtmItm(bucketed[date], isCall);
   }
 
   return bucketed;
@@ -132,8 +139,8 @@ function newOptionChain(options) {
   }
 
   return {
-    calls: process(allCalls),
-    puts: process(allPuts),
+    calls: process(allCalls, true),
+    puts: process(allPuts, false),
   };
 }
 

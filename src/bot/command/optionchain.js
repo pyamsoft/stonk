@@ -6,15 +6,12 @@ const logger = Logger.tag("bot/command/optionchain");
 
 function getOptionsChain(symbols) {
   logger.log(`Get Options for symbols: '${symbols}'`);
-  const results = [];
+  const results = {};
   const promises = [];
   for (const symbol of symbols) {
     const promise = YFinance.optionChain({ symbol })
       .then((result) => {
-        results.push({
-          symbol,
-          options: result,
-        });
+        results[symbol] = result;
       })
       .catch((error) => {
         const msg = `Error doing options lookup: ${error.message}`;

@@ -1,6 +1,17 @@
 const { code, codeBlock, bold, italic } = require("../util/format");
+const Logger = require("../logger");
+
+const logger = Logger.tag("bot/message");
 
 const NBSP = "\u00a0";
+
+// Add an extra space for the option md # block header
+const STRIKE_LABEL = "STRIKE ";
+const BID_LABEL = "BID   ";
+const ASK_LABEL = "ASK   ";
+const PERCENT_LABEL = "PERCENT";
+const VOLUME_LABEL = "VOLUME";
+const IV_LABEL = "IV    ";
 
 function formatSymbol(symbol) {
   return `${symbol}`;
@@ -71,18 +82,123 @@ ${messageAfterHoursDirection} ${messageAfterHoursChangeAmount} [${messageAfterHo
 `)}`;
 }
 
+function parseQuery(query) {
+  let message = "";
+  if (query) {
+    message += `Best guess for: ${code(query)}`;
+    message += "\n";
+  }
+
+  return message;
+}
+
+function parseQuote(symbol, quote) {
+  let message;
+  if (quote) {
+    message = formatQuote(quote);
+  } else {
+    message = `Unable to find data for: ${symbol}`;
+  }
+
+  return message;
+}
+
+function parseNews(symbol, symbolNews) {
+  let message = "";
+  if (symbolNews) {
+    message += "\n";
+    message += bold("News");
+    message += "\n";
+    if (symbolNews.error) {
+      message += `Unable to find news for: ${symbol}`;
+      message += "\n";
+    } else {
+      for (const newsLink of symbolNews.news) {
+        message += newsLink;
+        message += "\n";
+      }
+    }
+  }
+
+  return message;
+}
+
+function formatOption(option) {
+  const { strike, bid, ask, percent, volume, iv, inTheMoney } = option;
+  const msgItm = inTheMoney ? "#" : " ";
+  const msgStrike = strike.padEnd(STRIKE_LABEL.length);
+  const msgBid = bid.padEnd(BID_LABEL.length);
+  const msgAsk = ask.padEnd(ASK_LABEL.length);
+  const msgPct = percent.padEnd(PERCENT_LABEL.length);
+  const msgVol = volume.padEnd(VOLUME_LABEL.length);
+  const msgIv = iv.padEnd(IV_LABEL.length);
+  return `${msgItm}${msgStrike} ${msgBid} ${msgAsk} ${msgPct} ${msgVol} ${msgIv}`;
+}
+
+function formatOptionChain(expirationDate, options, isCall) {
+  let message = `${expirationDate}`;
+  message += "\n";
+  message += "\n";
+  message += ` ${STRIKE_LABEL} `;
+  message += `${BID_LABEL} `;
+  message += `${ASK_LABEL} `;
+  message += `${PERCENT_LABEL} `;
+  message += `${VOLUME_LABEL} `;
+  message += `${IV_LABEL}`;
+
+  const { otm, itm } = options;
+  let chain;
+  if (isCall) {
+    chain = [...itm.reverse(), ...otm];
+  } else {
+    chain = [...otm.reverse(), ...itm];
+  }
+  for (const option of chain) {
+    message += "\n";
+    message += formatOption(option);
+  }
+  return message;
+}
+
+function formatOptions(type, options) {
+  const isCall = type === "Calls";
+
+  return `
+${codeBlock(`md
+${type}
+
+${Object.keys(options)
+  .map((expDate) => formatOptionChain(expDate, options[expDate], isCall))
+  .join("\n")}
+`)}
+`;
+}
+
+function parseOptionChain(symbol, symbolOptions) {
+  let message = "";
+  if (symbolOptions) {
+    message += "\n";
+    message += bold("Options");
+    message += "\n";
+    const { calls, puts } = symbolOptions;
+    message += formatOptions("Calls", calls);
+    message += formatOptions("Puts", puts);
+  }
+  return message;
+}
+
 module.exports = {
   notify: function notify(author, { symbol, point, price, notifyAbove }) {
     return `${formatUserId(author)} ${formatSymbol(symbol)} has passed the ${
       notifyAbove ? "high" : "low"
     } point of ${formatPrice(point)}, reaching ${formatPrice(price)}`;
   },
-  parse: function parse({ query, symbols, data, news }) {
+  parse: function parse(msg) {
+    logger.log("Parse message: ", msg);
+    const { query, symbols, data, news, optionChain } = msg;
     let message = "";
-    if (query) {
-      message += `Best guess for: ${code(query)}`;
-      message += "\n";
-    }
+
+    message += parseQuery(query);
 
     if (!symbols || symbols.length <= 0) {
       message += `Beep boop try again later.`;
@@ -90,27 +206,13 @@ module.exports = {
     } else {
       for (const symbol of symbols) {
         const quote = data ? data[symbol] : null;
-        if (quote) {
-          message += formatQuote(quote);
-        } else {
-          message += `Unable to find data for: ${symbol}`;
-        }
+        message += parseQuote(symbol, quote);
 
         const symbolNews = news ? news[symbol] : null;
-        if (symbolNews) {
-          message += "\n";
-          message += bold("News");
-          message += "\n";
-          if (symbolNews.error) {
-            message += `Unable to find news for: ${symbol}`;
-            message += "\n";
-          } else {
-            for (const newsLink of symbolNews.news) {
-              message += newsLink;
-              message += "\n";
-            }
-          }
-        }
+        message += parseNews(symbol, symbolNews);
+
+        const symbolOptionChain = optionChain ? optionChain[symbol] : null;
+        message += parseOptionChain(symbol, symbolOptionChain);
 
         message += "\n";
       }
