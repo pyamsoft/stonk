@@ -177,12 +177,17 @@ ${Object.keys(options)
 function parseOptionChain(symbol, symbolOptions) {
   let message = "";
   if (symbolOptions) {
-    message += "\n";
-    message += bold("Options");
-    message += "\n";
     const { calls, puts } = symbolOptions;
-    message += formatOptions("Calls", calls);
-    message += formatOptions("Puts", puts);
+    if (Object.keys(calls).length > 0 && Object.keys(puts).length > 0) {
+      message += "\n";
+      message += bold("Options");
+      message += "\n";
+      message += formatOptions("Calls", calls);
+      message += formatOptions("Puts", puts);
+    } else {
+      message += `No options for: ${symbol}`;
+      message += "\n";
+    }
   }
   return message;
 }

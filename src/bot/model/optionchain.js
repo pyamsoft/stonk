@@ -113,6 +113,10 @@ function processOption(option) {
 
 function processOptions(options) {
   const result = [];
+  if (!options) {
+    return result;
+  }
+
   for (const option of options) {
     const opt = processOption(option);
     if (opt) {
