@@ -76,12 +76,12 @@ function process(options, isCall) {
   return bucketed;
 }
 
-function getRawValue(thing) {
-  return thing.raw;
+function getRawValue(thing, or) {
+  return thing ? thing.raw : or;
 }
 
-function getFormattedValue(thing) {
-  return thing.fmt;
+function getFormattedValue(thing, or) {
+  return thing ? thing.fmt : or;
 }
 
 function processOption(option) {
@@ -98,16 +98,22 @@ function processOption(option) {
   } = option;
   return {
     inTheMoney,
-    percent: getFormattedValue(percentChange),
-    strike: getFormattedValue(strike),
-    amount: getFormattedValue(change),
-    iv: getFormattedValue(impliedVolatility),
-    expiration: getFormattedValue(expiration),
-    bid: getFormattedValue(bid),
-    ask: getFormattedValue(ask),
+    strike: getFormattedValue(strike, "0"),
+    expiration: getFormattedValue(expiration, "0000-00-00"),
+    bid: getFormattedValue(bid, "0.00"),
+    ask: getFormattedValue(ask, "0.00"),
+
+    // No change, this field is excluded
+    amount: getFormattedValue(change, "0"),
+
+    // No change, this field is excluded
+    percent: getFormattedValue(percentChange, "0%"),
+
+    // No volatility, this field is excluded
+    iv: getFormattedValue(impliedVolatility, "0%"),
 
     // No volume, this field is excluded
-    volume: volume ? getFormattedValue(volume) : "0",
+    volume: getFormattedValue(volume, "0"),
   };
 }
 
