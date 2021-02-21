@@ -1,3 +1,3 @@
-const config = require("./config");
+const { BotConfig } = require("./config");
 const Bot = require("./bot");
-Bot.login(config);
+Bot.login(BotConfig);

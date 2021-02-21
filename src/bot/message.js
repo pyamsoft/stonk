@@ -1,7 +1,4 @@
 const { code, codeBlock, bold, italic } = require("../util/format");
-const Logger = require("../logger");
-
-const logger = Logger.tag("bot/message");
 
 const NBSP = "\u00a0";
 
@@ -9,9 +6,10 @@ const NBSP = "\u00a0";
 const STRIKE_LABEL = "STRIKE ";
 const BID_LABEL = "BID   ";
 const ASK_LABEL = "ASK   ";
-const PERCENT_LABEL = "PERCENT";
 const VOLUME_LABEL = "VOLUME";
 const IV_LABEL = "IV    ";
+const DELTA_LABEL = "DELTA ";
+const GAMMA_LABEL = "GAMMA ";
 
 function formatSymbol(symbol) {
   return `${symbol}`;
@@ -104,19 +102,21 @@ function parseQuote(symbol, quote) {
 }
 
 function parseNews(symbol, symbolNews) {
+  if (!symbolNews) {
+    return null;
+  }
+
   let message = "";
-  if (symbolNews) {
+  message += "\n";
+  message += bold("News");
+  message += "\n";
+  if (symbolNews.error) {
+    message += `Unable to find news for: ${symbol}`;
     message += "\n";
-    message += bold("News");
-    message += "\n";
-    if (symbolNews.error) {
-      message += `Unable to find news for: ${symbol}`;
+  } else {
+    for (const newsLink of symbolNews.news) {
+      message += newsLink;
       message += "\n";
-    } else {
-      for (const newsLink of symbolNews.news) {
-        message += newsLink;
-        message += "\n";
-      }
     }
   }
 
@@ -124,15 +124,16 @@ function parseNews(symbol, symbolNews) {
 }
 
 function formatOption(option) {
-  const { strike, bid, ask, percent, volume, iv, inTheMoney } = option;
+  const { strike, bid, ask, delta, gamma, volume, iv, inTheMoney } = option;
   const msgItm = inTheMoney ? "#" : " ";
   const msgStrike = strike.padEnd(STRIKE_LABEL.length);
   const msgBid = bid.padEnd(BID_LABEL.length);
   const msgAsk = ask.padEnd(ASK_LABEL.length);
-  const msgPct = percent.padEnd(PERCENT_LABEL.length);
+  const msgDelta = delta.padEnd(DELTA_LABEL.length);
+  const msgGamma = gamma.padEnd(GAMMA_LABEL.length);
   const msgVol = volume.padEnd(VOLUME_LABEL.length);
   const msgIv = iv.padEnd(IV_LABEL.length);
-  return `${msgItm}${msgStrike} ${msgBid} ${msgAsk} ${msgPct} ${msgVol} ${msgIv}`;
+  return `${msgItm}${msgStrike} ${msgBid} ${msgAsk} ${msgDelta} ${msgGamma} ${msgVol} ${msgIv}`;
 }
 
 function formatOptionChain(expirationDate, options, isCall) {
@@ -142,7 +143,8 @@ function formatOptionChain(expirationDate, options, isCall) {
   message += ` ${STRIKE_LABEL} `;
   message += `${BID_LABEL} `;
   message += `${ASK_LABEL} `;
-  message += `${PERCENT_LABEL} `;
+  message += `${DELTA_LABEL} `;
+  message += `${GAMMA_LABEL} `;
   message += `${VOLUME_LABEL} `;
   message += `${IV_LABEL}`;
 
@@ -160,36 +162,85 @@ function formatOptionChain(expirationDate, options, isCall) {
   return message;
 }
 
-function formatOptions(type, options) {
+function formatOptions(type, options, respond) {
   const isCall = type === "Calls";
 
-  return `
+  const dates = Object.keys(options);
+  for (let i = 0; i < dates.length; ++i) {
+    const expDate = dates[i];
+    const message = `
 ${codeBlock(`md
 ${type}
 
-${Object.keys(options)
-  .map((expDate) => formatOptionChain(expDate, options[expDate], isCall))
-  .join("\n")}
-`)}
-`;
+${formatOptionChain(expDate, options[expDate], isCall)}
+`)}`;
+    respond(`option-${expDate}`, message);
+  }
 }
 
-function parseOptionChain(symbol, symbolOptions) {
+function parseOptionChain(symbol, symbolOptions, respond) {
+  if (!symbolOptions) {
+    return;
+  }
+
+  const { calls, puts } = symbolOptions;
+  if (Object.keys(calls).length > 0 && Object.keys(puts).length > 0) {
+    formatOptions("Calls", calls, respond);
+    formatOptions("Puts", puts, respond);
+  } else {
+    let message = "";
+    message += `No options for: ${symbol}`;
+    message += "\n";
+    respond(message);
+  }
+}
+
+function quotes(msg) {
+  const { query, symbols, data } = msg;
   let message = "";
-  if (symbolOptions) {
-    const { calls, puts } = symbolOptions;
-    if (Object.keys(calls).length > 0 && Object.keys(puts).length > 0) {
-      message += "\n";
-      message += bold("Options");
-      message += "\n";
-      message += formatOptions("Calls", calls);
-      message += formatOptions("Puts", puts);
-    } else {
-      message += `No options for: ${symbol}`;
+
+  message += parseQuery(query);
+
+  let error;
+  if (!symbols || symbols.length <= 0) {
+    message += `Beep boop try again later.`;
+    message += "\n";
+    error = true;
+  } else {
+    error = false;
+    for (const symbol of symbols) {
+      const quote = data ? data[symbol] : null;
+      message += parseQuote(symbol, quote);
       message += "\n";
     }
   }
-  return message;
+
+  return {
+    error,
+    message,
+  };
+}
+function news(msg, respond) {
+  const { symbols, news } = msg;
+  for (const symbol of symbols) {
+    if (news) {
+      const symbolNews = news[symbol];
+      const message = parseNews(symbol, symbolNews);
+      if (message) {
+        respond("news", message + "\n");
+      }
+    }
+  }
+}
+function options(msg, respond) {
+  const { symbols, optionChain } = msg;
+
+  for (const symbol of symbols) {
+    if (optionChain) {
+      const symbolOptionChain = optionChain[symbol];
+      parseOptionChain(symbol, symbolOptionChain, respond);
+    }
+  }
 }
 
 module.exports = {
@@ -198,31 +249,17 @@ module.exports = {
       notifyAbove ? "high" : "low"
     } point of ${formatPrice(point)}, reaching ${formatPrice(price)}`;
   },
-  parse: function parse(msg) {
-    logger.log("Parse message: ", msg);
-    const { query, symbols, data, news, optionChain } = msg;
-    let message = "";
 
-    message += parseQuery(query);
+  parse: function parse(msg, respond) {
+    const { error, message } = quotes(msg);
+    respond("quote", message);
 
-    if (!symbols || symbols.length <= 0) {
-      message += `Beep boop try again later.`;
-      message += "\n";
-    } else {
-      for (const symbol of symbols) {
-        const quote = data ? data[symbol] : null;
-        message += parseQuote(symbol, quote);
-
-        const symbolNews = news ? news[symbol] : null;
-        message += parseNews(symbol, symbolNews);
-
-        const symbolOptionChain = optionChain ? optionChain[symbol] : null;
-        message += parseOptionChain(symbol, symbolOptionChain);
-
-        message += "\n";
-      }
+    if (error) {
+      // Error occured, stop processing
+      return;
     }
 
-    return message;
+    news(msg, respond);
+    options(msg, respond);
   },
 };

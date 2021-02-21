@@ -5,35 +5,45 @@ function create(timeout) {
       const now = new Date();
 
       // Clear out any stale messages
-      for (const key of Object.keys(map)) {
-        const old = map[key];
-        if (old) {
-          const { lastUsed } = old;
+      for (const id of Object.keys(map)) {
+        const oldData = map[id];
+        if (!oldData) {
+          continue;
+        }
+
+        for (const key of Object.keys(oldData)) {
+          const { lastUsed } = oldData[key];
           if (now.valueOf() - timeout > lastUsed.valueOf()) {
-            map[key] = null;
+            oldData[key] = null;
           }
         }
       }
     },
-    insert: function insert(id, message) {
-      const now = new Date();
-      map[id] = {
+    insert: function insert(id, key, message) {
+      const payload = map[id] || {};
+      payload[key] = {
         message,
-        lastUsed: now,
+        lastUsed: new Date(),
       };
+      map[id] = payload;
     },
 
-    get: function get(id) {
+    get: function get(id, key) {
       if (!id) {
         return null;
       }
 
       const cached = map[id];
-      if (cached) {
-        return cached.message;
+      if (!cached) {
+        return null;
       }
 
-      return null;
+      const data = cached[key];
+      if (!data) {
+        return null;
+      }
+
+      return data.message;
     },
   };
 }

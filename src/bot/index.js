@@ -38,22 +38,28 @@ function validateMessage(prefix, { id, author, content }) {
   return content.startsWith(prefix);
 }
 
-function cacheMessage(cache, skipCache, id, message) {
+function cacheMessage(cache, cacheKey, skipCache, id, message) {
   if (!skipCache) {
-    cache.insert(id || message.id, message);
+    cache.insert(id || message.id, cacheKey, message);
   }
   cache.invalidate();
 }
 
-function sendMessage(channel, { cache, skipCache, messageId, messageText }) {
+function sendMessage(
+  channel,
+  { cache, cacheKey, skipCache, messageId, messageText }
+) {
   // Edit an existing message
   if (messageId) {
-    const oldMessage = cache.get(messageId);
+    logger.log("Find old message: ", messageId, cacheKey);
+    const oldMessage = cache.get(messageId, cacheKey);
     if (oldMessage) {
       logger.log("Update old message with new content: ", messageId);
       oldMessage
         .edit(messageText)
-        .then((message) => cacheMessage(cache, skipCache, messageId, message))
+        .then((message) =>
+          cacheMessage(cache, cacheKey, skipCache, messageId, message)
+        )
         .catch((error) => {
           logger.error(error, "Unable to update message: ", messageId);
         });
@@ -62,10 +68,12 @@ function sendMessage(channel, { cache, skipCache, messageId, messageText }) {
   }
 
   // Send a new message
-  logger.log("Send new message for id: ", messageId);
   channel
     .send(messageText)
-    .then((message) => cacheMessage(cache, skipCache, messageId, message))
+    .then((message) => {
+      logger.log("Send new message for id: ", messageId);
+      cacheMessage(cache, cacheKey, skipCache, messageId, message);
+    })
     .catch((error) => {
       logger.error(error, `Unable to send message: "${messageText}"`);
     });
