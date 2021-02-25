@@ -42,7 +42,18 @@ async function sendMessage(
   channel,
   { cache, skipCache, messageId, messageText }
 ) {
-  const { data } = messageText;
+  const { error, data } = messageText;
+  if (error) {
+    await postMessage(channel, {
+      cache,
+      skipCache: true,
+      messageId,
+      stockSymbol: null,
+      messageText: error,
+    });
+    return;
+  }
+
   const newSymbols = Object.keys(data);
   const allOldData = cache.getAll(messageId);
   if (allOldData) {

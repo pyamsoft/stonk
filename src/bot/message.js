@@ -206,20 +206,15 @@ module.exports = {
 
   parse: function parse(msg) {
     const { symbols, data } = msg;
-    const { query } = msg;
     const { news } = msg;
     const { optionChain } = msg;
 
-    let mainMessage = "";
+    let error = null;
     const result = {};
 
-    if (query) {
-      mainMessage += parseQuery(query);
-    }
-
     if (!symbols || symbols.length <= 0) {
-      mainMessage += `Beep boop try again later.`;
-      mainMessage += "\n";
+      error = `Beep boop try again later.`;
+      error += "\n";
     } else {
       for (const symbol of symbols) {
         let message = "";
@@ -248,7 +243,7 @@ module.exports = {
     }
 
     return {
-      message: mainMessage,
+      error,
       data: result,
     };
   },
