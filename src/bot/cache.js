@@ -21,6 +21,19 @@ function create(timeout) {
     }
   }
 
+  function all(id) {
+    if (!id) {
+      return null;
+    }
+
+    const cached = map[id];
+    if (!cached) {
+      return null;
+    }
+
+    return cached;
+  }
+
   return {
     insert: function insert(id, stockSymbol, message) {
       if (!map[id]) {
@@ -33,17 +46,39 @@ function create(timeout) {
       invalidate();
     },
 
-    get: function get(id, stockSymbol) {
-      if (!id) {
+    getAll: function getAll(id) {
+      const a = all(id);
+      if (!a) {
         return null;
       }
 
-      const cached = map[id];
+      const result = {};
+      for (const symbol of Object.keys(a)) {
+        const cached = a[symbol];
+        if (cached) {
+          result[symbol] = cached.message;
+        }
+      }
+
+      return result;
+    },
+
+    remove: function remove(id, symbol) {
+      const cached = all(id);
+      if (!cached) {
+        return;
+      }
+
+      cached[symbol] = null;
+    },
+
+    get: function get(id, symbol) {
+      const cached = all(id);
       if (!cached) {
         return null;
       }
 
-      const stock = cached[stockSymbol];
+      const stock = cached[symbol];
       if (!stock) {
         return null;
       }

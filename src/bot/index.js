@@ -43,7 +43,34 @@ async function sendMessage(
   { cache, skipCache, messageId, messageText }
 ) {
   const { data } = messageText;
-  for (const stockSymbol of Object.keys(data)) {
+  const newSymbols = Object.keys(data);
+  const allOldData = cache.getAll(messageId);
+  if (allOldData) {
+    const oldSymbols = Object.keys(allOldData);
+
+    for await (const symbol of oldSymbols) {
+      if (!newSymbols.includes(symbol)) {
+        const oldMessage = allOldData[symbol];
+        if (oldMessage) {
+          await oldMessage
+            .delete()
+            .then(() => {
+              logger.log("Deleted old message: ", symbol, oldMessage.id);
+              cache.remove(messageId, symbol);
+            })
+            .catch((error) => {
+              logger.error(
+                error,
+                "Failed to delete old message",
+                oldMessage.id
+              );
+            });
+        }
+      }
+    }
+  }
+
+  for await (const stockSymbol of newSymbols) {
     const messageContent = data[stockSymbol];
     await postMessage(channel, {
       cache,
@@ -60,37 +87,51 @@ function postMessage(
 ) {
   const oldMessage = cache.get(messageId, stockSymbol);
   if (oldMessage) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       oldMessage
         .edit(messageText)
         .then((message) => {
-          logger.log("Update old message with new content: ", messageId);
+          logger.log(
+            "Update old message with new content: ",
+            stockSymbol,
+            oldMessage.id
+          );
           if (!skipCache) {
             cache.insert(messageId, stockSymbol, message);
           }
           resolve(message);
         })
         .catch((error) => {
-          logger.error(error, "Unable to update message: ", messageId);
-          reject(error);
+          logger.error(
+            error,
+            "Unable to update message: ",
+            stockSymbol,
+            oldMessage.id
+          );
+          resolve(null);
         });
     });
   }
 
   // Send a new message
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     channel
       .send(messageText)
       .then((message) => {
-        logger.log("Send new message for id: ", messageId);
+        logger.log("Send new message for id: ", stockSymbol, message.id);
         if (!skipCache) {
           cache.insert(messageId, stockSymbol, message);
         }
         resolve(message);
       })
       .catch((error) => {
-        logger.error(error, `Unable to send message: "${messageText}"`);
-        reject(error);
+        logger.error(
+          error,
+          `Unable to send message: `,
+          stockSymbol,
+          messageText
+        );
+        resolve(null);
       });
   });
 }
