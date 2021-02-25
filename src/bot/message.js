@@ -1,4 +1,4 @@
-const { code, codeBlock, bold, italic } = require("../util/format");
+const { codeBlock, bold, italic } = require("../util/format");
 
 const NBSP = "\u00a0";
 
@@ -78,16 +78,6 @@ ${messageAfterHoursDirection} ${messageAfterHoursChangeAmount} [${messageAfterHo
     : ""
 }
 `)}`;
-}
-
-function parseQuery(query) {
-  let message = "";
-  if (query) {
-    message += `Best guess for: ${code(query)}`;
-    message += "\n";
-  }
-
-  return message;
 }
 
 function parseQuote(symbol, quote) {
