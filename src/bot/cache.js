@@ -1,31 +1,39 @@
 function create(timeout) {
   const map = {};
-  return {
-    invalidate: function invalidate() {
-      const now = new Date();
 
-      // Clear out any stale messages
-      for (const id of Object.keys(map)) {
-        const oldData = map[id];
-        if (!oldData) {
-          continue;
-        }
+  function invalidate() {
+    const now = new Date();
 
-        const { lastUsed } = oldData;
+    // Clear out any stale messages
+    for (const id of Object.keys(map)) {
+      const oldData = map[id];
+      if (!oldData) {
+        continue;
+      }
+
+      for (const stock of Object.keys(oldData)) {
+        const oldStock = oldData[stock];
+        const { lastUsed } = oldStock;
         if (now.valueOf() - timeout > lastUsed.valueOf()) {
-          map[id] = null;
+          map[id][stock] = null;
         }
       }
-    },
+    }
+  }
 
-    insert: function insert(id, message) {
-      map[id] = {
+  return {
+    insert: function insert(id, stockSymbol, message) {
+      if (!map[id]) {
+        map[id] = {};
+      }
+      map[id][stockSymbol] = {
         message,
         lastUsed: new Date(),
       };
+      invalidate();
     },
 
-    get: function get(id) {
+    get: function get(id, stockSymbol) {
       if (!id) {
         return null;
       }
@@ -35,7 +43,12 @@ function create(timeout) {
         return null;
       }
 
-      return cached.message;
+      const stock = cached[stockSymbol];
+      if (!stock) {
+        return null;
+      }
+
+      return stock.message;
     },
   };
 }

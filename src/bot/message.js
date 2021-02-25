@@ -205,46 +205,51 @@ module.exports = {
   },
 
   parse: function parse(msg) {
-    const { query, symbols, data } = msg;
-    let message = "";
-
-    message += parseQuery(query);
-
-    if (!symbols || symbols.length <= 0) {
-      message += `Beep boop try again later.`;
-      message += "\n";
-      return message;
-    }
-
-    for (const symbol of symbols) {
-      const quote = data ? data[symbol] : null;
-      message += parseQuote(symbol, quote);
-      message += "\n";
-    }
-
+    const { symbols, data } = msg;
+    const { query } = msg;
     const { news } = msg;
-    if (news) {
-      for (const symbol of symbols) {
-        const symbolNews = news[symbol];
-        const msg = parseNews(symbol, symbolNews);
-        if (msg) {
-          message += msg;
-        }
-      }
-    }
-
     const { optionChain } = msg;
 
-    if (optionChain) {
+    let mainMessage = "";
+    const result = {};
+
+    if (query) {
+      mainMessage += parseQuery(query);
+    }
+
+    if (!symbols || symbols.length <= 0) {
+      mainMessage += `Beep boop try again later.`;
+      mainMessage += "\n";
+    } else {
       for (const symbol of symbols) {
-        const symbolOptionChain = optionChain[symbol];
-        const msg = parseOptionChain(symbol, symbolOptionChain);
-        if (msg) {
-          message += msg;
+        let message = "";
+        const quote = data ? data[symbol] : null;
+        message += parseQuote(symbol, quote);
+        message += "\n";
+
+        if (news) {
+          const symbolNews = news[symbol];
+          const msg = parseNews(symbol, symbolNews);
+          if (msg) {
+            message += msg;
+          }
         }
+
+        if (optionChain) {
+          const symbolOptionChain = optionChain[symbol];
+          const msg = parseOptionChain(symbol, symbolOptionChain);
+          if (msg) {
+            message += msg;
+          }
+        }
+
+        result[symbol] = message;
       }
     }
 
-    return message;
+    return {
+      message: mainMessage,
+      data: result,
+    };
   },
 };
