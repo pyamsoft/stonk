@@ -12,24 +12,20 @@ module.exports = {
   process: function process(id, command, callback) {
     command
       .then(({ result, extras }) => {
-        MessageParser.parse(result, (cacheKey, message) => {
-          callback(
-            {
-              result,
-              cacheKey,
-              skipCache: false,
-              messageId: id,
-              messageText: message,
-            },
-            extras
-          );
-        });
+        callback(
+          {
+            result,
+            skipCache: false,
+            messageId: id,
+            messageText: MessageParser.parse(result),
+          },
+          extras
+        );
       })
       .catch((error) => {
         callback(
           {
             error,
-            cacheKey: null,
             skipCache: true,
             messageId: id,
             messageText: error.message,

@@ -157,21 +157,17 @@ module.exports = {
           // Send the notify message to the user directly
           respond({
             result,
-            cacheKey: null,
             skipCache: true,
             messageId: null,
             messageText: message,
           });
 
           // And send the new price info
-          MessageParser.parse(result, (cacheKey, message) => {
-            respond({
-              result,
-              cacheKey,
-              skipCache: true,
-              messageId: null,
-              messageText: message,
-            });
+          respond({
+            result,
+            skipCache: true,
+            messageId: null,
+            messageText: MessageParser.parse(result),
           });
         }
       );

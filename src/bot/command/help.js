@@ -34,7 +34,6 @@ module.exports = {
   `);
     callback(
       {
-        cacheKey: null,
         skipCache: false,
         messageId: id,
         messageText: message,

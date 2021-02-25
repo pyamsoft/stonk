@@ -23,7 +23,7 @@ function generateOptionsUrl(symbol) {
   params.append("apikey", TdConfig.key);
   params.append("symbol", symbol);
   params.append("fromDate", toOptionsDate(DateTime.local()));
-  params.append("toDate", toOptionsDate(DateTime.local().plus({ months: 2 })));
+  params.append("toDate", toOptionsDate(DateTime.local()));
   return `https://api.tdameritrade.com/v1/marketdata/chains?${params.toString()}`;
 }
 

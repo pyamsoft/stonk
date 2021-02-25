@@ -11,24 +11,21 @@ function create(timeout) {
           continue;
         }
 
-        for (const key of Object.keys(oldData)) {
-          const { lastUsed } = oldData[key];
-          if (now.valueOf() - timeout > lastUsed.valueOf()) {
-            oldData[key] = null;
-          }
+        const { lastUsed } = oldData;
+        if (now.valueOf() - timeout > lastUsed.valueOf()) {
+          map[id] = null;
         }
       }
     },
-    insert: function insert(id, key, message) {
-      const payload = map[id] || {};
-      payload[key] = {
+
+    insert: function insert(id, message) {
+      map[id] = {
         message,
         lastUsed: new Date(),
       };
-      map[id] = payload;
     },
 
-    get: function get(id, key) {
+    get: function get(id) {
       if (!id) {
         return null;
       }
@@ -38,12 +35,7 @@ function create(timeout) {
         return null;
       }
 
-      const data = cached[key];
-      if (!data) {
-        return null;
-      }
-
-      return data.message;
+      return cached.message;
     },
   };
 }

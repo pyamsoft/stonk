@@ -162,85 +162,39 @@ function formatOptionChain(expirationDate, options, isCall) {
   return message;
 }
 
-function formatOptions(type, options, respond) {
+function formatOptions(type, options) {
   const isCall = type === "Calls";
 
+  let message = "";
   const dates = Object.keys(options);
   for (let i = 0; i < dates.length; ++i) {
     const expDate = dates[i];
-    const message = `
+    message += `
 ${codeBlock(`md
 ${type}
 
 ${formatOptionChain(expDate, options[expDate], isCall)}
 `)}`;
-    respond(`option-${expDate}`, message);
   }
+  return message;
 }
 
-function parseOptionChain(symbol, symbolOptions, respond) {
+function parseOptionChain(symbol, symbolOptions) {
   if (!symbolOptions) {
-    return;
+    return null;
   }
 
   const { calls, puts } = symbolOptions;
+  let message = "";
   if (Object.keys(calls).length > 0 && Object.keys(puts).length > 0) {
-    formatOptions("Calls", calls, respond);
-    formatOptions("Puts", puts, respond);
+    message += formatOptions("Calls", calls);
+    message += formatOptions("Puts", puts);
   } else {
-    let message = "";
     message += `No options for: ${symbol}`;
     message += "\n";
-    respond(message);
-  }
-}
-
-function quotes(msg) {
-  const { query, symbols, data } = msg;
-  let message = "";
-
-  message += parseQuery(query);
-
-  let error;
-  if (!symbols || symbols.length <= 0) {
-    message += `Beep boop try again later.`;
-    message += "\n";
-    error = true;
-  } else {
-    error = false;
-    for (const symbol of symbols) {
-      const quote = data ? data[symbol] : null;
-      message += parseQuote(symbol, quote);
-      message += "\n";
-    }
   }
 
-  return {
-    error,
-    message,
-  };
-}
-function news(msg, respond) {
-  const { symbols, news } = msg;
-  for (const symbol of symbols) {
-    if (news) {
-      const symbolNews = news[symbol];
-      const message = parseNews(symbol, symbolNews);
-      if (message) {
-        respond("news", message + "\n");
-      }
-    }
-  }
-}
-function options(msg, respond) {
-  const { symbols, optionChain } = msg;
-
-  for (const symbol of symbols) {
-    if (optionChain) {
-      const symbolOptionChain = optionChain[symbol];
-      parseOptionChain(symbol, symbolOptionChain, respond);
-    }
-  }
+  return message;
 }
 
 module.exports = {
@@ -250,16 +204,47 @@ module.exports = {
     } point of ${formatPrice(point)}, reaching ${formatPrice(price)}`;
   },
 
-  parse: function parse(msg, respond) {
-    const { error, message } = quotes(msg);
-    respond("quote", message);
+  parse: function parse(msg) {
+    const { query, symbols, data } = msg;
+    let message = "";
 
-    if (error) {
-      // Error occured, stop processing
-      return;
+    message += parseQuery(query);
+
+    if (!symbols || symbols.length <= 0) {
+      message += `Beep boop try again later.`;
+      message += "\n";
+      return message;
     }
 
-    news(msg, respond);
-    options(msg, respond);
+    for (const symbol of symbols) {
+      const quote = data ? data[symbol] : null;
+      message += parseQuote(symbol, quote);
+      message += "\n";
+    }
+
+    const { news } = msg;
+    if (news) {
+      for (const symbol of symbols) {
+        const symbolNews = news[symbol];
+        const msg = parseNews(symbol, symbolNews);
+        if (msg) {
+          message += msg;
+        }
+      }
+    }
+
+    const { optionChain } = msg;
+
+    if (optionChain) {
+      for (const symbol of symbols) {
+        const symbolOptionChain = optionChain[symbol];
+        const msg = parseOptionChain(symbol, symbolOptionChain);
+        if (msg) {
+          message += msg;
+        }
+      }
+    }
+
+    return message;
   },
 };
