@@ -1,6 +1,6 @@
 const Command = require("./command");
 const Logger = require("../../logger");
-const YFinance = require("../source/yahoo");
+const TDAmeritrade = require("../source/td");
 
 const logger = Logger.tag("bot/command/optionchain");
 
@@ -9,7 +9,7 @@ function getOptionsChain(symbols) {
   const results = {};
   const promises = [];
   for (const symbol of symbols) {
-    const promise = YFinance.optionChain({ symbol })
+    const promise = TDAmeritrade.optionChain({ symbol })
       .then((result) => {
         results[symbol] = result;
       })
