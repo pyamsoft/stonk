@@ -5,8 +5,8 @@ const Cache = require("./cache");
 const Handler = require("./handler");
 const WatchList = require("./watch");
 const StopWatch = require("./model/stopwatch");
-const EventEmitter = require("./model/eventemitter");
 const Status = require("./model/status");
+const EventEmitter = require("./eventemitter");
 
 const TYPE_STRING = typeof "";
 const logger = Logger.tag("bot/index");
@@ -240,7 +240,7 @@ function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
   }
 }
 
-function botWatchReady({ emitter, status, stopWatch, marketCallback }) {
+function botWatchReady(emitter, { status, stopWatch, marketCallback }) {
   emitter.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
     logger.print(`Bot has started!`);
@@ -267,8 +267,9 @@ function spaceOutMessageLogs() {
 }
 
 function botWatchMessageUpdates(
+  emitter,
   prefix,
-  { cache, emitter, stopWatch, marketCallback }
+  { cache, stopWatch, marketCallback }
 ) {
   logger.log("Watching for message updates");
   emitter.on("messageUpdate", (oldMessage, newMessage) => {
@@ -305,8 +306,9 @@ function botWatchMessageUpdates(
 }
 
 function botWatchMessages(
+  emitter,
   prefix,
-  { cache, emitter, stopWatch, marketCallback }
+  { cache, stopWatch, marketCallback }
 ) {
   logger.log("Watching for messages");
   emitter.on("message", (message) => {
@@ -352,16 +354,14 @@ function initializeBot(prefix) {
   const marketCallback = createMarketCallback(status);
 
   // Event listeners
-  botWatchReady({ emitter, status, stopWatch, marketCallback });
-  botWatchMessages(prefix, {
+  botWatchReady(emitter, { status, stopWatch, marketCallback });
+  botWatchMessages(emitter, prefix, {
     cache,
-    emitter,
     stopWatch,
     marketCallback,
   });
-  botWatchMessageUpdates(prefix, {
+  botWatchMessageUpdates(emitter, prefix, {
     cache,
-    emitter,
     stopWatch,
     marketCallback,
   });
