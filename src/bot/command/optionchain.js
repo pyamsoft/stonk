@@ -1,15 +1,19 @@
-const Command = require("./command");
 const Logger = require("../../logger");
 const TDAmeritrade = require("../source/td");
 
 const logger = Logger.tag("bot/command/optionchain");
 
-function getOptionsChain(symbols) {
-  logger.log(`Get Options for symbols: '${symbols}'`);
+function optionsChain(symbols, weekOffset) {
   const results = {};
   const promises = [];
   for (const symbol of symbols) {
-    const promise = TDAmeritrade.optionChain({ symbol })
+    const offset = weekOffset ? weekOffset[symbol] : null;
+    const offsetValue = offset ? offset.weekOffset : 0;
+    logger.log(`Get Options for symbol: '${symbol}' (offset: ${offsetValue})`);
+    const promise = TDAmeritrade.optionChain({
+      symbol,
+      weekOffset: offsetValue,
+    })
       .then((result) => {
         results[symbol] = result;
       })
@@ -30,26 +34,28 @@ module.exports = {
    *
    * @param {Boolean|Object} include
    */
-  getOptionsChain: function attachNews(include) {
-    return function newsAppender(result) {
+  getOptionsChain: function getOptionsChain(include) {
+    return function optionsAppender(result) {
       if (result.symbols) {
         let includeSymbols = [];
+        let weekOffsets = {};
 
-        // Include news if true or symbol contained in news object payload
-        if (include === true) {
-          includeSymbols = result.symbols;
-        } else if (typeof include === Command.TYPE_OBJECT) {
-          for (const symbol of Object.keys(include)) {
-            if (include[symbol]) {
-              includeSymbols.push(symbol);
-            }
+        // Include option chain if symbol contained in options object payload
+        for (const symbol of Object.keys(include)) {
+          const weekOffset = include[symbol];
+          if (weekOffset !== undefined && weekOffset !== null) {
+            includeSymbols.push(symbol);
+            weekOffsets[symbol] = weekOffset;
           }
         }
 
-        if (includeSymbols.length > 0)
-          return getOptionsChain(includeSymbols).then((optionChain) => {
-            return { ...result, optionChain };
-          });
+        if (includeSymbols.length > 0) {
+          return optionsChain(includeSymbols, weekOffsets).then(
+            (optionChain) => {
+              return { ...result, optionChain };
+            }
+          );
+        }
       }
 
       return result;

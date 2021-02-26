@@ -30,7 +30,12 @@ module.exports = function watch(
 
   // Parse results
   const resultData = result.data[symbol];
-  const newPrice = resultData.price;
+  let newPrice;
+  if (resultData.afterHours) {
+    newPrice = resultData.afterHours.price;
+  } else {
+    newPrice = resultData.normal.price;
+  }
 
   // Fire if low is passed
   if (isPassedPoint(low, newPrice, false)) {
@@ -42,6 +47,7 @@ module.exports = function watch(
         point: low,
         price: newPrice,
         notifyAbove: false,
+        isAfterHours: !!resultData.afterHours,
       })
     );
   }
@@ -56,6 +62,7 @@ module.exports = function watch(
         point: high,
         price: newPrice,
         notifyAbove: true,
+        isAfterHours: !!resultData.afterHours,
       })
     );
   }

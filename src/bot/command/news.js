@@ -36,10 +36,11 @@ module.exports = {
           }
         }
 
-        if (includeSymbols.length > 0)
+        if (includeSymbols.length > 0) {
           return lookupNews(includeSymbols, addStockToQuery).then((news) => {
             return { ...result, news };
           });
+        }
       }
 
       return result;

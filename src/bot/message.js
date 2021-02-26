@@ -188,10 +188,15 @@ function parseOptionChain(symbol, symbolOptions) {
 }
 
 module.exports = {
-  notify: function notify(author, { symbol, point, price, notifyAbove }) {
+  notify: function notify(
+    author,
+    { symbol, point, price, notifyAbove, isAfterHours }
+  ) {
     return `${formatUserId(author)} ${formatSymbol(symbol)} has passed the ${
       notifyAbove ? "high" : "low"
-    } point of ${formatPrice(point)}, reaching ${formatPrice(price)}`;
+    } point ${isAfterHours ? "(after hours) " : ""}of ${formatPrice(
+      point
+    )}, reaching ${formatPrice(price)}`;
   },
 
   parse: function parse(msg) {

@@ -8,17 +8,13 @@ const StopWatch = require("./model/stopwatch");
 const EventEmitter = require("./model/eventemitter");
 const Status = require("./model/status");
 
+const TYPE_STRING = typeof "";
 const logger = Logger.tag("bot/index");
 
-function createMarketCallback(status, stopWatch) {
-  return function onMarketUpdated({ open, message }) {
+function createMarketCallback(status) {
+  return function onMarketUpdated({ message }) {
     logger.log("Setting bot activity: ", message);
     status.setActivity(message);
-
-    if (!open) {
-      logger.log("Clear watch list when market is closed");
-      WatchList.clearWatchList(stopWatch);
-    }
   };
 }
 
@@ -42,6 +38,18 @@ async function sendMessage(
   channel,
   { cache, skipCache, messageId, messageText }
 ) {
+  if (typeof messageText === TYPE_STRING) {
+    // String direct messages are never cached and just sent over plainly.
+    await postMessage(channel, {
+      cache,
+      skipCache: true,
+      messageId,
+      stockSymbol: null,
+      messageText,
+    });
+    return;
+  }
+
   const { error, data } = messageText;
   if (error) {
     await postMessage(channel, {
@@ -341,7 +349,7 @@ function initializeBot(prefix) {
   const emitter = EventEmitter.create(client);
   const status = Status.create(client);
   const stopWatch = StopWatch.create(client);
-  const marketCallback = createMarketCallback(status, stopWatch);
+  const marketCallback = createMarketCallback(status);
 
   // Event listeners
   botWatchReady({ emitter, status, stopWatch, marketCallback });

@@ -5,7 +5,7 @@ const logger = Logger.tag("bot/option/watch");
 
 module.exports = {
   process: function process(options) {
-    const possibleWatch = options.find((o) => o.indexOf("WATCH[") >= 0);
+    const possibleWatch = options.find((o) => o.indexOf("WATCH") >= 0);
     // WATCH[LOW|HIGH]
     if (possibleWatch) {
       const valuesSection = possibleWatch.replace(/WATCH/g, "");

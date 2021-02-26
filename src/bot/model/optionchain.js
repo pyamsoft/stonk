@@ -65,17 +65,18 @@ function processOption(option) {
     volatility,
     delta,
     gamma,
-    volume,
+    totalVolume,
     bid,
     ask,
   } = option;
+
   return {
     inTheMoney,
     strike: getValue(strikePrice, 0.0),
     iv: getValue(volatility, 0.0),
     bid: getValue(bid, 0.0),
     ask: getValue(ask, 0.0),
-    volume: getValue(volume, 0),
+    volume: getValue(totalVolume, 0),
     delta: getValue(delta, 0),
     gamma: getValue(gamma, 0),
   };
