@@ -86,9 +86,8 @@ module.exports = {
       }
       const splitQuery = rawQuery.split(":");
       const [query, opts] = splitQuery;
-      const { news, watch, stopWatch, optionChain } = Option.process(opts);
+      const { watch, stopWatch, optionChain } = Option.process(opts);
       const options = {
-        includeNews: !!news,
         watchSymbols: watch,
         stopWatchSymbols: !!stopWatch,
         optionChain: optionChain,
@@ -108,7 +107,6 @@ module.exports = {
     const symbols = [];
 
     const options = {
-      includeNews: {},
       watchSymbols: {},
       stopWatchSymbols: {},
       optionChain: {},
@@ -119,8 +117,7 @@ module.exports = {
       const [symbol, opts] = splitSymbol;
       symbols.push(symbol);
 
-      const { news, watch, stopWatch, optionChain } = Option.process(opts);
-      options.includeNews[symbol] = !!news;
+      const { watch, stopWatch, optionChain } = Option.process(opts);
       options.watchSymbols[symbol] = watch;
       options.stopWatchSymbols[symbol] = !!stopWatch;
       options.optionChain[symbol] = optionChain;

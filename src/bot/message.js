@@ -91,28 +91,6 @@ function parseQuote(symbol, quote) {
   return message;
 }
 
-function parseNews(symbol, symbolNews) {
-  if (!symbolNews) {
-    return null;
-  }
-
-  let message = "";
-  message += "\n";
-  message += bold("News");
-  message += "\n";
-  if (symbolNews.error) {
-    message += `Unable to find news for: ${symbol}`;
-    message += "\n";
-  } else {
-    for (const newsLink of symbolNews.news) {
-      message += newsLink;
-      message += "\n";
-    }
-  }
-
-  return message;
-}
-
 function formatOption(option) {
   const { strike, bid, ask, delta, gamma, volume, iv, inTheMoney } = option;
   const msgItm = inTheMoney ? "#" : " ";
@@ -201,7 +179,6 @@ module.exports = {
 
   parse: function parse(msg) {
     const { symbols, data } = msg;
-    const { news } = msg;
     const { optionChain } = msg;
 
     let error = null;
@@ -216,14 +193,6 @@ module.exports = {
         const quote = data ? data[symbol] : null;
         message += parseQuote(symbol, quote);
         message += "\n";
-
-        if (news) {
-          const symbolNews = news[symbol];
-          const msg = parseNews(symbol, symbolNews);
-          if (msg) {
-            message += msg;
-          }
-        }
 
         if (optionChain) {
           const symbolOptionChain = optionChain[symbol];
