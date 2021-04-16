@@ -19,6 +19,7 @@ function optionsChain(symbols, weekOffset, date) {
     })
       .then((result) => {
         results[symbol] = result;
+        return result;
       })
       .catch((error) => {
         const msg = `Error doing options lookup: ${error.message}`;

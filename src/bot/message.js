@@ -94,13 +94,13 @@ function parseQuote(symbol, quote) {
 function formatOption(option) {
   const { strike, bid, ask, delta, gamma, volume, iv, inTheMoney } = option;
   const msgItm = inTheMoney ? "#" : " ";
-  const msgStrike = strike.padEnd(STRIKE_LABEL.length);
-  const msgBid = bid.padEnd(BID_LABEL.length);
-  const msgAsk = ask.padEnd(ASK_LABEL.length);
-  const msgDelta = delta.padEnd(DELTA_LABEL.length);
-  const msgGamma = gamma.padEnd(GAMMA_LABEL.length);
-  const msgVol = volume.padEnd(VOLUME_LABEL.length);
-  const msgIv = iv.padEnd(IV_LABEL.length);
+  const msgStrike = `${strike.toFixed(2)}`.padEnd(STRIKE_LABEL.length);
+  const msgBid = `${bid.toFixed(2)}`.padEnd(BID_LABEL.length);
+  const msgAsk = `${ask.toFixed(2)}`.padEnd(ASK_LABEL.length);
+  const msgDelta = `${delta}`.padEnd(DELTA_LABEL.length);
+  const msgGamma = `${gamma}`.padEnd(GAMMA_LABEL.length);
+  const msgVol = `${volume}`.padEnd(VOLUME_LABEL.length);
+  const msgIv = `${iv}`.padEnd(IV_LABEL.length);
   return `${msgItm}${msgStrike} ${msgBid} ${msgAsk} ${msgDelta} ${msgGamma} ${msgVol} ${msgIv}`;
 }
 

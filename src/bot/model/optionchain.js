@@ -47,27 +47,27 @@ function bucketOtmItm(options, isCall) {
 function process(options, isCall) {
   const bucketed = [];
   for (const date of Object.keys(options)) {
-    const key = date.substring(0, date.length - 2);
+    const key = date.split(":")[0];
     bucketed[key] = bucketOtmItm(options[date], isCall);
   }
 
   return bucketed;
 }
 
-function getPrice(thing, or) {
-  return getValue(thing ? thing.toFixed(2) : null, or);
-}
-
-function getValue(thing, or) {
+function getValue(isFloaty, thing, or) {
   if (thing) {
     if (Number.isNaN(thing) || thing === "NaN") {
-      return `${or}`;
+      return or;
     }
 
-    return `${thing}`;
+    try {
+      return isFloaty ? parseFloat(thing) : parseInt(thing);
+    } catch (e) {
+      return or;
+    }
   }
 
-  return `${or}`;
+  return or;
 }
 
 function processOption(option) {
@@ -82,16 +82,21 @@ function processOption(option) {
     ask,
   } = option;
 
-  return {
+  const result = {
     inTheMoney,
-    strike: getPrice(strikePrice, 0.0),
-    iv: getValue(volatility, 0.0),
-    bid: getPrice(bid, 0.0),
-    ask: getPrice(ask, 0.0),
-    volume: getValue(totalVolume, 0),
-    delta: getValue(delta, 0),
-    gamma: getValue(gamma, 0),
+    strike: getValue(true, strikePrice, 0.0),
+    bid: getValue(true, bid, 0.0),
+    ask: getValue(true, ask, 0.0),
+    iv: getValue(true, volatility, 0.0),
+    delta: getValue(true, delta, 0.0),
+    gamma: getValue(true, gamma, 0.0),
+    volume: getValue(false, totalVolume, 0),
   };
+
+  // Midpoint between the ask and the bid
+  result.mid = (result.ask - result.bid) / 2 + result.bid;
+
+  return result;
 }
 
 function newOptionChain(calls, puts) {

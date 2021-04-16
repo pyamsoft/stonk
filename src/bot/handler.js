@@ -2,6 +2,9 @@ const Command = require("./command");
 const Option = require("./option");
 const MessageParser = require("./message");
 const { DateTime } = require("luxon");
+const Logger = require("../logger");
+
+const logger = Logger.tag("bot/handler");
 
 const NUMBER_REGEX = /\d/;
 
@@ -89,12 +92,26 @@ function contentToOptionsPosition(prefix, content) {
   const { isHelp, symbols } = contentToArray(prefix, 3, content);
   const result = symbols.map((s) => s.replace(regex, "")).filter((s) => s);
 
-  let [symbol, strike, day, month, year, price] = result;
+  let [symbol, leg, side, strike, day, month, year, price] = result;
 
   if (!symbol) {
     return {
       shouldRespond: true,
       error: "Missing SYMBOL",
+    };
+  }
+
+  if (!leg) {
+    return {
+      shouldRespond: true,
+      error: "Missing LEG",
+    };
+  }
+
+  if (!side) {
+    return {
+      shouldRespond: true,
+      error: "Missing SIDE",
     };
   }
 
@@ -196,6 +213,22 @@ function contentToOptionsPosition(prefix, content) {
     };
   }
 
+  side = side.toUpperCase();
+  if (side !== "BUY" && side !== "SELL") {
+    return {
+      shouldRespond: true,
+      error: "Invalid SIDE. Must be BUY or SELL",
+    };
+  }
+
+  leg = leg.toUpperCase();
+  if (leg !== "OPEN" && leg !== "CLOSE") {
+    return {
+      shouldRespond: true,
+      error: "Invalid LEG. Must be OPEN or CLOSE",
+    };
+  }
+
   try {
     const position = {
       isCall,
@@ -203,6 +236,8 @@ function contentToOptionsPosition(prefix, content) {
       strike: strikePrice,
       date,
       price: cost,
+      leg,
+      side,
     };
 
     return {
@@ -274,15 +309,39 @@ module.exports = {
       }
 
       if (error) {
-        console.error("Error: ", error);
+        logger.error(error, "Error handling options position.");
         return;
       }
 
-      Command.getOption(position.symbol, position.date).then((result) => {
-        console.log("Position: ", position);
-        console.log("Calls: ", result.calls.length);
-        console.log("Puts: ", result.puts.length);
-      });
+      Command.getOptionPosition(position)
+        .then((result) => {
+          if (!result) {
+            return;
+          }
+
+          if (position.leg !== "CLOSE") {
+            return;
+          }
+
+          if (position.side === "BUY") {
+            const change = result.mid - position.price;
+            if (change !== 0) {
+              logger.log(
+                `${change > 0 ? "Gain" : "Loss"}: ${(change * 100).toFixed(2)}`
+              );
+            }
+          } else {
+            const change = result.mid - position.price;
+            if (change !== 0) {
+              logger.log(
+                `${change < 0 ? "Gain" : "Loss"}: ${(change * 100).toFixed(2)}`
+              );
+            }
+          }
+        })
+        .catch((e) => {
+          logger.error(e, "Unable to get option for position: ", position);
+        });
       return;
     }
 
