@@ -55,11 +55,19 @@ function process(options, isCall) {
 }
 
 function getPrice(thing, or) {
-  return getValue(thing ? thing.toFixed(2) : or);
+  return getValue(thing ? thing.toFixed(2) : null, or);
 }
 
 function getValue(thing, or) {
-  return `${thing ? thing : or}`;
+  if (thing) {
+    if (Number.isNaN(thing) || thing === "NaN") {
+      return `${or}`;
+    }
+
+    return `${thing}`;
+  }
+
+  return `${or}`;
 }
 
 function processOption(option) {
