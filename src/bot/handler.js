@@ -1,9 +1,16 @@
 const Command = require("./command");
 const Option = require("./option");
 const MessageParser = require("./message");
+const { DateTime } = require("luxon");
+
+const NUMBER_REGEX = /\d/;
+
+function isOptionsPositionCommand(prefix, content) {
+  return content.startsWith(`${prefix}`.repeat(3));
+}
 
 function isReverseLookupCommand(prefix, content) {
-  return content.startsWith(`${prefix}${prefix}`);
+  return content.startsWith(`${prefix}`.repeat(2));
 }
 
 function contentToSymbols(prefix, content) {
@@ -12,7 +19,6 @@ function contentToSymbols(prefix, content) {
   const regex = new RegExp(`\\${prefix}`, "g");
 
   // A symbol cannot be numbers
-  const numberRegex = /\d/;
   const { isHelp, symbols } = contentToArray(prefix, 0, content);
   const result = symbols
     .filter((s) => s.indexOf(prefix) >= 0 && s.length > 1)
@@ -25,9 +31,9 @@ function contentToSymbols(prefix, content) {
         }
 
         const symbol = s.split(":")[0];
-        return !numberRegex.test(symbol);
+        return !NUMBER_REGEX.test(symbol);
       } else {
-        return !numberRegex.test(s);
+        return !NUMBER_REGEX.test(s);
       }
     })
     .map((s) => s.replace(regex, ""));
@@ -36,6 +42,180 @@ function contentToSymbols(prefix, content) {
     shouldRespond: isHelp || result.length > 0,
     symbols: result,
   };
+}
+
+function tryParseFormat(day, month, year, format) {
+  try {
+    const date = DateTime.fromFormat(`${day} ${month} ${year}`, format);
+
+    if (!date.isValid) {
+      return null;
+    }
+
+    return date;
+  } catch (e) {
+    return null;
+  }
+}
+
+function tryParseDate(day, month, year) {
+  let result = tryParseFormat(
+    day,
+    month,
+    year,
+    `${day >= 10 ? "dd" : "d"} LLL yyyy`
+  );
+  if (result) {
+    return result;
+  }
+
+  result = tryParseFormat(
+    day,
+    month,
+    year,
+    `${day >= 10 ? "dd" : "d"} LLLL yyyy`
+  );
+  if (result) {
+    return result;
+  }
+
+  return null;
+}
+
+function contentToOptionsPosition(prefix, content) {
+  // We escape here since it may be an escape character like $
+  // noinspection RegExpRedundantEscape
+  const regex = new RegExp(`\\${prefix}`, "g");
+  const { isHelp, symbols } = contentToArray(prefix, 3, content);
+  const result = symbols.map((s) => s.replace(regex, "")).filter((s) => s);
+
+  let [symbol, strike, day, month, year, price] = result;
+
+  if (!symbol) {
+    return {
+      shouldRespond: true,
+      error: "Missing SYMBOL",
+    };
+  }
+
+  if (!day) {
+    return {
+      shouldRespond: true,
+      error: "Missing DAY",
+    };
+  }
+
+  if (!month) {
+    return {
+      shouldRespond: true,
+      error: "Missing MONTH",
+    };
+  }
+
+  if (!year) {
+    year = DateTime.local().year;
+  } else {
+    year =
+      year.length === 4
+        ? year
+        : year.length === 2
+        ? `20${year}`
+        : year.length === 1
+        ? `202${year}`
+        : null;
+  }
+
+  if (!year) {
+    return {
+      shouldRespond: true,
+      error: "Missing YEAR",
+    };
+  }
+
+  if (!strike) {
+    return {
+      shouldRespond: true,
+      error: "Missing STRIKE",
+    };
+  }
+
+  strike = strike.toUpperCase();
+  const isValidStrike = strike.endsWith("C") || strike.endsWith("P");
+  if (!isValidStrike) {
+    return {
+      shouldRespond: true,
+      error: "Invalid STRIKE. Must be in format #C for CALL or #P for PUT",
+    };
+  }
+
+  let strikePrice = strike.substring(0, strike.length - 1);
+  try {
+    strikePrice = parseFloat(strikePrice);
+  } catch (e) {
+    return {
+      shouldRespond: true,
+      error: "Invalid STRIKE. Must be in format #C for CALL or #P for PUT",
+    };
+  }
+
+  if (!price) {
+    return {
+      shouldRespond: true,
+      error: "Missing PRICE",
+    };
+  }
+
+  if (!price.startsWith("@")) {
+    return {
+      shouldRespond: true,
+      error: "Invalid PRICE. Must be in format @#",
+    };
+  }
+
+  let cost = price.substring(1);
+  try {
+    cost = parseFloat(cost);
+  } catch (e) {
+    return {
+      shouldRespond: true,
+      error: "Invalid PRICE. Must be in format @#",
+    };
+  }
+
+  month = month.toLowerCase();
+  month = month.charAt(0).toUpperCase() + month.substring(1);
+
+  const isCall = strike.endsWith("C");
+
+  const date = tryParseDate(day, month, year);
+  if (!date) {
+    return {
+      shouldRespond: true,
+      error:
+        "Invalid DATE. Must be in format {day} {month} {year} (21 June 23  6 May 21)",
+    };
+  }
+
+  try {
+    const position = {
+      isCall,
+      symbol: symbol.toUpperCase(),
+      strike: strikePrice,
+      date,
+      price: cost,
+    };
+
+    return {
+      shouldRespond: isHelp || result.length > 0,
+      error: null,
+      position,
+    };
+  } catch (e) {
+    return {
+      shouldRespond: true,
+      error: "Invalid DATE. Must be in format {day} {month} {year}",
+    };
+  }
 }
 
 function contentToQuery(prefix, content) {
@@ -53,6 +233,14 @@ function contentToQuery(prefix, content) {
 }
 
 function contentToArray(prefix, sliceOut, content) {
+  // This is just the prefix
+  if (content.split("").every((s) => s === prefix)) {
+    return {
+      isHelp: true,
+      symbols: [],
+    };
+  }
+
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // symbol = say
@@ -76,6 +264,28 @@ function contentToArray(prefix, sliceOut, content) {
 
 module.exports = {
   handle: function handle(prefix, { content, id }, respond) {
+    if (isOptionsPositionCommand(prefix, content)) {
+      const { shouldRespond, error, position } = contentToOptionsPosition(
+        prefix,
+        content
+      );
+      if (!shouldRespond) {
+        return;
+      }
+
+      if (error) {
+        console.error("Error: ", error);
+        return;
+      }
+
+      Command.getOption(position.symbol, position.date).then((result) => {
+        console.log("Position: ", position);
+        console.log("Calls: ", result.calls.length);
+        console.log("Puts: ", result.puts.length);
+      });
+      return;
+    }
+
     if (isReverseLookupCommand(prefix, content)) {
       const { shouldRespond, query: rawQuery } = contentToQuery(
         prefix,

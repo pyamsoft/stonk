@@ -3,16 +3,19 @@ const TDAmeritrade = require("../source/td");
 
 const logger = Logger.tag("bot/command/optionchain");
 
-function optionsChain(symbols, weekOffset) {
+function optionsChain(symbols, weekOffset, date) {
   const results = {};
   const promises = [];
   for (const symbol of symbols) {
     const offset = weekOffset ? weekOffset[symbol] : null;
     const offsetValue = offset ? offset.weekOffset : 0;
-    logger.log(`Get Options for symbol: '${symbol}' (offset: ${offsetValue})`);
+    logger.log(
+      `Get Options for symbol: '${symbol}' (offset: ${offsetValue}, date: ${date})`
+    );
     const promise = TDAmeritrade.optionChain({
       symbol,
       weekOffset: offsetValue,
+      date,
     })
       .then((result) => {
         results[symbol] = result;
@@ -50,7 +53,7 @@ module.exports = {
         }
 
         if (includeSymbols.length > 0) {
-          return optionsChain(includeSymbols, weekOffsets).then(
+          return optionsChain(includeSymbols, weekOffsets, null).then(
             (optionChain) => {
               return { ...result, optionChain };
             }
@@ -60,5 +63,17 @@ module.exports = {
 
       return result;
     };
+  },
+
+  /**
+   * Gets Option Chain data for a symbol on a date
+   *
+   * @param {string} symbol
+   * @param {Date} date
+   */
+  getOption: function getOption(symbol, date) {
+    return optionsChain([symbol], null, date).then((result) => {
+      return result[symbol];
+    });
   },
 };
