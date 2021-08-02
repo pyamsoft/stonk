@@ -33,9 +33,7 @@ module.exports = {
         return { query };
       }
 
-      const equities = quotes
-        .filter((q) => q.quoteType === "EQUITY")
-        .filter((q) => !!q.score);
+      const equities = quotes.filter((q) => !!q.score);
 
       if (!equities || equities.length <= 0) {
         logger.warn("YFinance query missing equities");

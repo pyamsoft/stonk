@@ -38,6 +38,7 @@ module.exports = {
    *
    * @param {Boolean|Object} include
    */
+
   getOptionsChain: function getOptionsChain(include) {
     return function optionsAppender(result) {
       if (result.symbols) {
@@ -45,11 +46,13 @@ module.exports = {
         let weekOffsets = {};
 
         // Include option chain if symbol contained in options object payload
-        for (const symbol of Object.keys(include)) {
-          const weekOffset = include[symbol];
-          if (weekOffset !== undefined && weekOffset !== null) {
-            includeSymbols.push(symbol);
-            weekOffsets[symbol] = weekOffset;
+        if (include) {
+          for (const symbol of Object.keys(include)) {
+            const weekOffset = include[symbol];
+            if (weekOffset !== undefined && weekOffset !== null) {
+              includeSymbols.push(symbol);
+              weekOffsets[symbol] = weekOffset;
+            }
           }
         }
 
