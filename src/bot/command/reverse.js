@@ -39,7 +39,17 @@ module.exports = function reverse(
   Command.process(
     id,
     reverseLookupSymbols(query, true)
-      .then(OptionChain.getOptionsChain(optionChain))
+      .then((result) => {
+        if (!result || !result.symbols || result.symbols.length <= 0) {
+          return result;
+        }
+
+        const symbol = result.symbols[0];
+        const newOptionsChain = {};
+        newOptionsChain[symbol] = optionChain;
+        const appender = OptionChain.getOptionsChain(newOptionsChain);
+        return appender(result);
+      })
       .then((result) => {
         // Turn the watchSymbols payload into the expected format
         if (result.symbols) {
