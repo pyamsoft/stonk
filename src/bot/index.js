@@ -18,7 +18,7 @@ function createMarketCallback(status) {
   };
 }
 
-function validateMessage(prefix, { id, author, content }) {
+function validateMessage(prefix, { id, author, content }, channel, optionalSpecificChannel) {
   if (!id) {
     return false;
   }
@@ -27,6 +27,18 @@ function validateMessage(prefix, { id, author, content }) {
   // and not get into a spam loop (we call that "botception").
   if (author.bot) {
     return false;
+  }
+
+  // Make sure the message has a text channel
+  if (!channel || channel.type !== "text") {
+    return false;
+  }
+
+  // If the bot only watches specific channels, make sure we enforce it here.
+  if (optionalSpecificChannel) {
+    if (channel.id !== optionalSpecificChannel) {
+      return false
+    }
   }
 
   // Also good practice to ignore any message that does not start with our prefix,
@@ -269,12 +281,12 @@ function spaceOutMessageLogs() {
 function botWatchMessageUpdates(
   emitter,
   prefix,
-  { cache, stopWatch, marketCallback }
+  { cache, stopWatch, marketCallback, specificChannel, }
 ) {
   logger.log("Watching for message updates");
   emitter.on("messageUpdate", (oldMessage, newMessage) => {
     const { id, content, channel, author } = newMessage;
-    if (!validateMessage(prefix, newMessage)) {
+    if (!validateMessage(prefix, newMessage, channel, specificChannel)) {
       return;
     }
 
@@ -308,14 +320,14 @@ function botWatchMessageUpdates(
 function botWatchMessages(
   emitter,
   prefix,
-  { cache, stopWatch, marketCallback }
+  { cache, stopWatch, marketCallback, specificChannel, }
 ) {
   logger.log("Watching for messages");
   emitter.on("message", (message) => {
     const { id, content, channel, author } = message;
 
     // This event will run on every single message received, from any channel or DM.
-    if (!validateMessage(prefix, message)) {
+    if (!validateMessage(prefix, message, channel, specificChannel)) {
       return;
     }
 
@@ -344,7 +356,7 @@ function botWatchMessages(
   });
 }
 
-function initializeBot(prefix) {
+function initializeBot(prefix, { specificChannel }) {
   // Models
   const client = new Discord.Client();
   const cache = Cache.create(2 * 60 * 60 * 1000);
@@ -359,11 +371,13 @@ function initializeBot(prefix) {
     cache,
     stopWatch,
     marketCallback,
+    specificChannel,
   });
   botWatchMessageUpdates(emitter, prefix, {
     cache,
     stopWatch,
     marketCallback,
+    specificChannel,
   });
 
   // Login
