@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd "${HOME}/pyamsoft/stonk-bot" || {
+cd "${HOME}/dev/Pyamsoft/stonk-bot" || {
   printf -- 'Failed to cd into bot directory\n'
   exit 1
 }
