@@ -29,8 +29,13 @@ function validateMessage(prefix, { id, author, content }, channel, optionalSpeci
     return false;
   }
 
-  // Make sure the message has a text channel
-  if (!channel || channel.type !== "text") {
+  // Missing channel
+  if (!channel) {
+    return false;
+  }
+
+  // Make sure the message has a text channel or a dm
+  if (channel.type !== "text" && channel.type !== "dm") {
     return false;
   }
 
