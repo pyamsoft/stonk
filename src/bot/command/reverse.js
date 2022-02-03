@@ -1,4 +1,3 @@
-const OptionChain = require("./optionchain");
 const Command = require("./command");
 const Help = require("./help");
 const Logger = require("../../logger");
@@ -29,7 +28,7 @@ module.exports = function reverse(
   prefix,
   id,
   respond,
-  { watchSymbols, stopWatchSymbols, optionChain }
+  { watchSymbols, stopWatchSymbols }
 ) {
   if (!query || query.length <= 0) {
     Help.printHelp(prefix, id, respond);
@@ -38,42 +37,30 @@ module.exports = function reverse(
 
   Command.process(
     id,
-    reverseLookupSymbols(query, true)
-      .then((result) => {
-        if (!result || !result.symbols || result.symbols.length <= 0) {
-          return result;
+    reverseLookupSymbols(query, true).then((result) => {
+      // Turn the watchSymbols payload into the expected format
+      if (result.symbols) {
+        const [symbol] = result.symbols;
+        if (symbol) {
+          const correctWatchSymbols = {};
+          correctWatchSymbols[symbol] = watchSymbols;
+          const correctStopWatchSymbols = {};
+          correctStopWatchSymbols[symbol] = stopWatchSymbols;
+          return {
+            result,
+            extras: {
+              watchSymbols: correctWatchSymbols,
+              stopWatchSymbols: correctStopWatchSymbols,
+            },
+          };
         }
+      }
 
-        const symbol = result.symbols[0];
-        const newOptionsChain = {};
-        newOptionsChain[symbol] = optionChain;
-        const appender = OptionChain.getOptionsChain(newOptionsChain);
-        return appender(result);
-      })
-      .then((result) => {
-        // Turn the watchSymbols payload into the expected format
-        if (result.symbols) {
-          const [symbol] = result.symbols;
-          if (symbol) {
-            const correctWatchSymbols = {};
-            correctWatchSymbols[symbol] = watchSymbols;
-            const correctStopWatchSymbols = {};
-            correctStopWatchSymbols[symbol] = stopWatchSymbols;
-            return {
-              result,
-              extras: {
-                watchSymbols: correctWatchSymbols,
-                stopWatchSymbols: correctStopWatchSymbols,
-              },
-            };
-          }
-        }
-
-        return {
-          result,
-          extras: Command.EMPTY_OBJECT,
-        };
-      }),
+      return {
+        result,
+        extras: Command.EMPTY_OBJECT,
+      };
+    }),
     respond
   );
 };

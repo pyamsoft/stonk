@@ -2,15 +2,6 @@ const { codeBlock, bold, italic } = require("../util/format");
 
 const NBSP = "\u00a0";
 
-// Add an extra space for the option md # block header
-const STRIKE_LABEL = "STRIKE ";
-const BID_LABEL = "BID   ";
-const ASK_LABEL = "ASK   ";
-const VOLUME_LABEL = "VOLUME";
-const IV_LABEL = "IV    ";
-const DELTA_LABEL = "DELTA ";
-const GAMMA_LABEL = "GAMMA ";
-
 function formatSymbol(symbol) {
   return `${symbol}`;
 }
@@ -91,80 +82,6 @@ function parseQuote(symbol, quote) {
   return message;
 }
 
-function formatOption(option) {
-  const { strike, bid, ask, delta, gamma, volume, iv, inTheMoney } = option;
-  const msgItm = inTheMoney ? "#" : " ";
-  const msgStrike = `${strike.toFixed(2)}`.padEnd(STRIKE_LABEL.length);
-  const msgBid = `${bid.toFixed(2)}`.padEnd(BID_LABEL.length);
-  const msgAsk = `${ask.toFixed(2)}`.padEnd(ASK_LABEL.length);
-  const msgDelta = `${delta}`.padEnd(DELTA_LABEL.length);
-  const msgGamma = `${gamma}`.padEnd(GAMMA_LABEL.length);
-  const msgVol = `${volume}`.padEnd(VOLUME_LABEL.length);
-  const msgIv = `${iv}`.padEnd(IV_LABEL.length);
-  return `${msgItm}${msgStrike} ${msgBid} ${msgAsk} ${msgDelta} ${msgGamma} ${msgVol} ${msgIv}`;
-}
-
-function formatOptionChain(expirationDate, options, isCall) {
-  let message = `${expirationDate}`;
-  message += "\n";
-  message += "\n";
-  message += ` ${STRIKE_LABEL} `;
-  message += `${BID_LABEL} `;
-  message += `${ASK_LABEL} `;
-  message += `${DELTA_LABEL} `;
-  message += `${GAMMA_LABEL} `;
-  message += `${VOLUME_LABEL} `;
-  message += `${IV_LABEL}`;
-
-  const { otm, itm } = options;
-  let chain;
-  if (isCall) {
-    chain = [...itm.reverse(), ...otm];
-  } else {
-    chain = [...otm.reverse(), ...itm];
-  }
-  for (const option of chain) {
-    message += "\n";
-    message += formatOption(option);
-  }
-  return message;
-}
-
-function formatOptions(type, options) {
-  const isCall = type === "Calls";
-
-  let message = "";
-  const dates = Object.keys(options);
-  for (let i = 0; i < dates.length; ++i) {
-    const expDate = dates[i];
-    message += `
-${codeBlock(`md
-${type}
-
-${formatOptionChain(expDate, options[expDate], isCall)}
-`)}`;
-  }
-  return message;
-}
-
-function parseOptionChain(symbol, symbolOptions) {
-  if (!symbolOptions) {
-    return null;
-  }
-
-  const { calls, puts } = symbolOptions;
-  let message = "";
-  if (Object.keys(calls).length > 0 && Object.keys(puts).length > 0) {
-    message += formatOptions("Calls", calls);
-    message += formatOptions("Puts", puts);
-  } else {
-    message += `No options for: ${symbol}`;
-    message += "\n";
-  }
-
-  return message;
-}
-
 module.exports = {
   notify: function notify(
     author,
@@ -179,7 +96,6 @@ module.exports = {
 
   parse: function parse(msg) {
     const { symbols, data } = msg;
-    const { optionChain } = msg;
 
     let error = null;
     const result = {};
@@ -193,14 +109,6 @@ module.exports = {
         const quote = data ? data[symbol] : null;
         message += parseQuote(symbol, quote);
         message += "\n";
-
-        if (optionChain) {
-          const symbolOptionChain = optionChain[symbol];
-          const msg = parseOptionChain(symbol, symbolOptionChain);
-          if (msg) {
-            message += msg;
-          }
-        }
 
         result[symbol] = message;
       }

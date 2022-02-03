@@ -1,4 +1,3 @@
-const OptionChain = require("./optionchain");
 const Command = require("./command");
 const Help = require("./help");
 const Logger = require("../../logger");
@@ -24,7 +23,7 @@ module.exports = function lookup(
   prefix,
   id,
   respond,
-  { watchSymbols, stopWatchSymbols, optionChain }
+  { watchSymbols, stopWatchSymbols }
 ) {
   if (!symbols || symbols.length <= 0) {
     Help.printHelp(prefix, id, respond);
@@ -33,14 +32,12 @@ module.exports = function lookup(
 
   Command.process(
     id,
-    lookupSymbols(symbols)
-      .then(OptionChain.getOptionsChain(optionChain))
-      .then((result) => {
-        return {
-          result,
-          extras: { watchSymbols, stopWatchSymbols },
-        };
-      }),
+    lookupSymbols(symbols).then((result) => {
+      return {
+        result,
+        extras: { watchSymbols, stopWatchSymbols },
+      };
+    }),
     respond
   );
 };
