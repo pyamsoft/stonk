@@ -20,7 +20,7 @@ function isPassedPoint(point, price, notifyAbove) {
 
 module.exports = function watch(
   author,
-  { stopWatch, result, symbol, low, high },
+  { result, symbol, low, high },
   respond
 ) {
   if (!result || !result.data) {
@@ -40,7 +40,7 @@ module.exports = function watch(
   // Fire if low is passed
   if (isPassedPoint(low, newPrice, false)) {
     logger.log("Low point passed: ", symbol, low, newPrice);
-    WatchList.markLowPassed(stopWatch, { symbol });
+    WatchList.markLowPassed({ symbol });
     respond(
       MessageParser.notify(author, {
         symbol,
@@ -55,7 +55,7 @@ module.exports = function watch(
   // Fire if high is passed
   if (isPassedPoint(high, newPrice, true)) {
     logger.log("High point passed: ", symbol, high, newPrice);
-    WatchList.markHighPassed(stopWatch, { symbol });
+    WatchList.markHighPassed({ symbol });
     respond(
       MessageParser.notify(author, {
         symbol,

@@ -1,10 +1,9 @@
-const Discord = require("discord.js");
+const { Client, Intents } = require("discord.js");
 const Logger = require("../logger");
 const Market = require("./market");
 const Cache = require("./cache");
 const Handler = require("./handler");
 const WatchList = require("./watch");
-const StopWatch = require("./model/stopwatch");
 const Status = require("./model/status");
 const EventEmitter = require("./eventemitter");
 
@@ -18,7 +17,12 @@ function createMarketCallback(status) {
   };
 }
 
-function validateMessage(prefix, { id, author, content }, channel, optionalSpecificChannel) {
+function validateMessage(
+  prefix,
+  { id, author, content },
+  channel,
+  optionalSpecificChannel
+) {
   if (!id) {
     return false;
   }
@@ -42,7 +46,7 @@ function validateMessage(prefix, { id, author, content }, channel, optionalSpeci
   // If the bot only watches specific channels, make sure we enforce it here.
   if (optionalSpecificChannel) {
     if (channel.id !== optionalSpecificChannel) {
-      return false
+      return false;
     }
   }
 
@@ -172,7 +176,7 @@ function postMessage(
   });
 }
 
-function handleStopWatchSymbols({ stopWatch, stopWatching }) {
+function handleStopWatchSymbols({ stopWatching }) {
   for (const symbol of Object.keys(stopWatching)) {
     const stop = stopWatching[symbol];
     if (!stop) {
@@ -180,20 +184,20 @@ function handleStopWatchSymbols({ stopWatch, stopWatching }) {
     }
 
     logger.log("Stop watching symbol for price points: ", symbol);
-    WatchList.stopWatchingSymbol(stopWatch, { symbol });
+    WatchList.stopWatchingSymbol({ symbol });
   }
 }
 
 function handleWatchSymbols(
   prefix,
   channel,
-  { author, cache, stopWatch, symbols, stopWatching }
+  { author, cache, symbols, stopWatching }
 ) {
   for (const symbol of Object.keys(symbols)) {
     const stop = stopWatching[symbol];
     // If we want this to stop watching, we unregister it instead of registering it here.
     if (stop) {
-      WatchList.stopWatchingSymbol(stopWatch, { symbol });
+      WatchList.stopWatchingSymbol({ symbol });
       continue;
     }
 
@@ -209,7 +213,7 @@ function handleWatchSymbols(
 
     const interval = 45;
     logger.log("Watch symbol for price points: ", symbol, low, high, interval);
-    WatchList.watchSymbol(stopWatch, {
+    WatchList.watchSymbol({
       symbol,
       low,
       high,
@@ -219,7 +223,6 @@ function handleWatchSymbols(
           prefix,
           {
             author,
-            stopWatch,
             symbol: s,
             low: l,
             high: h,
@@ -236,12 +239,11 @@ function handleWatchSymbols(
   }
 }
 
-function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
+function handleExtras(prefix, channel, { author, cache, extras }) {
   logger.log("Handle result extras", extras);
   const { watchSymbols, stopWatchSymbols } = extras;
   if (stopWatchSymbols) {
     handleStopWatchSymbols({
-      stopWatch,
       stopWatching: stopWatchSymbols,
     });
   }
@@ -250,18 +252,17 @@ function handleExtras(prefix, channel, { author, cache, stopWatch, extras }) {
     handleWatchSymbols(prefix, channel, {
       author,
       cache,
-      stopWatch,
       symbols: watchSymbols,
       stopWatching: stopWatchSymbols,
     });
   }
 }
 
-function botWatchReady(emitter, { status, stopWatch, marketCallback }) {
+function botWatchReady(emitter, { status, marketCallback }) {
   emitter.on("ready", () => {
     // This event will run if the bot starts, and logs in, successfully.
     logger.print(`Bot has started!`);
-    Market.watchMarket(stopWatch, marketCallback);
+    Market.watchMarket(marketCallback);
   });
 
   emitter.on("error", (error) => {
@@ -270,10 +271,10 @@ function botWatchReady(emitter, { status, stopWatch, marketCallback }) {
 
     // Clear all the handlers
     logger.log("Stop watching status on error");
-    Market.stopWatchingMarket(stopWatch);
+    Market.stopWatchingMarket();
 
     logger.log("Clear watch list on error");
-    WatchList.clearWatchList(stopWatch);
+    WatchList.clearWatchList();
   });
 }
 
@@ -286,7 +287,7 @@ function spaceOutMessageLogs() {
 function botWatchMessageUpdates(
   emitter,
   prefix,
-  { cache, stopWatch, marketCallback, specificChannel, }
+  { cache, marketCallback, specificChannel }
 ) {
   logger.log("Watching for message updates");
   emitter.on("messageUpdate", (oldMessage, newMessage) => {
@@ -313,7 +314,6 @@ function botWatchMessageUpdates(
         handleExtras(prefix, channel, {
           author,
           cache,
-          stopWatch,
           data: result,
           extras,
         });
@@ -325,7 +325,7 @@ function botWatchMessageUpdates(
 function botWatchMessages(
   emitter,
   prefix,
-  { cache, stopWatch, marketCallback, specificChannel, }
+  { cache, marketCallback, specificChannel }
 ) {
   logger.log("Watching for messages");
   emitter.on("message", (message) => {
@@ -353,7 +353,6 @@ function botWatchMessages(
         handleExtras(prefix, channel, {
           author,
           cache,
-          stopWatch,
           extras,
         });
       }
@@ -363,24 +362,23 @@ function botWatchMessages(
 
 function initializeBot(prefix, { specificChannel }) {
   // Models
-  const client = new Discord.Client();
+  const client = new Client({
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES],
+  });
   const cache = Cache.create(2 * 60 * 60 * 1000);
   const emitter = EventEmitter.create(client);
   const status = Status.create(client);
-  const stopWatch = StopWatch.create(client);
   const marketCallback = createMarketCallback(status);
 
   // Event listeners
-  botWatchReady(emitter, { status, stopWatch, marketCallback });
+  botWatchReady(emitter, { status, marketCallback });
   botWatchMessages(emitter, prefix, {
     cache,
-    stopWatch,
     marketCallback,
     specificChannel,
   });
   botWatchMessageUpdates(emitter, prefix, {
     cache,
-    stopWatch,
     marketCallback,
     specificChannel,
   });

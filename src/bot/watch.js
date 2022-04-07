@@ -2,30 +2,23 @@ const WatchList = require("./model/watchlist");
 
 const watchList = WatchList.create();
 
-function stopWatching(stopwatch, symbol) {
-  watchList.stop(stopwatch, { symbol });
-}
-
 module.exports = {
-  watchSymbol: function watchSymbol(
-    stopwatch,
-    { symbol, low, high, interval, command }
-  ) {
-    stopWatching(stopwatch, symbol);
-    watchList.start(stopwatch, { symbol, low, high, interval }, (s, l, h) =>
+  watchSymbol: function watchSymbol({ symbol, low, high, interval, command }) {
+    watchList.stop({ symbol });
+    watchList.start({ symbol, low, high, interval }, (s, l, h) =>
       command(s, l, h)
     );
   },
-  markLowPassed: function markLowPassed(stopwatch, { symbol }) {
-    return watchList.passedLow(stopwatch, { symbol });
+  markLowPassed: function markLowPassed({ symbol }) {
+    return watchList.passedLow({ symbol });
   },
-  markHighPassed: function markHighPassed(stopwatch, { symbol }) {
-    return watchList.passedHigh(stopwatch, { symbol });
+  markHighPassed: function markHighPassed({ symbol }) {
+    return watchList.passedHigh({ symbol });
   },
-  stopWatchingSymbol: function stopWatchingSymbol(stopwatch, { symbol }) {
-    stopWatching(stopwatch, symbol);
+  stopWatchingSymbol: function stopWatchingSymbol({ symbol }) {
+    watchList.stop({ symbol });
   },
-  clearWatchList: function clearWatchList(stopwatch) {
-    watchList.clear(stopwatch);
+  clearWatchList: function clearWatchList() {
+    watchList.clear();
   },
 };

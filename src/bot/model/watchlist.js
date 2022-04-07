@@ -18,11 +18,11 @@ function newWatchList() {
     };
   }
 
-  function stopWatching(stopwatch, symbol) {
+  function stopWatching(symbol) {
     const { interval } = getEntry(symbol);
     if (interval) {
       logger.log("Stop watching for symbol:", symbol);
-      stopwatch.clearInterval(interval);
+      clearInterval(interval);
       watchList[symbol] = null;
       return true;
     }
@@ -31,17 +31,13 @@ function newWatchList() {
   }
 
   return {
-    start: function start(
-      stopwatch,
-      { symbol, low, high, interval },
-      onInterval
-    ) {
+    start: function start({ symbol, low, high, interval }, onInterval) {
       logger.log("Begin watching", symbol, low, high, interval);
       setEntry(
         symbol,
         low,
         high,
-        stopwatch.setInterval(() => {
+        setInterval(() => {
           const entry = getEntry(symbol);
           const { low, high } = entry;
           if (!low && !high) {
@@ -55,32 +51,32 @@ function newWatchList() {
       // Run it immediately
       onInterval(symbol, low, high);
     },
-    passedLow: function passedLow(stopwatch, { symbol }) {
+    passedLow: function passedLow({ symbol }) {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (low) {
         logger.log("Symbol passed low point: ", symbol, low);
         setEntry(symbol, null, high, interval);
       } else if (!low && !high) {
-        stopWatching(stopwatch, symbol);
+        stopWatching(symbol);
       }
     },
-    passedHigh: function passedHigh(stopwatch, { symbol }) {
+    passedHigh: function passedHigh({ symbol }) {
       const entry = getEntry(symbol);
       const { low, high, interval } = entry;
       if (high) {
         logger.log("Symbol passed high point: ", symbol, high);
         setEntry(symbol, low, null, interval);
       } else if (!low && !high) {
-        stopWatching(stopwatch, symbol);
+        stopWatching(symbol);
       }
     },
-    stop: function stop(stopwatch, { symbol }) {
-      return stopWatching(stopwatch, symbol);
+    stop: function stop({ symbol }) {
+      return stopWatching(symbol);
     },
-    clear: function clear(stopwatch) {
+    clear: function clear() {
       for (const symbol of Object.keys(watchList)) {
-        stopWatching(stopwatch, symbol);
+        stopWatching(symbol);
       }
     },
   };

@@ -392,11 +392,7 @@ module.exports = {
     Command.lookup(symbols, prefix, id, respond, options);
   },
 
-  notify: function notify(
-    prefix,
-    { author, stopWatch, symbol, low, high },
-    respond
-  ) {
+  notify: function notify(prefix, { author, symbol, low, high }, respond) {
     // Rebuild content
     const content = `${prefix}${symbol.toUpperCase()}`;
     return this.handle(prefix, { content, id: null }, (payload) => {
@@ -404,7 +400,6 @@ module.exports = {
       Command.watchSymbols(
         author,
         {
-          stopWatch,
           result,
           symbol,
           low,

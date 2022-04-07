@@ -82,10 +82,10 @@ function updateActivity(callback) {
   });
 }
 
-function stopWatchingStatus(stopwatch) {
+function stopWatchingStatus() {
   if (statusInterval) {
     logger.log("Clear interval for STATUS");
-    stopwatch.clearInterval(statusInterval);
+    clearInterval(statusInterval);
     statusInterval = null;
     return true;
   }
@@ -100,12 +100,12 @@ module.exports = {
     return isMarketOpen(now, holiday);
   },
   updateMarket: updateActivity,
-  watchMarket: function watchStatus(stopwatch, callback) {
+  watchMarket: function watchStatus(callback) {
     updateActivity(callback);
 
     const timeout = 5 * 60 * 1000;
     logger.log("Begin watching MARKET");
-    statusInterval = stopwatch.setInterval(() => {
+    statusInterval = setInterval(() => {
       updateActivity(callback);
     }, timeout);
   },
