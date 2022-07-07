@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "yarn lint && node ./src/index.js",
+    "start": "rm -rf dist && yarn lint && webpack --mode=production --color && node ./dist/index.js",
     "deploy:main": "yarn lint && bash ./bin/deploy 1",
     "deploy:back": "yarn lint && bash ./bin/deploy 2",
     "scale:main": "bash ./bin/scale main",
@@ -17,11 +17,39 @@
   "dependencies": {
     "axios": "0.26.1",
     "discord.js": "13.6.0",
-    "dotenv": "16.0.0",
-    "eslint": "8.12.0",
-    "luxon": "2.3.1"
+    "dotenv": "16.0.1",
+    "eslint": "7",
+    "luxon": "2.3.2",
+    "uuid": "8.3.2"
   },
   "devDependencies": {
-    "prettier": "2.6.2"
+    "@babel/core": "7",
+    "@babel/plugin-proposal-private-property-in-object": "7.17.12",
+    "@babel/plugin-syntax-flow": "7",
+    "@babel/plugin-transform-react-jsx": "7",
+    "@babel/preset-env": "7.16.11",
+    "@babel/preset-typescript": "7.16.7",
+    "@types/jest": "27.4.1",
+    "@types/uuid": "8.3.4",
+    "@typescript-eslint/eslint-plugin": "5.30.5",
+    "@typescript-eslint/parser": "5.30.5",
+    "babel-eslint": "10",
+    "babel-loader": "8.2.5",
+    "eslint-config-react-app": "6",
+    "eslint-plugin-flowtype": "5",
+    "eslint-plugin-import": "2",
+    "eslint-plugin-jsx-a11y": "6",
+    "eslint-plugin-react": "7",
+    "eslint-plugin-react-hooks": "4",
+    "jest": "27.5.1",
+    "prettier": "2.6.2",
+    "serve": "13.0.4",
+    "source-map-loader": "3.0.1",
+    "ts-jest": "27.1.5",
+    "ts-loader": "9.2.9",
+    "tslib": "2.3.1",
+    "typescript": "4.6.4",
+    "webpack": "5.70.0",
+    "webpack-cli": "4.9.2"
   }
 }
