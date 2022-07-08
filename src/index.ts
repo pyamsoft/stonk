@@ -1,22 +1,19 @@
-import { DiscordBot, initializeBot } from "./bot";
+import { initializeBot } from "./bot";
 import { sourceConfig } from "./config";
 import { newLogger } from "./logger";
 
 const logger = newLogger("StonkBot");
 
-const initialize = function (bot: DiscordBot) {
-  logger.log("Bot logged in: ", bot);
-};
-
 const config = sourceConfig();
 const bot = initializeBot(config);
 
-bot.login().then((loggedIn) => {
-  logger.log("Bot logged in: ", loggedIn);
-  if (!loggedIn) {
-    logger.warn("Bot failed to login!");
-    return;
-  }
+const watcher = bot.watchMessages();
 
-  initialize(bot);
+bot.login().then((loggedIn) => {
+  if (loggedIn) {
+    logger.log("Bot logged in: ", loggedIn);
+  } else {
+    logger.warn("Bot failed to login!");
+    watcher.stop();
+  }
 });

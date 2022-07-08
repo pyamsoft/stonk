@@ -1,10 +1,17 @@
-import { Message, PartialMessage } from "discord.js";
+import { BotConfig } from "../../../config";
+import { Msg } from "../Msg";
+
+export interface KeyedMessageHandler {
+  id: string;
+  handler: MessageHandler;
+}
 
 export interface MessageHandler {
   event: "message" | "messageUpdate";
 
   handle: (
-    message: Message | PartialMessage,
-    optionalOldMessage: Message | PartialMessage | undefined
+    config: BotConfig,
+    message: Msg,
+    optionalOldMessage?: Msg
   ) => boolean;
 }

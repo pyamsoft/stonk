@@ -1,10 +1,14 @@
 import { BotConfig } from "../config";
 import { Client, Intents, Message, PartialMessage } from "discord.js";
 import { newLogger } from "../logger";
-import { MessageHandler } from "./message/handler/MessageHandler";
+import {
+  KeyedMessageHandler,
+  MessageHandler,
+} from "./message/handler/MessageHandler";
 import { KeyedObject } from "../model/KeyedObject";
 import { generateRandomId } from "../model/id";
 import { Listener, newListener } from "../model/listener";
+import { handleBotMessage } from "./messages";
 
 const logger = newLogger("DiscordBot");
 
@@ -18,53 +22,19 @@ export interface DiscordBot {
   watchMessages: () => Listener;
 }
 
-interface KeyedMessageHandler {
-  id: string;
-  handler: MessageHandler;
-}
-
 export const initializeBot = function (config: BotConfig): DiscordBot {
   const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES],
   });
 
   const handlers: KeyedObject<KeyedMessageHandler | undefined> = {};
+
+  // Keep this cached to avoid having to recalculate it each time
   let handlerList: KeyedMessageHandler[] = [];
-
-  const handleMessage = function (
-    eventType: "message" | "messageUpdate",
-    message: Message | PartialMessage,
-    optionalOldMessage: Message | PartialMessage | undefined
-  ) {
-    let handled = false;
-    for (const item of handlerList) {
-      // If it was removed, skip it
-      if (!item) {
-        continue;
-      }
-
-      const { handler, id } = item;
-      if (handler.event === eventType) {
-        if (handler.handle(message, optionalOldMessage)) {
-          logger.log("Message handled by handler: ", { eventType, id });
-          handled = true;
-          break;
-        }
-      }
-    }
-
-    if (!handled) {
-      logger.warn("Message unhandled: ", {
-        eventType,
-        handlers,
-        message,
-      });
-    }
-  };
 
   const messageHandler = function (message: Message) {
     logger.log("Message received", message);
-    handleMessage("message", message, undefined);
+    handleBotMessage("message", config, message, undefined, handlerList);
   };
 
   const messageUpdateHandler = function (
@@ -75,7 +45,13 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       old: oldMessage,
       new: newMessage,
     });
-    handleMessage("messageUpdate", newMessage, oldMessage);
+    handleBotMessage(
+      "messageUpdate",
+      config,
+      newMessage,
+      oldMessage,
+      handlerList
+    );
   };
 
   return Object.freeze({
@@ -99,23 +75,31 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       }
     },
     watchMessages: function () {
-      client.on("message", messageHandler);
-      client.on("messageUpdate", messageUpdateHandler);
+      const readyListener = (user: Client) => {
+        logger.log("Bot is ready!", user);
+        client.on("message", messageHandler);
+        client.on("messageUpdate", messageUpdateHandler);
+      };
+
+      client.once("ready", readyListener);
       return newListener(() => {
+        client.off("ready", readyListener);
         client.off("message", messageHandler);
         client.off("messageUpdate", messageUpdateHandler);
       });
     },
-    login: async function () {
+    login: function () {
       const { token } = config;
-      try {
-        const result = await client.login(token);
-        logger.log("Bot logged in!", result);
-        return true;
-      } catch (e) {
-        logger.error(e, "Error logging in");
-        return false;
-      }
+      return client
+        .login(token)
+        .then((result) => {
+          logger.log("Bot logged in!", result);
+          return true;
+        })
+        .catch((e) => {
+          logger.error(e, "Error logging in");
+          return false;
+        });
     },
   });
 };
