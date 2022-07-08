@@ -1,8 +1,8 @@
 import { initializeBot } from "./bot";
 import { sourceConfig } from "./config";
 import { newLogger } from "./logger";
-import { HelpHandler } from "./bot/message/handler/help";
-import { LookupHelpHandler } from "./bot/message/handler/lookuphelp";
+import { HelpHandler } from "./commands/help";
+import { LookupHelpHandler } from "./commands/lookuphelp";
 
 const logger = newLogger("StonkBot");
 

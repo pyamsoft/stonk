@@ -1,5 +1,5 @@
-import { BotConfig } from "../../../config";
-import { Msg } from "../Msg";
+import { BotConfig } from "../../config";
+import { Msg } from "./Msg";
 
 export interface KeyedMessageHandler {
   id: string;

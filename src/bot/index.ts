@@ -4,7 +4,7 @@ import { newLogger } from "../logger";
 import {
   KeyedMessageHandler,
   MessageHandler,
-} from "./message/handler/MessageHandler";
+} from "./message/MessageHandler";
 import { KeyedObject } from "../model/KeyedObject";
 import { generateRandomId } from "../model/id";
 import { Listener, newListener } from "../model/listener";

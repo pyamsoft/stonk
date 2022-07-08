@@ -1,7 +1,7 @@
 import { BotConfig } from "../config";
 import { Channel, Message, PartialMessage, User } from "discord.js";
 import { Msg } from "./message/Msg";
-import { KeyedMessageHandler } from "./message/handler/MessageHandler";
+import { KeyedMessageHandler } from "./message/MessageHandler";
 import { newLogger } from "../logger";
 
 const logger = newLogger("messages");

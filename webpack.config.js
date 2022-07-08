@@ -12,7 +12,8 @@ const tsLoader = {
   loader: "ts-loader",
 };
 
-module.exports = function () {
+module.exports = function (env) {
+  const isDevelopment = env.mode === "development";
   return [
     {
       target: "node",
@@ -36,11 +37,17 @@ module.exports = function () {
             use: [babelLoader],
             exclude: /node_modules[/\\](?!stonk-bot).*$/,
           },
+          {
+            enforce: "pre",
+            test: /\.[tj]sx?$/,
+            use: ["source-map-loader"],
+          },
         ],
       },
       resolve: {
         extensions: [".tsx", ".ts", ".js"],
-      }
+      },
+      devtool: isDevelopment ? "cheap-eval-source-map" : "source-map",
     },
   ];
 };

@@ -1,8 +1,8 @@
-import { MessageHandler } from "./MessageHandler";
-import { newLogger } from "../../../logger";
-import { BotConfig } from "../../../config";
-import { validateMessage } from "../validate";
-import { Msg } from "../Msg";
+import { MessageHandler } from "../bot/message/MessageHandler";
+import { newLogger } from "../logger";
+import { BotConfig } from "../config";
+import { validateMessage } from "../bot/message/validate";
+import { Msg } from "../bot/message/Msg";
 
 const TAG = "HelpHandler"
 const logger = newLogger(TAG);
