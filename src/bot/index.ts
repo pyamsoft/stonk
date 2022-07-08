@@ -55,21 +55,12 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     });
   };
 
-  const objectValues = function <T>(o: object): T[] {
-    const keys = Object.keys(o);
-    const values: T[] = [];
-    for (const key of keys) {
-      values.push((o as any)[key] as T);
-    }
-    return values;
-  };
-
   return Object.freeze({
     addHandler: function (handler: MessageHandler) {
       const id = generateRandomId();
       handlers[id] = { id, handler };
       logger.log("Add new handler: ", handlers[id]);
-      handlerList = objectValues(handlers).filter(
+      handlerList = Object.values(handlers).filter(
         (h) => !!h
       ) as KeyedMessageHandler[];
       return id;
@@ -78,7 +69,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       if (handlers[id]) {
         logger.log("Removed handler: ", handlers[id]);
         handlers[id] = undefined;
-        handlerList = objectValues(handlers).filter(
+        handlerList = Object.values(handlers).filter(
           (h) => !!h
         ) as KeyedMessageHandler[];
         return true;
@@ -87,11 +78,11 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       }
     },
     watchMessages: function (onStop: () => void) {
-      const readyListener = () => {
+      const readyListener = (bot: Client) => {
         logger.log("Bot is ready!");
         logger.log("Watch for messages");
-        client.on("message", messageHandler);
-        client.on("messageUpdate", messageUpdateHandler);
+        bot.on("message", messageHandler);
+        bot.on("messageUpdate", messageUpdateHandler);
       };
 
       logger.log("Wait until bot is ready");
