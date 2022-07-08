@@ -18,18 +18,14 @@ Beep Boop.
 [COMMANDS]
 ${p("                      This help")}
 ${lk("                     This help")}
-${p("SYMBOL[:OPTION] ...   Price information for <SYMBOL>")}
-${lk("QUERY ...            Price information for <QUERY>")}
-
-[OPTIONS]
-watch[LOW|HIGH]        Watch the <SYMBOL> for if/when it crosses the <LOW> or <HIGH> points
-stopwatch              Stop watching the <SYMBOL>
+${p("SYMBOL...             Price information for <SYMBOL>")}
+${lk("QUERY...             Price information for <QUERY>")}
 
 [EXAMPLE]
 
-    An OPTION can be added to a COMMAND by appending it with ':'
-
 ${p("MSFT                  Gets price information for MSFT")}
-${lk("Apple                Lookup the symbol for 'Apple' and get price information.")}
+${lk(
+  "Apple                Lookup the symbol for 'Apple' and get price information."
+)}
 `);
 };
