@@ -1,6 +1,6 @@
 import { Msg } from "./Msg";
 import { BotConfig } from "../../config";
-import { newLogger } from "../../logger";
+import { newLogger } from "../logger";
 
 const logger = newLogger("MessageValidation");
 

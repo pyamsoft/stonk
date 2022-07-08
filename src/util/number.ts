@@ -1,4 +1,4 @@
-import { newLogger } from "../logger";
+import { newLogger } from "../bot/logger";
 
 const logger = newLogger("NumberUtils");
 

@@ -1,5 +1,5 @@
 import { MessageHandler } from "../bot/message/MessageHandler";
-import { newLogger } from "../logger";
+import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { validateMessage } from "../bot/message/validate";
 import { Msg } from "../bot/message/Msg";

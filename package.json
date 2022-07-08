@@ -4,12 +4,13 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "rm -rf dist && yarn lint && webpack --mode=production --color && node ./dist/index.js",
-    "deploy:main": "yarn lint && bash ./bin/deploy 1",
-    "deploy:back": "yarn lint && bash ./bin/deploy 2",
+    "build": "yarn lint && webpack --mode=production --color",
+    "start": "yarn build && node ./dist/index.js",
+    "deploy:main": "yarn build && bash ./bin/deploy 1",
+    "deploy:back": "yarn build && bash ./bin/deploy 2",
     "scale:main": "bash ./bin/scale main",
     "scale:back": "bash ./bin/scale back2",
-    "lint": "eslint ."
+    "lint": "rm -rf dist && eslint ."
   },
   "engines": {
     "node": ">=12.x"

@@ -1,14 +1,12 @@
 import { BotConfig } from "../config";
 import { Client, Intents, Message, PartialMessage } from "discord.js";
-import { newLogger } from "../logger";
-import {
-  KeyedMessageHandler,
-  MessageHandler,
-} from "./message/MessageHandler";
-import { KeyedObject } from "../model/KeyedObject";
-import { generateRandomId } from "../model/id";
-import { Listener, newListener } from "../model/listener";
-import { handleBotMessage } from "./messages";
+import { newLogger } from "./logger";
+import { KeyedMessageHandler, MessageHandler } from "./message/MessageHandler";
+import { KeyedObject } from "./model/KeyedObject";
+import { generateRandomId } from "./model/id";
+import { Listener, newListener } from "./model/listener";
+import { handleBotMessage } from "./message/messages";
+import { createMessageCache } from "./message/MessageCache";
 
 const logger = newLogger("DiscordBot");
 
@@ -28,13 +26,18 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
   });
 
   const handlers: KeyedObject<KeyedMessageHandler | undefined> = {};
+  const messageCache = createMessageCache();
 
   // Keep this cached to avoid having to recalculate it each time
   let handlerList: KeyedMessageHandler[] = [];
 
   const messageHandler = function (message: Message) {
     logger.log("Message received", message);
-    handleBotMessage("message", config, message, undefined, handlerList);
+    handleBotMessage("message", message, undefined, {
+      config,
+      handlers: handlerList,
+      cache: messageCache,
+    });
   };
 
   const messageUpdateHandler = function (
@@ -45,13 +48,11 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       old: oldMessage,
       new: newMessage,
     });
-    handleBotMessage(
-      "messageUpdate",
+    handleBotMessage("messageUpdate", newMessage, oldMessage, {
       config,
-      newMessage,
-      oldMessage,
-      handlerList
-    );
+      handlers: handlerList,
+      cache: messageCache,
+    });
   };
 
   return Object.freeze({

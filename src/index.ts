@@ -1,6 +1,6 @@
 import { initializeBot } from "./bot";
 import { sourceConfig } from "./config";
-import { newLogger } from "./logger";
+import { newLogger } from "./bot/logger";
 import { HelpHandler } from "./commands/help";
 import { LookupHelpHandler } from "./commands/lookuphelp";
 

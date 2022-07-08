@@ -1,6 +1,6 @@
 // Parse the .env file if one exists
 import DotEnv from "dotenv";
-import { newLogger } from "./logger";
+import { newLogger } from "./bot/logger";
 
 DotEnv.config();
 

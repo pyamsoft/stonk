@@ -1,4 +1,4 @@
-export const parseAsArray = function <T>(oneOrMany: T | T[]): T[] {
+export const ensureArray = function <T>(oneOrMany: T | T[]): T[] {
   let list;
   if (Array.isArray(oneOrMany)) {
     list = oneOrMany;
