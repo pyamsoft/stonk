@@ -22,7 +22,12 @@ export interface DiscordBot {
 
 export const initializeBot = function (config: BotConfig): DiscordBot {
   const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES],
+    intents: [
+      Intents.FLAGS.GUILDS,
+      Intents.FLAGS.DIRECT_MESSAGES,
+      Intents.FLAGS.GUILD_MESSAGES,
+    ],
+    partials: ["MESSAGE", "CHANNEL"],
   });
 
   const handlers: KeyedObject<KeyedMessageHandler | undefined> = {};
@@ -78,18 +83,28 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       }
     },
     watchMessages: function (onStop: () => void) {
-      const readyListener = (bot: Client) => {
+      const readyHandler = function (bot: Client) {
         logger.log("Bot is ready!");
         logger.log("Watch for messages");
-        bot.on("message", messageHandler);
+        bot.on("messageCreate", messageHandler);
         bot.on("messageUpdate", messageUpdateHandler);
       };
 
+      const errorHandler = function (error: Error) {
+        logger.error(error, "BOT ERROR");
+        client.off("ready", readyHandler);
+        client.off("messageCreate", messageHandler);
+        client.off("messageUpdate", messageUpdateHandler);
+        onStop();
+      };
+
+      client.on("error", errorHandler);
+
       logger.log("Wait until bot is ready");
-      client.once("ready", readyListener);
+      client.once("ready", readyHandler);
       return newListener(() => {
         logger.log("Stop watching for messages");
-        client.off("ready", readyListener);
+        client.off("ready", readyHandler);
         client.off("message", messageHandler);
         client.off("messageUpdate", messageUpdateHandler);
         onStop();
