@@ -1,7 +1,6 @@
 import { BotConfig } from "../../config";
-import { SendChannel } from "./Msg";
-import { MessageCache } from "./MessageCache";
 import { SymbolCommand } from "../../commands/symbol";
+import { KeyedObject } from "../model/KeyedObject";
 
 export interface KeyedMessageHandler {
   id: string;
@@ -9,22 +8,40 @@ export interface KeyedMessageHandler {
   handler: MessageHandler;
 }
 
+export interface MessageHandlerOutput {
+  objectType: "MessageHandlerOutput";
+  helpOutput: string;
+  messages: KeyedObject<string>;
+}
+
+export const messageHandlerOutput = function (
+  messages: KeyedObject<string>
+): MessageHandlerOutput {
+  return {
+    objectType: "MessageHandlerOutput",
+    helpOutput: "",
+    messages,
+  };
+};
+
+export const messageHandlerHelpText = function (
+  message: string
+): MessageHandlerOutput {
+  return {
+    objectType: "MessageHandlerOutput",
+    helpOutput: message,
+    messages: {},
+  };
+};
+
 export interface MessageHandler {
   tag: string;
 
   handle: (
     config: BotConfig,
-    sendChannel: SendChannel,
-    messages: {
-      currentMessageId: string;
-      oldMessageId?: string;
-    },
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    },
-    env: {
-      cache: MessageCache;
     }
-  ) => void;
+  ) => Promise<MessageHandlerOutput> | undefined;
 }

@@ -10,9 +10,12 @@ interface DiscordMsg extends Msg {
   raw: Message;
 }
 
-export interface Msg {
+interface LoggableMsg {
   id: string;
   content: string;
+}
+
+export interface Msg extends LoggableMsg {
   channel: TextChannel;
   author: User;
 }
@@ -28,6 +31,13 @@ export interface MessageRemover {
 export interface SendChannel {
   send: (messageText: string) => Promise<Msg>;
 }
+
+export const logMsg = function (m: Msg): LoggableMsg {
+  return {
+    id: m.id,
+    content: m.content,
+  };
+};
 
 export const msgFromMessage = function (
   message: Message | PartialMessage

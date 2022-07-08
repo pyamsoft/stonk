@@ -16,8 +16,7 @@ const logger = newLogger("communicate");
 
 export interface CommunicationResult<T> {
   objectType: "CommunicationResult";
-  error: string;
-  data: T | undefined;
+  data: T;
 }
 
 export interface CommunicationMessage {
@@ -31,6 +30,15 @@ export const createCommunicationMessage = function (
   return {
     objectType: "CommunicationMessage",
     message,
+  };
+};
+
+export const createCommunicationResult = function <T>(
+  data: T
+): CommunicationResult<T> {
+  return {
+    objectType: "CommunicationResult",
+    data,
   };
 };
 
@@ -48,6 +56,11 @@ const deleteOldMessages = function (
     logger.log("No old contents to delete, continue.");
     return Promise.resolve();
   }
+
+  logger.log("DELETE OLD: ", {
+    oldContents,
+    keys,
+  });
 
   const work = [];
   for (const key of oldContents) {
@@ -275,26 +288,11 @@ export const sendMessage = function (
       }
     });
   } else {
-    const { error, data } = content;
-    // If missing data, we assume error is not blank and thus, is an error
-    if (!data) {
-      return postMessageToPublicChannel(receivedMessageId, channel, error, {
-        ...env,
-        cacheKey: GLOBAL_CACHE_KEY,
-        cacheResult: true,
-      }).then((msg) => {
-        if (msg) {
-          return ensureArray(msg);
-        } else {
-          return [];
-        }
-      });
-    } else {
-      // Delete any old messages first
-      const keys = Object.keys(data);
-      return deleteOldMessages(receivedMessageId, keys, env).then(() =>
-        postNewMessages(receivedMessageId, channel, keys, data, env)
-      );
-    }
+    const { data } = content;
+    // Delete any old messages first
+    const keys = Object.keys(data);
+    return deleteOldMessages(receivedMessageId, keys, env).then(() =>
+      postNewMessages(receivedMessageId, channel, keys, data, env)
+    );
   }
 };

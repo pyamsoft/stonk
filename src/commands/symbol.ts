@@ -55,14 +55,11 @@ export const stringContentToSymbolList = function (
 ): SymbolCommand {
   const { prefix } = config;
 
-  // We escape here since it may be an escape character like $
-  // noinspection RegExpRedundantEscape
-  const regex = new RegExp(`\\${prefix}`, "g");
-
   const { isHelpCommand, symbols } = stringContentToArray(config, 0, content);
 
   const filteredSymbols = symbols
-    .filter((s) => s.indexOf(prefix) >= 0 && s.length > 1)
+    // Must start with the prefix and be more than just the prefix string
+    .filter((s) => s.indexOf(prefix) === 0 && s.length > 1)
     .filter((s) => {
       // Has options, split up first then check symbol
       if (s.indexOf(":") > 0) {
@@ -77,8 +74,7 @@ export const stringContentToSymbolList = function (
       } else {
         return !NUMBER_REGEX.test(s);
       }
-    })
-    .map((s) => s.replace(regex, ""));
+    });
 
   return {
     isHelpCommand: isHelpCommand || filteredSymbols.length <= 0,

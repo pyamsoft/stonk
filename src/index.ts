@@ -16,11 +16,16 @@ const createQuoteHandler = bot.addHandler(
   MessageEventTypes.CREATE,
   QuoteHandler
 );
+const updateQuoteHandler = bot.addHandler(
+  MessageEventTypes.UPDATE,
+  QuoteHandler
+);
 
 const watcher = bot.watchMessages(() => {
   bot.removeHandler(createHelpHandler);
   bot.removeHandler(updateHelpHandler);
   bot.removeHandler(createQuoteHandler);
+  bot.removeHandler(updateQuoteHandler);
 });
 
 bot.login().then((loggedIn) => {
