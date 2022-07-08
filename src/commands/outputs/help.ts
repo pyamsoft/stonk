@@ -3,23 +3,33 @@ import { codeBlock } from "../../bot/discord/format";
 
 export const outputHelpText = function (config: BotConfig): string {
   const { prefix } = config;
+
+  const p = function (text: string): string {
+    return `${prefix}${text}`;
+  };
+
+  const lk = function (text: string): string {
+    return `${prefix}${prefix}${text}`;
+  };
+
   return codeBlock(`
 Beep Boop.
 
 [COMMANDS]
-${prefix}                         This help.
-${prefix}${prefix}                        This help.
-${prefix}SYMBOL:[OPTION    Price information for <SYMBOL>
-${prefix}${prefix}QUERY:[OPTION...]       Query results for <QUERY>
+${p("                      This help")}
+${lk("                     This help")}
+${p("SYMBOL[:OPTION] ...   Price information for <SYMBOL>")}
+${lk("QUERY ...            Price information for <QUERY>")}
 
 [OPTIONS]
-watch[LOW|HIGH]           Watch the <SYMBOL> for if/when it crosses the <LOW> or <HIGH> points
-stopwatch                 Stop watching the <SYMBOL>
-
-An OPTION can be added to a COMMAND by appending it with ':'
+watch[LOW|HIGH]        Watch the <SYMBOL> for if/when it crosses the <LOW> or <HIGH> points
+stopwatch              Stop watching the <SYMBOL>
 
 [EXAMPLE]
-${prefix}MSFT                     Gets price information for MSFT
-${prefix}${prefix}Microsoft Corporation   Reverse lookup a symbol for 'Microsoft Corporation' and gets price information.
+
+    An OPTION can be added to a COMMAND by appending it with ':'
+
+${p("MSFT                  Gets price information for MSFT")}
+${lk("Apple                Lookup the symbol for 'Apple' and get price information.")}
 `);
 };
