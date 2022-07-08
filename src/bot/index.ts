@@ -19,7 +19,7 @@ export interface DiscordBot {
 
   removeHandler: (id: string) => boolean;
 
-  watchMessages: () => Listener;
+  watchMessages: (onStop: () => void) => Listener;
 }
 
 export const initializeBot = function (config: BotConfig): DiscordBot {
@@ -58,6 +58,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     addHandler: function (handler: MessageHandler) {
       const id = generateRandomId();
       handlers[id] = { id, handler };
+      logger.log("Add new handler: ", handlers[id]);
       handlerList = Object.values(handlers).filter(
         (h) => !!h
       ) as KeyedMessageHandler[];
@@ -65,6 +66,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     },
     removeHandler: function (id: string) {
       if (handlers[id]) {
+        logger.log("Removed handler: ", handlers[id]);
         handlers[id] = undefined;
         handlerList = Object.values(handlers).filter(
           (h) => !!h
@@ -74,18 +76,22 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
         return false;
       }
     },
-    watchMessages: function () {
+    watchMessages: function (onStop: () => void) {
       const readyListener = (user: Client) => {
         logger.log("Bot is ready!", user);
+        logger.log("Watch for messages");
         client.on("message", messageHandler);
         client.on("messageUpdate", messageUpdateHandler);
       };
 
+      logger.log("Wait until bot is ready");
       client.once("ready", readyListener);
       return newListener(() => {
+        logger.log("Stop watching for messages");
         client.off("ready", readyListener);
         client.off("message", messageHandler);
         client.off("messageUpdate", messageUpdateHandler);
+        onStop();
       });
     },
     login: function () {

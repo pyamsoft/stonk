@@ -9,6 +9,8 @@ export interface KeyedMessageHandler {
 export interface MessageHandler {
   event: "message" | "messageUpdate";
 
+  tag: string;
+
   handle: (
     config: BotConfig,
     message: Msg,

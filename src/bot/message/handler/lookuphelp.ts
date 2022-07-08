@@ -4,10 +4,13 @@ import { BotConfig } from "../../../config";
 import { validateMessage } from "../validate";
 import { Msg } from "../Msg";
 
-const logger = newLogger("LookupHelpHandler");
+const TAG = "LookupHelpHandler";
+const logger = newLogger(TAG);
 
 export const LookupHelpHandler: MessageHandler = {
   event: "message",
+
+  tag: TAG,
 
   handle: function (config: BotConfig, message: Msg) {
     if (!validateMessage(config, message)) {
