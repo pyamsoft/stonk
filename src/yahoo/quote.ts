@@ -20,6 +20,7 @@ const generateQuoteUrl = function (symbols: string[]): string {
       "postMarketChange",
       "postMarketChangePercent",
       "shortName",
+      "longName",
     ].join(",")
   );
   params.append("symbols", symbolsToString(symbols));
@@ -55,7 +56,7 @@ const postMarketAmountChange = function (quote: any): number | undefined {
 };
 
 const company = function (quote: any): string {
-  return quote.shortName;
+  return quote.shortName || quote.longName;
 };
 
 export const parseYFQuote = function (
