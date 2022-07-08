@@ -1,10 +1,11 @@
-// Parse the .env file if one exists
-import DotEnv from "dotenv";
 import { newLogger } from "./bot/logger";
 
-DotEnv.config();
-
 const logger = newLogger("BotConfig");
+
+// Use require here instead of import
+//
+// Parse the .env file if one exists
+require("dotenv").config();
 
 export interface BotConfig {
   prefix: string;

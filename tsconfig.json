@@ -1,11 +1,10 @@
 {
-  // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
   "include": ["src", "types"],
   "compilerOptions": {
     "outDir": "./dist",
-    "module": "esnext",
+    "module": "commonjs",
     "target": "es5",
-    "lib": ["dom", "esnext"],
+    "lib": ["es5"],
     "importHelpers": true,
     "declaration": true,
     "sourceMap": true,
@@ -19,6 +18,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "isolatedModules": true,
+    "isolatedModules": true
   }
 }

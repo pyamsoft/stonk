@@ -31,7 +31,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
   // Keep this cached to avoid having to recalculate it each time
   let handlerList: KeyedMessageHandler[] = [];
 
-  const messageHandler = function (message: Message) {
+  const messageHandler = function (message: Message | PartialMessage) {
     logger.log("Message received", message);
     handleBotMessage("message", message, undefined, {
       config,
@@ -55,12 +55,21 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     });
   };
 
+  const objectValues = function <T>(o: object): T[] {
+    const keys = Object.keys(o);
+    const values: T[] = [];
+    for (const key of keys) {
+      values.push((o as any)[key] as T);
+    }
+    return values;
+  };
+
   return Object.freeze({
     addHandler: function (handler: MessageHandler) {
       const id = generateRandomId();
       handlers[id] = { id, handler };
       logger.log("Add new handler: ", handlers[id]);
-      handlerList = Object.values(handlers).filter(
+      handlerList = objectValues(handlers).filter(
         (h) => !!h
       ) as KeyedMessageHandler[];
       return id;
@@ -69,7 +78,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       if (handlers[id]) {
         logger.log("Removed handler: ", handlers[id]);
         handlers[id] = undefined;
-        handlerList = Object.values(handlers).filter(
+        handlerList = objectValues(handlers).filter(
           (h) => !!h
         ) as KeyedMessageHandler[];
         return true;
@@ -78,8 +87,8 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       }
     },
     watchMessages: function (onStop: () => void) {
-      const readyListener = (user: Client) => {
-        logger.log("Bot is ready!", user);
+      const readyListener = () => {
+        logger.log("Bot is ready!");
         logger.log("Watch for messages");
         client.on("message", messageHandler);
         client.on("messageUpdate", messageUpdateHandler);
@@ -99,8 +108,8 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       const { token } = config;
       return client
         .login(token)
-        .then((result) => {
-          logger.log("Bot logged in!", result);
+        .then(() => {
+          logger.log("Bot logged in!");
           return true;
         })
         .catch((e) => {
