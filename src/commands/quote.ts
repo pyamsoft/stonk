@@ -1,4 +1,7 @@
-import { MessageHandler } from "../bot/message/MessageHandler";
+import {
+  MessageHandler,
+  messageHandlerOutput,
+} from "../bot/message/MessageHandler";
 import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
@@ -23,7 +26,6 @@ export const QuoteHandler: MessageHandler = {
       return;
     }
 
-    logger.log("Handle quote message", currentCommand);
     const { prefix } = config;
     const { symbols } = currentCommand;
 
@@ -32,6 +34,12 @@ export const QuoteHandler: MessageHandler = {
       return s[0] === prefix && !!s[1] && s[1] !== prefix;
     });
 
+    // No quotes, don't handle
+    if (quoteSymbols.length <= 0) {
+      return;
+    }
+
+    logger.log("Handle quote message", currentCommand);
     const symbolList = [];
     for (const symbol of quoteSymbols) {
       let cleanSymbol = symbol.trim();
@@ -42,6 +50,8 @@ export const QuoteHandler: MessageHandler = {
       symbolList.push(stockSymbol);
     }
 
-    return findQuotesForSymbols(symbolList);
+    return findQuotesForSymbols(symbolList).then((result) =>
+      messageHandlerOutput(result)
+    );
   },
 };

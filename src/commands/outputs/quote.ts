@@ -70,15 +70,3 @@ ${messageAfterHoursDirection} ${messageAfterHoursChangeAmount} [${messageAfterHo
 }
 `)}`;
 };
-
-export const outputQuoteError = function (
-  symbol: string,
-  error: string
-): string {
-  const messageSymbol = bold(formatSymbol(symbol));
-  return `
-${messageSymbol}
-${codeBlock(`
-${error}
-`)}`;
-};

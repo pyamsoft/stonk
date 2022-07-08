@@ -3,6 +3,7 @@ import { symbolsToString } from "../commands/symbol";
 import { URLSearchParams } from "url";
 import { jsonApi } from "../util/api";
 import { newLogger } from "../bot/logger";
+import { bold } from "../bot/discord/format";
 
 const logger = newLogger("YahooQuote");
 
@@ -59,7 +60,7 @@ const company = function (quote: any): string {
   return quote.shortName || quote.longName;
 };
 
-export const parseYFQuote = function (
+const parseYFQuote = function (
   symbol: string,
   quote: any
 ): {
@@ -70,7 +71,7 @@ export const parseYFQuote = function (
   if (!quote) {
     return {
       quote: undefined,
-      error: `Unable to find quote for: ${symbol}`,
+      error: `Unable to find quote for: ${bold(symbol)}`,
     };
   }
 
@@ -91,7 +92,7 @@ export const parseYFQuote = function (
   ) {
     return {
       quote: undefined,
-      error: `Unable to find quote for: ${symbol}`,
+      error: `Unable to find quote for: ${bold(symbol)}`,
     };
   }
 
@@ -131,19 +132,43 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
   return jsonApi(generateQuoteUrl(symbols)).then((data: any) => {
     if (!data) {
       logger.warn("YF missing response");
-      return [];
+      const results: QuoteResponse[] = [];
+      for (const s of symbols) {
+        results.push({
+          symbol: s,
+          error: `Unable to find quote for ${bold(s)}`,
+          quote: undefined,
+        });
+      }
+      return results;
     }
 
     const { quoteResponse } = data;
     if (!quoteResponse) {
       logger.warn("YF missing quote response");
-      return [];
+      const results: QuoteResponse[] = [];
+      for (const s of symbols) {
+        results.push({
+          symbol: s,
+          error: `Unable to find quote for ${bold(s)}`,
+          quote: undefined,
+        });
+      }
+      return results;
     }
 
     const { result } = quoteResponse;
     if (!result) {
       logger.warn("YF missing response result");
-      return [];
+      const results: QuoteResponse[] = [];
+      for (const s of symbols) {
+        results.push({
+          symbol: s,
+          error: `Unable to find quote for ${bold(s)}`,
+          quote: undefined,
+        });
+      }
+      return results;
     }
 
     const results: QuoteResponse[] = [];

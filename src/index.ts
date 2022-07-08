@@ -4,6 +4,7 @@ import { newLogger } from "./bot/logger";
 import { HelpHandler } from "./commands/help";
 import { QuoteHandler } from "./commands/quote";
 import { MessageEventTypes } from "./bot/model/MessageEventType";
+import { LookupHandler } from "./commands/lookup";
 
 const logger = newLogger("StonkBot");
 
@@ -20,12 +21,22 @@ const updateQuoteHandler = bot.addHandler(
   MessageEventTypes.UPDATE,
   QuoteHandler
 );
+const createLookupHandler = bot.addHandler(
+  MessageEventTypes.CREATE,
+  LookupHandler
+);
+const updateLookupHandler = bot.addHandler(
+  MessageEventTypes.UPDATE,
+  LookupHandler
+);
 
 const watcher = bot.watchMessages(() => {
   bot.removeHandler(createHelpHandler);
   bot.removeHandler(updateHelpHandler);
   bot.removeHandler(createQuoteHandler);
   bot.removeHandler(updateQuoteHandler);
+  bot.removeHandler(createLookupHandler);
+  bot.removeHandler(updateLookupHandler);
 });
 
 bot.login().then((loggedIn) => {
