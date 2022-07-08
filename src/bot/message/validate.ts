@@ -1,8 +1,6 @@
 import { Msg } from "./Msg";
 import { BotConfig } from "../../config";
-import { newLogger } from "../logger";
-
-const logger = newLogger("MessageValidation");
+import { Channel } from "discord.js";
 
 export const validateMessageHasId = function (message: Msg): boolean {
   return !!message.id;
@@ -26,7 +24,9 @@ export const validateMessageIsSpecificChannel = function (
   message: Msg
 ): boolean {
   if (config.specificChannel) {
-    return message.channel.id === config.specificChannel;
+    // I know this works, discord is dumb
+    const ch = message.channel as unknown as Channel;
+    return ch.id === config.specificChannel;
   } else {
     return true;
   }
@@ -44,36 +44,26 @@ export const validateMessage = function (
   message: Msg
 ): boolean {
   if (!validateMessageHasId(message)) {
-    logger.warn("Message is missing id", message);
     return false;
   }
 
   if (!validateMessageIsNotFromBot(message)) {
-    logger.warn("Message is from bot user", message);
     return false;
   }
 
   if (!validateMessageHasChannel(message)) {
-    logger.warn("Message is missing channel", message);
     return false;
   }
 
   if (!validateMessageIsTextChannel(message)) {
-    logger.warn("Message is not public text channel", message);
     return false;
   }
 
   if (!validateMessageIsSpecificChannel(config, message)) {
-    logger.warn(
-      "Message is not on specific channel",
-      config.specificChannel,
-      message
-    );
     return false;
   }
 
   if (!validateMessageIsWatched(config, message)) {
-    logger.warn("Message is watched content", config.prefix, message);
     return false;
   }
 

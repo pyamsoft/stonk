@@ -2,19 +2,25 @@ import { initializeBot } from "./bot";
 import { sourceConfig } from "./config";
 import { newLogger } from "./bot/logger";
 import { HelpHandler } from "./commands/help";
-import { LookupHelpHandler } from "./commands/lookuphelp";
+import { QuoteHandler } from "./commands/quote";
+import { MessageEventTypes } from "./bot/model/MessageEventType";
 
 const logger = newLogger("StonkBot");
 
 const config = sourceConfig();
 const bot = initializeBot(config);
 
-const helpHandler = bot.addHandler(HelpHandler);
-const lookupHandler = bot.addHandler(LookupHelpHandler);
+const createHelpHandler = bot.addHandler(MessageEventTypes.CREATE, HelpHandler);
+const updateHelpHandler = bot.addHandler(MessageEventTypes.UPDATE, HelpHandler);
+const createQuoteHandler = bot.addHandler(
+  MessageEventTypes.CREATE,
+  QuoteHandler
+);
 
 const watcher = bot.watchMessages(() => {
-  bot.removeHandler(helpHandler);
-  bot.removeHandler(lookupHandler);
+  bot.removeHandler(createHelpHandler);
+  bot.removeHandler(updateHelpHandler);
+  bot.removeHandler(createQuoteHandler);
 });
 
 bot.login().then((loggedIn) => {

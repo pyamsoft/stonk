@@ -1,9 +1,9 @@
 import { MessageCache } from "./MessageCache";
 import { newLogger } from "../logger";
 import {
-  DiscordMsg,
   editorFromMessage,
   MessageEditor,
+  messageFromMsg,
   Msg,
   removerFromMessage,
   SendChannel,
@@ -11,6 +11,7 @@ import {
 import { ensureArray } from "../../util/array";
 import { KeyedObject } from "../model/KeyedObject";
 
+const GLOBAL_CACHE_KEY = "global-cache-key";
 const logger = newLogger("communicate");
 
 export interface CommunicationResult<T> {
@@ -24,15 +25,24 @@ export interface CommunicationMessage {
   message: string;
 }
 
+export const createCommunicationMessage = function (
+  message: string
+): CommunicationMessage {
+  return {
+    objectType: "CommunicationMessage",
+    message,
+  };
+};
+
 const deleteOldMessages = function (
-  messageId: string,
+  receivedMessageId: string,
   keys: string[],
   env: {
     cache: MessageCache;
   }
 ): Promise<void | void[]> {
   const { cache } = env;
-  const allOldData = cache.getAll(messageId);
+  const allOldData = cache.getAll(receivedMessageId);
   const oldContents = Object.keys(allOldData);
   if (oldContents.length <= 0) {
     logger.log("No old contents to delete, continue.");
@@ -52,8 +62,7 @@ const deleteOldMessages = function (
       }
 
       // We know this to be true
-      const fullMessage = oldMessage as DiscordMsg;
-      const remover = removerFromMessage(fullMessage.raw);
+      const remover = removerFromMessage(messageFromMsg(oldMessage));
       const working = remover
         .remove()
         .then((id) => {
@@ -61,7 +70,7 @@ const deleteOldMessages = function (
             key,
             messageId: id,
           });
-          cache.remove(messageId, key);
+          cache.remove(receivedMessageId, key);
         })
         .catch((e) => {
           logger.error(e, "Failed to delete old message", {
@@ -120,6 +129,7 @@ const postNewMessages = function (
 };
 
 const editExistingMessage = function (
+  receivedMessageId: string,
   editor: MessageEditor,
   oldMessage: Msg,
   messageText: string,
@@ -138,13 +148,14 @@ const editExistingMessage = function (
           key: cacheKey,
           oldMessageId: oldMessage.id,
           newMessageId: newMessage.id,
+          receivedMessageId,
         });
         if (cacheResult) {
           logger.log("Caching update result: ", {
-            messageId: newMessage.id,
+            messageId: receivedMessageId,
             key: cacheKey,
           });
-          cache.insert(newMessage.id, cacheKey, newMessage);
+          cache.insert(receivedMessageId, cacheKey, newMessage);
           resolve(newMessage);
         }
       })
@@ -152,6 +163,7 @@ const editExistingMessage = function (
         logger.error(e, "Unable to update old message with new content: ", {
           key: cacheKey,
           oldMessageId: oldMessage.id,
+          receivedMessageId,
         });
         resolve(undefined);
       });
@@ -159,6 +171,7 @@ const editExistingMessage = function (
 };
 
 const sendNewMessageToChannel = function (
+  receivedMessageId: string,
   channel: SendChannel,
   messageText: string,
   env: {
@@ -174,15 +187,17 @@ const sendNewMessageToChannel = function (
       .then((newMessage) => {
         logger.log("Send new message: ", {
           messageId: newMessage.id,
+          receivedMessageId,
           key: cacheKey,
         });
 
         if (cacheResult) {
           logger.log("Caching new message result: ", {
             messageId: newMessage.id,
+            receivedMessageId,
             key: cacheKey,
           });
-          cache.insert(newMessage.id, cacheKey, newMessage);
+          cache.insert(receivedMessageId, cacheKey, newMessage);
         }
         resolve(newMessage);
       })
@@ -190,6 +205,7 @@ const sendNewMessageToChannel = function (
         logger.error(e, "Unable to send message", {
           key: cacheKey,
           text: messageText,
+          receivedMessageId,
         });
         resolve(undefined);
       });
@@ -197,7 +213,7 @@ const sendNewMessageToChannel = function (
 };
 
 const postMessageToPublicChannel = function (
-  messageId: string,
+  receivedMessageId: string,
   channel: SendChannel,
   messageText: string,
   env: {
@@ -209,21 +225,31 @@ const postMessageToPublicChannel = function (
   const { cache, cacheKey } = env;
   const oldMessage =
     !!cacheKey && !!cacheKey.trim()
-      ? cache.get(messageId, cacheKey)
+      ? cache.get(receivedMessageId, cacheKey)
       : undefined;
 
   if (oldMessage) {
     // We know this to be true
-    const fullMessage = oldMessage as DiscordMsg;
-    const editor = editorFromMessage(fullMessage.raw);
-    return editExistingMessage(editor, oldMessage, messageText, env);
+    const editor = editorFromMessage(messageFromMsg(oldMessage));
+    return editExistingMessage(
+      receivedMessageId,
+      editor,
+      oldMessage,
+      messageText,
+      env
+    );
   } else {
-    return sendNewMessageToChannel(channel, messageText, env);
+    return sendNewMessageToChannel(
+      receivedMessageId,
+      channel,
+      messageText,
+      env
+    );
   }
 };
 
 export const sendMessage = function (
-  messageId: string,
+  receivedMessageId: string,
   channel: SendChannel,
   content: CommunicationMessage | CommunicationResult<KeyedObject<string>>,
   env: {
@@ -231,12 +257,17 @@ export const sendMessage = function (
   }
 ): Promise<Msg[]> {
   if (content.objectType === "CommunicationMessage") {
-    // Plain text message, never cached, just sent over plainly
-    return postMessageToPublicChannel(messageId, channel, content.message, {
-      ...env,
-      cacheKey: "",
-      cacheResult: false,
-    }).then((msg) => {
+    // Plain text message
+    return postMessageToPublicChannel(
+      receivedMessageId,
+      channel,
+      content.message,
+      {
+        ...env,
+        cacheKey: GLOBAL_CACHE_KEY,
+        cacheResult: true,
+      }
+    ).then((msg) => {
       if (msg) {
         return ensureArray(msg);
       } else {
@@ -246,12 +277,11 @@ export const sendMessage = function (
   } else {
     const { error, data } = content;
     // If missing data, we assume error is not blank and thus, is an error
-    // Don't cache error messages
     if (!data) {
-      return postMessageToPublicChannel(messageId, channel, error, {
+      return postMessageToPublicChannel(receivedMessageId, channel, error, {
         ...env,
-        cacheKey: "",
-        cacheResult: false,
+        cacheKey: GLOBAL_CACHE_KEY,
+        cacheResult: true,
       }).then((msg) => {
         if (msg) {
           return ensureArray(msg);
@@ -262,8 +292,8 @@ export const sendMessage = function (
     } else {
       // Delete any old messages first
       const keys = Object.keys(data);
-      return deleteOldMessages(messageId, keys, env).then(() =>
-        postNewMessages(messageId, channel, keys, data, env)
+      return deleteOldMessages(receivedMessageId, keys, env).then(() =>
+        postNewMessages(receivedMessageId, channel, keys, data, env)
       );
     }
   }

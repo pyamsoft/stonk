@@ -6,7 +6,7 @@ import {
   User,
 } from "discord.js";
 
-export interface DiscordMsg extends Msg {
+interface DiscordMsg extends Msg {
   raw: Message;
 }
 
@@ -61,6 +61,10 @@ export const removerFromMessage = function (
       return (message as Message).delete().then((msg) => msg.id);
     },
   };
+};
+
+export const messageFromMsg = function (message: Msg): Message {
+  return (message as DiscordMsg).raw;
 };
 
 export const sendChannelFromMessage = function (

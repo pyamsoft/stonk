@@ -7,13 +7,14 @@ import { generateRandomId } from "./model/id";
 import { Listener, newListener } from "./model/listener";
 import { handleBotMessage } from "./message/messages";
 import { createMessageCache } from "./message/MessageCache";
+import { MessageEventType, MessageEventTypes } from "./model/MessageEventType";
 
 const logger = newLogger("DiscordBot");
 
 export interface DiscordBot {
   login: () => Promise<boolean>;
 
-  addHandler: (handler: MessageHandler) => string;
+  addHandler: (type: MessageEventType, handler: MessageHandler) => string;
 
   removeHandler: (id: string) => boolean;
 
@@ -37,9 +38,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
   let handlerList: KeyedMessageHandler[] = [];
 
   const messageHandler = function (message: Message | PartialMessage) {
-    logger.log("Message received", message);
-    handleBotMessage("message", message, undefined, {
-      config,
+    handleBotMessage(config, MessageEventTypes.CREATE, message, undefined, {
       handlers: handlerList,
       cache: messageCache,
     });
@@ -49,21 +48,16 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     oldMessage: Message | PartialMessage,
     newMessage: Message | PartialMessage
   ) {
-    logger.log("Message updated", {
-      old: oldMessage,
-      new: newMessage,
-    });
-    handleBotMessage("messageUpdate", newMessage, oldMessage, {
-      config,
+    handleBotMessage(config, MessageEventTypes.UPDATE, newMessage, oldMessage, {
       handlers: handlerList,
       cache: messageCache,
     });
   };
 
   return Object.freeze({
-    addHandler: function (handler: MessageHandler) {
+    addHandler: function (type: MessageEventType, handler: MessageHandler) {
       const id = generateRandomId();
-      handlers[id] = { id, handler };
+      handlers[id] = { id, handler, type };
       logger.log("Add new handler: ", handlers[id]);
       handlerList = Object.values(handlers).filter(
         (h) => !!h
@@ -83,18 +77,18 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       }
     },
     watchMessages: function (onStop: () => void) {
-      const readyHandler = function (bot: Client) {
+      const readyHandler = function () {
         logger.log("Bot is ready!");
         logger.log("Watch for messages");
-        bot.on("messageCreate", messageHandler);
-        bot.on("messageUpdate", messageUpdateHandler);
+        client.on(MessageEventTypes.CREATE, messageHandler);
+        client.on(MessageEventTypes.UPDATE, messageUpdateHandler);
       };
 
       const errorHandler = function (error: Error) {
         logger.error(error, "BOT ERROR");
         client.off("ready", readyHandler);
-        client.off("messageCreate", messageHandler);
-        client.off("messageUpdate", messageUpdateHandler);
+        client.off(MessageEventTypes.CREATE, messageHandler);
+        client.off(MessageEventTypes.UPDATE, messageUpdateHandler);
         onStop();
       };
 
@@ -105,8 +99,8 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       return newListener(() => {
         logger.log("Stop watching for messages");
         client.off("ready", readyHandler);
-        client.off("message", messageHandler);
-        client.off("messageUpdate", messageUpdateHandler);
+        client.off(MessageEventTypes.CREATE, messageHandler);
+        client.off(MessageEventTypes.UPDATE, messageUpdateHandler);
         onStop();
       });
     },

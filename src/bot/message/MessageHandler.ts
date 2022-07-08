@@ -1,19 +1,30 @@
 import { BotConfig } from "../../config";
-import { Msg } from "./Msg";
+import { SendChannel } from "./Msg";
+import { MessageCache } from "./MessageCache";
+import { SymbolCommand } from "../../commands/symbol";
 
 export interface KeyedMessageHandler {
   id: string;
+  type: "messageCreate" | "messageUpdate";
   handler: MessageHandler;
 }
 
 export interface MessageHandler {
-  event: "message" | "messageUpdate";
-
   tag: string;
 
   handle: (
     config: BotConfig,
-    message: Msg,
-    optionalOldMessage?: Msg
-  ) => boolean;
+    sendChannel: SendChannel,
+    messages: {
+      currentMessageId: string;
+      oldMessageId?: string;
+    },
+    command: {
+      currentCommand: SymbolCommand;
+      oldCommand?: SymbolCommand;
+    },
+    env: {
+      cache: MessageCache;
+    }
+  ) => void;
 }

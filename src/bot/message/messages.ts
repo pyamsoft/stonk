@@ -3,50 +3,60 @@ import { Message, PartialMessage } from "discord.js";
 import { KeyedMessageHandler } from "./MessageHandler";
 import { newLogger } from "../logger";
 import { MessageCache } from "./MessageCache";
-import { msgFromMessage } from "./Msg";
+import { msgFromMessage, sendChannelFromMessage } from "./Msg";
+import { stringContentToSymbolList } from "../../commands/symbol";
+import { MessageEventType } from "../model/MessageEventType";
+import { validateMessage } from "./validate";
 
 const logger = newLogger("messages");
 
 export const handleBotMessage = function (
-  eventType: "message" | "messageUpdate",
+  config: BotConfig,
+  eventType: MessageEventType,
   message: Message | PartialMessage,
   optionalOldMessage: Message | PartialMessage | undefined,
-  args: {
-    config: BotConfig;
+  env: {
     handlers: KeyedMessageHandler[];
     cache: MessageCache;
   }
 ) {
-  let handled = false;
-
   const msg = msgFromMessage(message);
   const oldMsg = optionalOldMessage
     ? msgFromMessage(optionalOldMessage)
     : undefined;
 
-  const { handlers, config } = args;
+  if (!validateMessage(config, msg)) {
+    return;
+  }
+
+  const { handlers } = env;
   for (const item of handlers) {
     // If it was removed, skip it
     if (!item) {
       continue;
     }
 
-    const { handler, id } = item;
-    if (handler.event === eventType) {
-      if (handler.handle(config, msg, oldMsg)) {
-        logger.log("Message handled by handler: ", { eventType, id });
-        handled = true;
-        break;
-      }
+    const { cache } = env;
+    const { handler, id, type } = item;
+    if (type === eventType) {
+      logger.log("Pass message to handler: ", id);
+      const sendChannel = sendChannelFromMessage(message);
+      const current = stringContentToSymbolList(config, msg.content);
+      const old = oldMsg
+        ? stringContentToSymbolList(config, oldMsg.content)
+        : undefined;
+      handler.handle(
+        config,
+        sendChannel,
+        {
+          currentMessageId: msg.id,
+          oldMessageId: oldMsg ? oldMsg.id : undefined,
+        },
+        { currentCommand: current, oldCommand: old },
+        {
+          cache,
+        }
+      );
     }
-  }
-
-  if (!handled) {
-    logger.warn("Message unhandled: ", {
-      eventType,
-      handlers,
-      message,
-      optionalOldMessage,
-    });
   }
 };
