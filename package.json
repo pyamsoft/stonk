@@ -25,6 +25,7 @@
     "erlpack": "discord/erlpack",
     "eslint": "7",
     "luxon": "2.3.2",
+    "typescript": "4.6.4",
     "utf-8-validate": "5.0.9",
     "uuid": "8.3.2",
     "zlib-sync": "0.1.7"
@@ -50,7 +51,6 @@
     "eslint-plugin-react-hooks": "4",
     "jest": "27.5.1",
     "prettier": "2.6.2",
-    "tslib": "2.4.0",
-    "typescript": "4.6.4"
+    "tslib": "2.4.0"
   }
 }
