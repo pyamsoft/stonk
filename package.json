@@ -1,6 +1,6 @@
 {
   "name": "stonk-bot",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
