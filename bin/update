@@ -4,7 +4,7 @@
 ignorelist="eslint eslint-* @typescript-eslint/* babel-eslint @babel/core @babel/plugin-syntax-* @babel/plugin-transform-*"
 
 if [ "$1" = "latest" ]; then
-  ncu -t patch -u -x "${ignorelist}" || exit 1
+  ncu -t latest -u -x "${ignorelist}" || exit 1
 else
   ncu -t patch -u -x "${ignorelist}" || exit 1
 fi
