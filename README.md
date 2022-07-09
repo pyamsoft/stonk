@@ -13,7 +13,7 @@ See the `env.default` file for the expected format.
 
 # Running
 ```
-$ node ./index.js
+$ yarn && yarn start
 ```
 
 # Usage
@@ -21,22 +21,14 @@ $ node ./index.js
 In any channel the bot is present in, type `<PREFIX>`
 followed by the symbols you want information about, like so:
 
-```
- <In #general>
-
- me >  $ MSFT AAPL
-
- bot > MSFT: 216.16 (+0.70%) [+1.51]
-       AAPL: 117.34 (-0.14%) [-0.17]
-
-```
+[![Example Bot Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/example.png)][1]
 
 # License
 
 Apache 2
 
 ```
-Copyright 2021 Peter Kenji Yamanaka
+Copyright 2022 Peter Kenji Yamanaka
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,3 +43,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+
+[1]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/example.png
