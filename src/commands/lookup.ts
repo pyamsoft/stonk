@@ -43,16 +43,21 @@ export const LookupHandler: MessageHandler = {
       return;
     }
 
-    logger.log("Handle lookup message", currentCommand);
-    const queryList = [];
+    logger.log("Handle lookup message", {
+      command: currentCommand,
+      queries: lookupQueries,
+    });
+
+    const queryMap: KeyedObject<boolean> = {};
     for (const query of lookupQueries) {
       let cleanQuery = query.trim();
       while (cleanQuery.startsWith(prefix)) {
         cleanQuery = cleanQuery.substring(1);
       }
-      queryList.push(lookupApi(cleanQuery));
+      queryMap[cleanQuery] = true;
     }
 
+    const queryList = Object.keys(queryMap).map((q) => lookupApi(q));
     return Promise.all(queryList).then((results) => {
       const errors: KeyedObject<string> = {};
       const symbols = [];

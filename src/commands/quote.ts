@@ -61,7 +61,6 @@ export const QuoteHandler: MessageHandler = {
     }
 
     const symbolList = Object.keys(symbolMap);
-    logger.log("Lookup quotes: ", symbolList);
     return findQuotesForSymbols(symbolList).then((result) =>
       messageHandlerOutput(result)
     )
