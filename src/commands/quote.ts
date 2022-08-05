@@ -6,6 +6,7 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
+import { KeyedObject } from "../bot/model/KeyedObject";
 
 const TAG = "QuoteHandler";
 const logger = newLogger(TAG);
@@ -39,19 +40,30 @@ export const QuoteHandler: MessageHandler = {
       return;
     }
 
-    logger.log("Handle quote message", currentCommand);
-    const symbolList = [];
+    logger.log("Handle quote message", {
+      command: currentCommand,
+      symbols: quoteSymbols,
+    });
+
+    // Use object to remove duplicate quote lookups
+    const symbolMap: KeyedObject<boolean> = {};
     for (const symbol of quoteSymbols) {
+      // Remove spaces
       let cleanSymbol = symbol.trim();
+
+      // Remove PREFIX or double PREFIX
       while (cleanSymbol.startsWith(prefix)) {
         cleanSymbol = cleanSymbol.substring(1);
       }
+
       const stockSymbol = cleanSymbol.toUpperCase();
-      symbolList.push(stockSymbol);
+      symbolMap[stockSymbol] = true;
     }
 
+    const symbolList = Object.keys(symbolMap);
+    logger.log("Lookup quotes: ", symbolList);
     return findQuotesForSymbols(symbolList).then((result) =>
       messageHandlerOutput(result)
-    );
+    )
   },
 };

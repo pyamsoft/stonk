@@ -57,11 +57,6 @@ const deleteOldMessages = function (
     return Promise.resolve();
   }
 
-  logger.log("DELETE OLD: ", {
-    oldContents,
-    keys,
-  });
-
   const work = [];
   for (const key of oldContents) {
     // If the new message replacing this one does not include previous existing content, delete the old message
@@ -73,6 +68,11 @@ const deleteOldMessages = function (
       if (!oldMessage) {
         continue;
       }
+
+      logger.log("Key existed in old message but not new message, delete it", {
+        oldContent: key,
+        newContents: keys,
+      });
 
       // We know this to be true
       const remover = removerFromMessage(messageFromMsg(oldMessage));
