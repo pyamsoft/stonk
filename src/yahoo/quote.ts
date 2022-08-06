@@ -133,7 +133,8 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
     if (!data) {
       logger.warn("YF missing response");
       const results: QuoteResponse[] = [];
-      for (const s of symbols) {
+      for (let s of symbols) {
+        s = s.toUpperCase();
         results.push({
           symbol: s,
           error: `Unable to find quote for ${bold(s)}`,
@@ -147,7 +148,8 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
     if (!quoteResponse) {
       logger.warn("YF missing quote response");
       const results: QuoteResponse[] = [];
-      for (const s of symbols) {
+      for (let s of symbols) {
+        s = s.toUpperCase();
         results.push({
           symbol: s,
           error: `Unable to find quote for ${bold(s)}`,
@@ -161,7 +163,8 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
     if (!result) {
       logger.warn("YF missing response result");
       const results: QuoteResponse[] = [];
-      for (const s of symbols) {
+      for (let s of symbols) {
+        s = s.toUpperCase();
         results.push({
           symbol: s,
           error: `Unable to find quote for ${bold(s)}`,
@@ -177,7 +180,7 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
       const stock = result.find((r: any) => r && r.symbol === symbol);
       const { error, quote } = parseYFQuote(symbol, stock);
       results.push({
-        symbol,
+        symbol: symbol.toUpperCase(),
         error,
         quote,
       });

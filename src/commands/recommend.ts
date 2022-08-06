@@ -1,8 +1,14 @@
-import {MessageHandler, messageHandlerOutput} from "../bot/message/MessageHandler";
+import {
+  MessageHandler,
+  messageHandlerOutput,
+} from "../bot/message/MessageHandler";
 import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { KeyedObject } from "../bot/model/KeyedObject";
+import { recommendApi } from "../yahoo/recommend";
+import { findQuotesForSymbols } from "./work/quote";
+import { bold } from "../bot/discord/format";
 
 const TAG = "RecommendHandler";
 const logger = newLogger(TAG);
@@ -64,8 +70,55 @@ export const RecommendHandler: MessageHandler = {
       symbolMap[stockSymbol] = true;
     }
 
-    const symbolList = Object.keys(symbolMap);
-    logger.log("Find recs for: ", symbolList);
-    return Promise.resolve(messageHandlerOutput({}));
+    const recList = Object.keys(symbolMap).map((s) => recommendApi(s));
+    return Promise.all(recList).then((results) => {
+      const errors: KeyedObject<string> = {};
+      const symbolResolvers = [];
+      for (const res of results) {
+        if (res.recommendations.length > 0) {
+          symbolResolvers.push(
+            findQuotesForSymbols(res.recommendations).then((results) => {
+                // Pair the recs with the symbol
+              return {
+                symbol: res.symbol,
+                recs: results,
+              };
+            })
+          );
+        } else if (res.error) {
+          errors[res.symbol] = res.error;
+        } else {
+          errors[res.symbol] = `Unable to get recommendation: ${res.symbol}`;
+        }
+      }
+
+      // No symbols found, only errors
+      if (symbolResolvers.length <= 0) {
+        return messageHandlerOutput(errors);
+      }
+
+      return Promise.all(symbolResolvers).then((results) => {
+        const quotes: KeyedObject<string> = {};
+
+        // For lookup
+        for (const pairing of results) {
+          // The symbol found these recs
+          const { symbol, recs } = pairing;
+          for (const recSymbol of Object.keys(recs)) {
+            // For rec symbol, attach OG, like MSFT found rec AAPL
+            const outputText = recs[recSymbol];
+            const messageSymbol = `${bold(symbol)} recommends similar ticker =>`;
+            quotes[recSymbol] = `${messageSymbol}${outputText}`;
+          }
+        }
+
+        // Then, for any lookup errors, replace the text with the error text
+        for (const key of Object.keys(errors)) {
+          quotes[key] = errors[key];
+        }
+
+        return messageHandlerOutput(quotes);
+      });
+    });
   },
 };
