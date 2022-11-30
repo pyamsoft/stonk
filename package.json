@@ -6,10 +6,6 @@
   "scripts": {
     "build": "yarn lint && tsc",
     "start": "yarn build && node ./dist/index.js",
-    "deploy:main": "yarn build && bash ./bin/deploy 1",
-    "deploy:back": "yarn build && bash ./bin/deploy 2",
-    "scale:main": "bash ./bin/scale main",
-    "scale:back": "bash ./bin/scale back2",
     "lint": "rm -rf dist && eslint ."
   },
   "engines": {
