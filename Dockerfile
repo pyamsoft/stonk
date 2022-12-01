@@ -1,5 +1,6 @@
 FROM node:16
 
+USER nobody
 WORKDIR /stonk-bot
 
 COPY package.json ./
@@ -9,6 +10,6 @@ COPY .eslintrc.js ./
 COPY .env ./
 COPY src ./src
 
-RUN umask 0077 && yarn && yarn build
+RUN sed -i '' 's/PREFIX=!/PREFIX=$/' && umask 0077 && yarn && yarn build
 
 CMD [ "node", "./dist/index.js" ]

@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "docker": "docker build . -t stonk-bot -f ./Dockerfile",
+    "docker": "docker build . -t pyamsoft/stonk-bot -f ./Dockerfile",
     "build": "yarn lint && tsc",
     "start": "yarn build && node ./dist/index.js",
     "lint": "rm -rf dist && eslint ."
