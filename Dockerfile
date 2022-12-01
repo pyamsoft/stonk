@@ -11,5 +11,4 @@ COPY src ./src
 
 RUN sed -i 's/PREFIX=!/PREFIX=$/' .env && umask 0077 && yarn && yarn build
 
-USER nobody
 CMD [ "node", "./dist/index.js" ]
