@@ -6,6 +6,7 @@ import { QuoteHandler } from "./commands/quote";
 import { MessageEventTypes } from "./bot/model/MessageEventType";
 import { LookupHandler } from "./commands/lookup";
 import { RecommendHandler } from "./commands/recommend";
+import { registerPeriodicHealthCheck } from "./health";
 
 const logger = newLogger("StonkBot");
 
@@ -39,7 +40,11 @@ const updateRecHandler = bot.addHandler(
   RecommendHandler
 );
 
+const health = registerPeriodicHealthCheck(config.healthCheckUrl);
+
 const watcher = bot.watchMessages(() => {
+  health.unregister();
+
   bot.removeHandler(createHelpHandler);
   bot.removeHandler(updateHelpHandler);
   bot.removeHandler(createQuoteHandler);
