@@ -31,8 +31,8 @@ export const validateMessageHasChannel = function (message: Msg): boolean {
 };
 
 export const validateMessageIsTextChannel = function (message: Msg): boolean {
-  // TODO(Peter): Support DM messages
-  return message.channel.type === "GUILD_TEXT";
+  const type = message.channel.type;
+  return type === "GUILD_TEXT" || type === "DM";
 };
 
 export const validateMessageIsSpecificChannel = function (
@@ -75,8 +75,11 @@ export const validateMessage = function (
     return false;
   }
 
-  if (!validateMessageIsSpecificChannel(config, message)) {
-    return false;
+  const type = message.channel.type;
+  if (type === "GUILD_TEXT") {
+    if (!validateMessageIsSpecificChannel(config, message)) {
+      return false;
+    }
   }
 
   if (!validateMessageIsWatched(config, message)) {

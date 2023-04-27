@@ -11,6 +11,9 @@ along with a `prefix` (I use `$`)
 
 See the `env.default` file for the expected format.
 
+You will also need to set the bot up in the Discord Developer Portal. The bot
+needs access to at least the "Server Members Intent" and "Presence Intent".  
+
 # Running
 ```
 $ yarn && yarn start
@@ -22,6 +25,14 @@ In any channel the bot is present in, type `<PREFIX>`
 followed by the symbols you want information about, like so:
 
 [![Example Bot Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/example.png)][1]
+
+## Customization
+
+You can have the bot only watch and reply in a designated channel by providing the
+`BOT_CHANNEL_ID` variable in the `.env` file, otherwise the bot will watch and reply from
+all channels.
+
+The bot will always watch and reply in individual DMs.
 
 # License
 
