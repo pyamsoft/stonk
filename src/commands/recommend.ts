@@ -94,7 +94,7 @@ export const RecommendHandler: MessageHandler = {
         if (res.recommendations.length > 0) {
           symbolResolvers.push(
             findQuotesForSymbols(res.recommendations).then((results) => {
-                // Pair the recs with the symbol
+              // Pair the recs with the symbol
               return {
                 symbol: res.symbol,
                 recs: results,
@@ -123,7 +123,9 @@ export const RecommendHandler: MessageHandler = {
           for (const recSymbol of Object.keys(recs)) {
             // For rec symbol, attach OG, like MSFT found rec AAPL
             const outputText = recs[recSymbol];
-            const messageSymbol = `${bold(symbol)} recommends similar ticker =>`;
+            const messageSymbol = `${bold(
+              symbol
+            )} recommends similar ticker =>`;
             quotes[recSymbol] = `${messageSymbol}${outputText}`;
           }
         }

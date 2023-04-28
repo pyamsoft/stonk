@@ -79,6 +79,6 @@ export const QuoteHandler: MessageHandler = {
     const symbolList = Object.keys(symbolMap);
     return findQuotesForSymbols(symbolList).then((result) =>
       messageHandlerOutput(result)
-    )
+    );
   },
 };
