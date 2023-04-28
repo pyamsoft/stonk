@@ -15,7 +15,13 @@
  */
 
 import { BotConfig } from "../config";
-import { Client, Intents, Message, PartialMessage } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Message,
+  PartialMessage,
+  Partials,
+} from "discord.js";
 import { newLogger } from "./logger";
 import { KeyedMessageHandler, MessageHandler } from "./message/MessageHandler";
 import { KeyedObject } from "./model/KeyedObject";
@@ -40,11 +46,16 @@ export interface DiscordBot {
 export const initializeBot = function (config: BotConfig): DiscordBot {
   const client = new Client({
     intents: [
-      Intents.FLAGS.GUILDS,
-      Intents.FLAGS.DIRECT_MESSAGES,
-      Intents.FLAGS.GUILD_MESSAGES,
+      GatewayIntentBits.Guilds,
+
+      // Needed to read messages
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
+
+      // Need to read message content
+      GatewayIntentBits.MessageContent,
     ],
-    partials: ["MESSAGE", "CHANNEL"],
+    partials: [Partials.Message, Partials.Channel],
   });
 
   const handlers: KeyedObject<KeyedMessageHandler | undefined> = {};
