@@ -9,22 +9,43 @@ to make your own Discord App in the developer portal,
 and then pass your own bot tokens into `.env`
 along with a `prefix` (I use `$`)
 
-See the `env.default` file for the expected format.
-
-You will also need to set the bot up in the Discord Developer Portal. The bot
-needs access to at least the "Server Members Intent" and "Presence Intent".  
+Copy the `env.default` file to `.env` to get started!
 
 # Running
-```
+
+You will need to create a Bot in the 
+[Discord Developer Portal](https://discord.com/developers/applications/). At
+a minimum, the bot must have a `TOKEN` and you must set the bot up with the
+`Message Content` intent.
+
+[![Intents](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/intents.png)][1]
+
+```bash
 $ yarn && yarn start
+
+OR 
+
+$ ./bin/dockerize
 ```
 
 # Usage
 
 In any channel the bot is present in, type `<PREFIX>`
-followed by the symbols you want information about, like so:
+followed by the symbols you want information about:
 
-[![Example Bot Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/example.png)][1]
+[![Example Bot Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/ticker.png)][2]
+
+You can also lookup the ticker of a company via a lookup. Type `<PREFIX><PREFIX>`
+followed by the search term (like the company name):
+
+[![Example Lookup Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/lookup.png)][3]
+
+You can receive similar recommendations related to a ticker. Type `<PREFIX><PREFIX><PREFIX>`
+followed by the symbol you want related recommendations for:
+
+[![Example Recommend Command](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/recs.png)][4]
+
+For additional help and options, type the `<PREFIX>` and the bot will display all of its commands.
 
 ## Customization
 
@@ -55,4 +76,7 @@ limitations under the License.
 ```
 
 
-[1]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/example.png
+[1]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/intents.png
+[2]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/ticker.png
+[3]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/lookup.png
+[4]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/recs.png
