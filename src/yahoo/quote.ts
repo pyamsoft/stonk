@@ -20,10 +20,11 @@ import { URLSearchParams } from "url";
 import { jsonApi } from "../util/api";
 import { newLogger } from "../bot/logger";
 import { bold } from "../bot/discord/format";
+import { authYahooFinance } from "./yahoo";
 
 const logger = newLogger("YahooQuote");
 
-const generateQuoteUrl = function (symbols: string[]): string {
+const generateQuoteUrl = async function (symbols: string[]) {
   const params = new URLSearchParams();
   params.append("format", "json");
   params.append(
@@ -41,6 +42,13 @@ const generateQuoteUrl = function (symbols: string[]): string {
     ].join(",")
   );
   params.append("symbols", symbolsToString(symbols));
+
+  // YF needs cookie auth
+  const crumb = await authYahooFinance();
+  if (crumb) {
+    params.append("crumb", crumb);
+  }
+
   return `https://query1.finance.yahoo.com/v7/finance/quote?${params.toString()}`;
 };
 
@@ -153,9 +161,12 @@ const parseYFQuote = function (
   };
 };
 
-export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
+export const quoteApi = async function (
+  symbols: string[]
+): Promise<QuoteResponse[]> {
+  const url = await generateQuoteUrl(symbols);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(generateQuoteUrl(symbols)).then((data: any) => {
+  return jsonApi(url).then((data: any) => {
     if (!data) {
       logger.warn("YF missing response");
       const results: QuoteResponse[] = [];

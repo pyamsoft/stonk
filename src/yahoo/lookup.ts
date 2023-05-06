@@ -19,10 +19,11 @@ import { newLogger } from "../bot/logger";
 import { jsonApi } from "../util/api";
 import { LookupResponse } from "../commands/model/LookupResponse";
 import { bold } from "../bot/discord/format";
+import { authYahooFinance } from "./yahoo";
 
 const logger = newLogger("YahooLookup");
 
-const generateLookupUrl = function (query: string, fuzzy: boolean) {
+const generateLookupUrl = async function (query: string, fuzzy: boolean) {
   const params = new URLSearchParams();
   params.append("q", query);
   params.append("lang", "en-US");
@@ -36,12 +37,22 @@ const generateLookupUrl = function (query: string, fuzzy: boolean) {
   params.append("enableCb", "true");
   params.append("enableNavLinks", "true");
   params.append("enableEnhancedTrivialQuery", "true");
+
+  // YF needs cookie auth
+  const crumb = await authYahooFinance();
+  if (crumb) {
+    params.append("crumb", crumb);
+  }
+
   return `https://query1.finance.yahoo.com/v1/finance/search?${params.toString()}`;
 };
 
-export const lookupApi = function (query: string): Promise<LookupResponse> {
+export const lookupApi = async function (
+  query: string
+): Promise<LookupResponse> {
+  const url = await generateLookupUrl(query, false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(generateLookupUrl(query, false)).then((data: any) => {
+  return jsonApi(url).then((data: any) => {
     const { quotes } = data;
     if (!quotes || quotes.length <= 0) {
       logger.warn("YFinance query missing quotes");

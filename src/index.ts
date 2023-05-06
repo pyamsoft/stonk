@@ -75,7 +75,11 @@ const watcher = bot.watchMessages(() => {
 bot.login().then((loggedIn) => {
   if (loggedIn) {
     logger.log("Bot logged in: ", loggedIn);
-    authYahooFinance().then((c) => logger.log("YF auth: ", c));
+
+    // Early auth YF attempt
+    authYahooFinance().then((c) => {
+      logger.log("Early authed YF with crumb: ", c);
+    });
   } else {
     logger.warn("Bot failed to login!");
     watcher.stop();

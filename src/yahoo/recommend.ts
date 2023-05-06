@@ -18,18 +18,29 @@ import { newLogger } from "../bot/logger";
 import { jsonApi } from "../util/api";
 import { bold } from "../bot/discord/format";
 import { RecommendResponse } from "../commands/model/RecommendResponse";
+import { URLSearchParams } from "url";
+import { authYahooFinance } from "./yahoo";
 
 const logger = newLogger("YahooRecommend");
 
-const generateRecommendUrl = function (symbol: string) {
-  return `https://query2.finance.yahoo.com/v6/finance/recommendationsbysymbol/${symbol}`;
+const generateRecommendUrl = async function (symbol: string) {
+  const params = new URLSearchParams();
+
+  // YF needs cookie auth
+  const crumb = await authYahooFinance();
+  if (crumb) {
+    params.append("crumb", crumb);
+  }
+
+  return `https://query2.finance.yahoo.com/v6/finance/recommendationsbysymbol/${symbol}?${params.toString()}`;
 };
 
-export const recommendApi = function (
+export const recommendApi = async function (
   symbol: string
 ): Promise<RecommendResponse> {
+  const url = await generateRecommendUrl(symbol);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(generateRecommendUrl(symbol)).then((data: any) => {
+  return jsonApi(url).then((data: any) => {
     const { finance } = data;
     if (!finance) {
       logger.warn("YFinance recommend missing finance");

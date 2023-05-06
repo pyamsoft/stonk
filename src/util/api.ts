@@ -15,9 +15,14 @@
  */
 
 import axios, { AxiosResponse } from "axios";
+import { CookieJar } from "tough-cookie";
+import { wrapper } from "axios-cookiejar-support";
+
+const jar = new CookieJar();
+const client = wrapper(axios.create({ jar }));
 
 export const jsonApi = function <T>(url: string): Promise<T> {
-  return axios({
+  return client({
     method: "GET",
     url,
     withCredentials: true,
@@ -25,11 +30,13 @@ export const jsonApi = function <T>(url: string): Promise<T> {
 };
 
 export const htmlApi = function <T>(url: string): Promise<T> {
-  return axios({
+  return client({
     method: "GET",
     url,
+    withCredentials: true,
     headers: {
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
-    }
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    },
   }).then((r: AxiosResponse<T>) => r.data);
 };

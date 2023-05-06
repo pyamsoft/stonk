@@ -7,6 +7,9 @@ import { newLogger } from "../bot/logger";
 
 const logger = newLogger("YahooApi");
 
+/**
+ * Hold onto this for the lifespan of our bot session
+ */
 let crumb = "";
 
 export const authYahooFinance = async function (): Promise<string> {
@@ -23,7 +26,7 @@ export const authYahooFinance = async function (): Promise<string> {
     const res = await htmlApi(
       "https://query1.finance.yahoo.com/v1/test/getcrumb"
     );
-    logger.log("CRUMB: ", res);
+    logger.log("Auth YF with crumb: ", res);
     crumb = res as string;
   } catch (e) {
     logger.error(e, "Error getting YF crumb");
