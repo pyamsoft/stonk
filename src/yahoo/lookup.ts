@@ -40,6 +40,7 @@ const generateLookupUrl = function (query: string, fuzzy: boolean) {
 };
 
 export const lookupApi = function (query: string): Promise<LookupResponse> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return jsonApi(generateLookupUrl(query, false)).then((data: any) => {
     const { quotes } = data;
     if (!quotes || quotes.length <= 0) {
@@ -51,6 +52,7 @@ export const lookupApi = function (query: string): Promise<LookupResponse> {
       };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const equities = quotes.filter((q: any) => !!q.score);
     if (!equities || equities.length <= 0) {
       logger.warn("YFinance query missing equities");
@@ -62,6 +64,7 @@ export const lookupApi = function (query: string): Promise<LookupResponse> {
     }
 
     const bestGuesses = equities.sort(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (e1: any, e2: any) => e2.score - e1.score
     );
     if (bestGuesses.length <= 0) {

@@ -44,40 +44,49 @@ const generateQuoteUrl = function (symbols: string[]): string {
   return `https://query1.finance.yahoo.com/v7/finance/quote?${params.toString()}`;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stockSymbol = function (quote: any): string {
   return quote.symbol;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalPrice = function (quote: any): number {
   return quote.regularMarketPrice;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const postMarketPrice = function (quote: any): number | undefined {
   return quote.postMarketPrice;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalPercentChange = function (quote: any): number {
   return quote.regularMarketChangePercent;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const postMarketPercentChange = function (quote: any): number | undefined {
   return quote.postMarketChangePercent;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalAmountChange = function (quote: any): number {
   return quote.regularMarketChange;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const postMarketAmountChange = function (quote: any): number | undefined {
   return quote.postMarketChange;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const company = function (quote: any): string {
   return quote.shortName || quote.longName;
 };
 
 const parseYFQuote = function (
   symbol: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   quote: any
 ): {
   quote: Quote | undefined;
@@ -145,6 +154,7 @@ const parseYFQuote = function (
 };
 
 export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return jsonApi(generateQuoteUrl(symbols)).then((data: any) => {
     if (!data) {
       logger.warn("YF missing response");
@@ -193,6 +203,7 @@ export const quoteApi = function (symbols: string[]): Promise<QuoteResponse[]> {
     const results: QuoteResponse[] = [];
     for (const symbol of symbols) {
       // Find the stock if it exists, if it is not included, then it was wrongly formatted or invalid.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stock = result.find((r: any) => r && r.symbol === symbol);
       const { error, quote } = parseYFQuote(symbol, stock);
       results.push({

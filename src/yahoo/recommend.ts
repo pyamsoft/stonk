@@ -28,6 +28,7 @@ const generateRecommendUrl = function (symbol: string) {
 export const recommendApi = function (
   symbol: string
 ): Promise<RecommendResponse> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return jsonApi(generateRecommendUrl(symbol)).then((data: any) => {
     const { finance } = data;
     if (!finance) {
@@ -62,7 +63,9 @@ export const recommendApi = function (
       };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bestRecs: any[] = recommendedSymbols.sort(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (e1: any, e2: any) => e2.score - e1.score
     );
     if (bestRecs.length <= 0) {

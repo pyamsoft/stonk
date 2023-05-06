@@ -15,13 +15,10 @@
  */
 
 import { newLogger } from "./bot/logger";
+import env from "dotenv";
 
+env.config();
 const logger = newLogger("BotConfig");
-
-// Use require here instead of import
-//
-// Parse the .env file if one exists
-require("dotenv").config();
 
 export interface BotConfig {
   prefix: string;
