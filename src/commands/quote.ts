@@ -23,6 +23,7 @@ import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
 import { KeyedObject } from "../bot/model/KeyedObject";
+import { AxiosError } from "axios";
 
 const TAG = "QuoteHandler";
 const logger = newLogger(TAG);
@@ -77,8 +78,13 @@ export const QuoteHandler: MessageHandler = {
     }
 
     const symbolList = Object.keys(symbolMap);
-    return findQuotesForSymbols(symbolList).then((result) =>
-      messageHandlerOutput(result)
-    );
+    return findQuotesForSymbols(symbolList)
+      .then((result) => messageHandlerOutput(result))
+      .catch((e: AxiosError) => {
+        logger.error(e, "Error getting quotes");
+        return messageHandlerOutput({
+          ERROR: `${e.code} ${e.message} ${e.response?.data}`,
+        });
+      });
   },
 };

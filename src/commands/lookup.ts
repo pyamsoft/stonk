@@ -24,6 +24,7 @@ import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
 import { lookupApi } from "../yahoo/lookup";
 import { KeyedObject } from "../bot/model/KeyedObject";
+import { AxiosError } from "axios";
 
 const TAG = "LookupHandler";
 const logger = newLogger(TAG);
@@ -92,13 +93,20 @@ export const LookupHandler: MessageHandler = {
         return messageHandlerOutput(errors);
       }
 
-      return findQuotesForSymbols(symbols).then((quotes) => {
-        for (const key of Object.keys(errors)) {
-          quotes[key] = errors[key];
-        }
+      return findQuotesForSymbols(symbols)
+        .then((quotes) => {
+          for (const key of Object.keys(errors)) {
+            quotes[key] = errors[key];
+          }
 
-        return messageHandlerOutput(quotes);
-      });
+          return messageHandlerOutput(quotes);
+        })
+        .catch((e: AxiosError) => {
+          logger.error(e, "Error getting lookup");
+          return messageHandlerOutput({
+            ERROR: `${e.code} ${e.message} ${e.response?.data}`,
+          });
+        });
     });
   },
 };

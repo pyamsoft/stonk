@@ -25,6 +25,7 @@ import { KeyedObject } from "../bot/model/KeyedObject";
 import { recommendApi } from "../yahoo/recommend";
 import { findQuotesForSymbols } from "./work/quote";
 import { bold } from "../bot/discord/format";
+import {AxiosError} from "axios";
 
 const TAG = "RecommendHandler";
 const logger = newLogger(TAG);
@@ -136,6 +137,11 @@ export const RecommendHandler: MessageHandler = {
         }
 
         return messageHandlerOutput(quotes);
+      }).catch((e: AxiosError) => {
+        logger.error(e, "Error getting recommendations")
+        return messageHandlerOutput({
+          "ERROR": `${e.code} ${e.message} ${e.response?.data}`
+        })
       });
     });
   },
