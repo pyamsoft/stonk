@@ -20,5 +20,16 @@ export const jsonApi = function <T>(url: string): Promise<T> {
   return axios({
     method: "GET",
     url,
+    withCredentials: true,
+  }).then((r: AxiosResponse<T>) => r.data);
+};
+
+export const htmlApi = function <T>(url: string): Promise<T> {
+  return axios({
+    method: "GET",
+    url,
+    headers: {
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+    }
   }).then((r: AxiosResponse<T>) => r.data);
 };
