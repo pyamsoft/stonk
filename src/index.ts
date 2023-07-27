@@ -23,7 +23,6 @@ import { MessageEventTypes } from "./bot/model/MessageEventType";
 import { LookupHandler } from "./commands/lookup";
 import { RecommendHandler } from "./commands/recommend";
 import { registerPeriodicHealthCheck } from "./health";
-import { authYahooFinance } from "./yahoo/yahoo";
 
 const logger = newLogger("StonkBot");
 
@@ -75,11 +74,6 @@ const watcher = bot.watchMessages(() => {
 bot.login().then((loggedIn) => {
   if (loggedIn) {
     logger.log("Bot logged in: ", loggedIn);
-
-    // Early auth YF attempt
-    authYahooFinance().then((c) => {
-      logger.log("Early authed YF with crumb: ", c);
-    });
   } else {
     logger.warn("Bot failed to login!");
     watcher.stop();

@@ -15,34 +15,19 @@
  */
 
 import { newLogger } from "../bot/logger";
-import { jsonApi } from "../util/api";
 import { bold } from "../bot/discord/format";
 import { RecommendResponse } from "../commands/model/RecommendResponse";
-import { URLSearchParams } from "url";
-import { authYahooFinance } from "./yahoo";
+import yf from "yahoo-finance2";
 
 const logger = newLogger("YahooRecommend");
-
-const generateRecommendUrl = async function (symbol: string) {
-  const params = new URLSearchParams();
-
-  // YF needs cookie auth
-  const crumb = await authYahooFinance();
-  if (crumb) {
-    params.append("crumb", crumb);
-  }
-
-  return `https://query2.finance.yahoo.com/v6/finance/recommendationsbysymbol/${symbol}?${params.toString()}`;
-};
 
 export const recommendApi = async function (
   symbol: string
 ): Promise<RecommendResponse> {
-  const url = await generateRecommendUrl(symbol);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(url).then((data: any) => {
-    const { finance } = data;
-    if (!finance) {
+  return yf.recommendationsBySymbol(symbol).then((data: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { symbol, recommendedSymbols } = data as any;
+    if (!symbol) {
       logger.warn("YFinance recommend missing finance");
       return {
         symbol: symbol.toUpperCase(),
@@ -51,22 +36,8 @@ export const recommendApi = async function (
       };
     }
 
-    const { result } = finance;
-    if (!result || result.length <= 0) {
-      logger.warn("YFinance recommend.finance missing result");
-      return {
-        symbol: symbol.toUpperCase(),
-        recommendations: [],
-        error: `Unable to find recommendations for ${bold(symbol)}`,
-      };
-    }
-
-    const theRes = result[0];
-    const { recommendedSymbols } = theRes;
     if (!recommendedSymbols || recommendedSymbols.length <= 0) {
-      logger.warn(
-        "YFinance recommend.finance.result[0] missing recommendedSymbols"
-      );
+      logger.warn("YFinance missing recommendedSymbols");
       return {
         symbol: symbol.toUpperCase(),
         recommendations: [],

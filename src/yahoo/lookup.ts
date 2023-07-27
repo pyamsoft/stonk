@@ -14,46 +14,20 @@
  * limitations under the License.
  */
 
-import { URLSearchParams } from "url";
 import { newLogger } from "../bot/logger";
-import { jsonApi } from "../util/api";
 import { LookupResponse } from "../commands/model/LookupResponse";
 import { bold } from "../bot/discord/format";
-import { authYahooFinance } from "./yahoo";
+import yf from "yahoo-finance2";
 
 const logger = newLogger("YahooLookup");
-
-const generateLookupUrl = async function (query: string, fuzzy: boolean) {
-  const params = new URLSearchParams();
-  params.append("q", query);
-  params.append("lang", "en-US");
-  params.append("region", "US");
-  params.append("quotesCount", "6");
-  params.append("newsCount", "1");
-  params.append("enableFuzzyQuery", `${fuzzy}`);
-  params.append("quotesQueryId", "tss_match_phrase_query");
-  params.append("multiQuoteQueryId", "multi_quote_single_token_query");
-  params.append("newsQueryId", "news_cie_vespa");
-  params.append("enableCb", "true");
-  params.append("enableNavLinks", "true");
-  params.append("enableEnhancedTrivialQuery", "true");
-
-  // YF needs cookie auth
-  const crumb = await authYahooFinance();
-  if (crumb) {
-    params.append("crumb", crumb);
-  }
-
-  return `https://query1.finance.yahoo.com/v1/finance/search?${params.toString()}`;
-};
 
 export const lookupApi = async function (
   query: string
 ): Promise<LookupResponse> {
-  const url = await generateLookupUrl(query, false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(url).then((data: any) => {
-    const { quotes } = data;
+  return yf.search(query).then((data: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { quotes } = data as any;
+
     if (!quotes || quotes.length <= 0) {
       logger.warn("YFinance query missing quotes");
       return {

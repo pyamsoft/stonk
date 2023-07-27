@@ -18,8 +18,8 @@ import axios, { AxiosResponse } from "axios";
 import { CookieJar } from "tough-cookie";
 import { wrapper } from "axios-cookiejar-support";
 
-const jar = new CookieJar();
-const client = wrapper(axios.create({ jar }));
+export const cookieJar = new CookieJar();
+const client = wrapper(axios.create({ jar: cookieJar }));
 
 export const jsonApi = function <T>(url: string): Promise<T> {
   return client({

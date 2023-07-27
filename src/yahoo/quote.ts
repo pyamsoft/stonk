@@ -15,42 +15,11 @@
  */
 
 import { Quote, QuoteResponse } from "../commands/model/QuoteResponse";
-import { symbolsToString } from "../commands/symbol";
-import { URLSearchParams } from "url";
-import { jsonApi } from "../util/api";
 import { newLogger } from "../bot/logger";
 import { bold } from "../bot/discord/format";
-import { authYahooFinance } from "./yahoo";
+import yf from "yahoo-finance2";
 
 const logger = newLogger("YahooQuote");
-
-const generateQuoteUrl = async function (symbols: string[]) {
-  const params = new URLSearchParams();
-  params.append("format", "json");
-  params.append(
-    "fields",
-    [
-      "symbol",
-      "regularMarketPrice",
-      "regularMarketChange",
-      "regularMarketChangePercent",
-      "postMarketPrice",
-      "postMarketChange",
-      "postMarketChangePercent",
-      "shortName",
-      "longName",
-    ].join(",")
-  );
-  params.append("symbols", symbolsToString(symbols));
-
-  // YF needs cookie auth
-  const crumb = await authYahooFinance();
-  if (crumb) {
-    params.append("crumb", crumb);
-  }
-
-  return `https://query1.finance.yahoo.com/v7/finance/quote?${params.toString()}`;
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stockSymbol = function (quote: any): string {
@@ -164,41 +133,9 @@ const parseYFQuote = function (
 export const quoteApi = async function (
   symbols: string[]
 ): Promise<QuoteResponse[]> {
-  const url = await generateQuoteUrl(symbols);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return jsonApi(url).then((data: any) => {
+  return yf.quote(symbols).then((data: unknown[]) => {
     if (!data) {
       logger.warn("YF missing response");
-      const results: QuoteResponse[] = [];
-      for (let s of symbols) {
-        s = s.toUpperCase();
-        results.push({
-          symbol: s,
-          error: `Unable to find quote for ${bold(s)}`,
-          quote: undefined,
-        });
-      }
-      return results;
-    }
-
-    const { quoteResponse } = data;
-    if (!quoteResponse) {
-      logger.warn("YF missing quote response");
-      const results: QuoteResponse[] = [];
-      for (let s of symbols) {
-        s = s.toUpperCase();
-        results.push({
-          symbol: s,
-          error: `Unable to find quote for ${bold(s)}`,
-          quote: undefined,
-        });
-      }
-      return results;
-    }
-
-    const { result } = quoteResponse;
-    if (!result) {
-      logger.warn("YF missing response result");
       const results: QuoteResponse[] = [];
       for (let s of symbols) {
         s = s.toUpperCase();
@@ -215,7 +152,7 @@ export const quoteApi = async function (
     for (const symbol of symbols) {
       // Find the stock if it exists, if it is not included, then it was wrongly formatted or invalid.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stock = result.find((r: any) => r && r.symbol === symbol);
+      const stock = data.find((r: any) => r && r.symbol === symbol);
       const { error, quote } = parseYFQuote(symbol, stock);
       results.push({
         symbol: symbol.toUpperCase(),
