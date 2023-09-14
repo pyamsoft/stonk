@@ -15,29 +15,44 @@
  */
 
 import axios from "axios";
+import { BotConfig } from "./config";
+import { QuoteHandler } from "./commands/quote";
 
-const fireHealthCheck = function (url: string) {
-  axios({
-    method: "GET",
-    url,
-  })
-    .then(() => {
-      // Ignore
-    })
-    .catch(() => {
-      // Ignore
+const fireHealthCheck = function (config: BotConfig, url: string) {
+  // Check that AAPL returns some data.
+  // If it does, we are live and working
+  // If it does not, we are dead
+  Promise.resolve().then(async () => {
+    const check = await QuoteHandler.handle(config, {
+      currentCommand: {
+        symbols: ["AAPL"],
+        isHelpCommand: false,
+      },
+      oldCommand: undefined,
     });
+
+    if (check && !check.error) {
+      await axios({
+        method: "GET",
+        url,
+      });
+    } else {
+      // Don't hit the healthcheck endpoint because AAPL lookup failed
+    }
+  });
 };
 
-export const registerPeriodicHealthCheck = function (url: string) {
+export const registerPeriodicHealthCheck = function (config: BotConfig) {
   let timer: NodeJS.Timeout | undefined = undefined;
 
-  if (url) {
+  const { healthCheckUrl } = config;
+
+  if (healthCheckUrl) {
     timer = setInterval(() => {
-      fireHealthCheck(url);
+      fireHealthCheck(config, healthCheckUrl);
     }, 60 * 1000);
 
-    fireHealthCheck(url);
+    fireHealthCheck(config, healthCheckUrl);
   }
 
   return {

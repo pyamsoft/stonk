@@ -28,24 +28,39 @@ export interface MessageHandlerOutput {
   objectType: "MessageHandlerOutput";
   helpOutput: string;
   messages: KeyedObject<string>;
+  error: Error | undefined;
 }
 
 export const messageHandlerOutput = function (
-  messages: KeyedObject<string>
+  messages: KeyedObject<string>,
+): MessageHandlerOutput {
+  return {
+    objectType: "MessageHandlerOutput",
+    helpOutput: "",
+    error: undefined,
+    messages,
+  };
+};
+
+export const messageHandlerError = function (
+  error: Error,
+  messages: KeyedObject<string>,
 ): MessageHandlerOutput {
   return {
     objectType: "MessageHandlerOutput",
     helpOutput: "",
     messages,
+    error,
   };
 };
 
 export const messageHandlerHelpText = function (
-  message: string
+  message: string,
 ): MessageHandlerOutput {
   return {
     objectType: "MessageHandlerOutput",
     helpOutput: message,
+    error: undefined,
     messages: {},
   };
 };
@@ -58,6 +73,6 @@ export interface MessageHandler {
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    }
+    },
   ) => Promise<MessageHandlerOutput> | undefined;
 }

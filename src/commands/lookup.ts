@@ -16,6 +16,7 @@
 
 import {
   MessageHandler,
+  messageHandlerError,
   messageHandlerOutput,
 } from "../bot/message/MessageHandler";
 import { newLogger } from "../bot/logger";
@@ -37,7 +38,7 @@ export const LookupHandler: MessageHandler = {
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    }
+    },
   ) {
     // Do not handle help
     const { currentCommand } = command;
@@ -90,7 +91,7 @@ export const LookupHandler: MessageHandler = {
 
       // No symbols found, only errors
       if (symbols.length <= 0) {
-        return messageHandlerOutput(errors);
+        return messageHandlerError(Error("Errors during lookup"), errors);
       }
 
       return findQuotesForSymbols(symbols)
@@ -103,7 +104,7 @@ export const LookupHandler: MessageHandler = {
         })
         .catch((e: AxiosError) => {
           logger.error(e, "Error getting lookup");
-          return messageHandlerOutput({
+          return messageHandlerError(e, {
             ERROR: `${e.code} ${e.message} ${e.response?.data}`,
           });
         });

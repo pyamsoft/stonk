@@ -33,30 +33,30 @@ const createHelpHandler = bot.addHandler(MessageEventTypes.CREATE, HelpHandler);
 const updateHelpHandler = bot.addHandler(MessageEventTypes.UPDATE, HelpHandler);
 const createQuoteHandler = bot.addHandler(
   MessageEventTypes.CREATE,
-  QuoteHandler
+  QuoteHandler,
 );
 const updateQuoteHandler = bot.addHandler(
   MessageEventTypes.UPDATE,
-  QuoteHandler
+  QuoteHandler,
 );
 const createLookupHandler = bot.addHandler(
   MessageEventTypes.CREATE,
-  LookupHandler
+  LookupHandler,
 );
 const updateLookupHandler = bot.addHandler(
   MessageEventTypes.UPDATE,
-  LookupHandler
+  LookupHandler,
 );
 const createRecHandler = bot.addHandler(
   MessageEventTypes.CREATE,
-  RecommendHandler
+  RecommendHandler,
 );
 const updateRecHandler = bot.addHandler(
   MessageEventTypes.UPDATE,
-  RecommendHandler
+  RecommendHandler,
 );
 
-const health = registerPeriodicHealthCheck(config.healthCheckUrl);
+const health = registerPeriodicHealthCheck(config);
 
 const watcher = bot.watchMessages(() => {
   health.unregister();

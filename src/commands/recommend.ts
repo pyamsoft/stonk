@@ -16,6 +16,7 @@
 
 import {
   MessageHandler,
+  messageHandlerError,
   messageHandlerOutput,
 } from "../bot/message/MessageHandler";
 import { newLogger } from "../bot/logger";
@@ -25,7 +26,7 @@ import { KeyedObject } from "../bot/model/KeyedObject";
 import { recommendApi } from "../yahoo/recommend";
 import { findQuotesForSymbols } from "./work/quote";
 import { bold } from "../bot/discord/format";
-import {AxiosError} from "axios";
+import { AxiosError } from "axios";
 
 const TAG = "RecommendHandler";
 const logger = newLogger(TAG);
@@ -38,7 +39,7 @@ export const RecommendHandler: MessageHandler = {
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    }
+    },
   ) {
     // Do not handle help
     const { currentCommand } = command;
@@ -100,7 +101,7 @@ export const RecommendHandler: MessageHandler = {
                 symbol: res.symbol,
                 recs: results,
               };
-            })
+            }),
           );
         } else if (res.error) {
           errors[res.symbol] = res.error;
@@ -111,38 +112,43 @@ export const RecommendHandler: MessageHandler = {
 
       // No symbols found, only errors
       if (symbolResolvers.length <= 0) {
-        return messageHandlerOutput(errors);
+        return messageHandlerError(
+          new Error("Errors during recommendation"),
+          errors,
+        );
       }
 
-      return Promise.all(symbolResolvers).then((results) => {
-        const quotes: KeyedObject<string> = {};
+      return Promise.all(symbolResolvers)
+        .then((results) => {
+          const quotes: KeyedObject<string> = {};
 
-        // For lookup
-        for (const pairing of results) {
-          // The symbol found these recs
-          const { symbol, recs } = pairing;
-          for (const recSymbol of Object.keys(recs)) {
-            // For rec symbol, attach OG, like MSFT found rec AAPL
-            const outputText = recs[recSymbol];
-            const messageSymbol = `${bold(
-              symbol
-            )} recommends similar ticker =>`;
-            quotes[recSymbol] = `${messageSymbol}${outputText}`;
+          // For lookup
+          for (const pairing of results) {
+            // The symbol found these recs
+            const { symbol, recs } = pairing;
+            for (const recSymbol of Object.keys(recs)) {
+              // For rec symbol, attach OG, like MSFT found rec AAPL
+              const outputText = recs[recSymbol];
+              const messageSymbol = `${bold(
+                symbol,
+              )} recommends similar ticker =>`;
+              quotes[recSymbol] = `${messageSymbol}${outputText}`;
+            }
           }
-        }
 
-        // Then, for any lookup errors, replace the text with the error text
-        for (const key of Object.keys(errors)) {
-          quotes[key] = errors[key];
-        }
+          // Then, for any lookup errors, replace the text with the error text
+          for (const key of Object.keys(errors)) {
+            quotes[key] = errors[key];
+          }
 
-        return messageHandlerOutput(quotes);
-      }).catch((e: AxiosError) => {
-        logger.error(e, "Error getting recommendations")
-        return messageHandlerOutput({
-          "ERROR": `${e.code} ${e.message} ${e.response?.data}`
+          return messageHandlerOutput(quotes);
         })
-      });
+        .catch((e: AxiosError) => {
+          logger.error(e, "Error getting recommendations");
+          return messageHandlerError(e, {
+            ERROR: `${e.code} ${e.message} ${e.response?.data}`,
+          });
+        });
     });
   },
 };

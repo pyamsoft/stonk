@@ -16,6 +16,7 @@
 
 import {
   MessageHandler,
+  messageHandlerError,
   messageHandlerOutput,
 } from "../bot/message/MessageHandler";
 import { newLogger } from "../bot/logger";
@@ -36,7 +37,7 @@ export const QuoteHandler: MessageHandler = {
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    }
+    },
   ) {
     // Do not handle help
     const { currentCommand } = command;
@@ -82,7 +83,7 @@ export const QuoteHandler: MessageHandler = {
       .then((result) => messageHandlerOutput(result))
       .catch((e: AxiosError) => {
         logger.error(e, "Error getting quotes");
-        return messageHandlerOutput({
+        return messageHandlerError(e, {
           ERROR: `${e.code} ${e.message} ${e.response?.data}`,
         });
       });
