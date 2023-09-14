@@ -25,7 +25,7 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
   Promise.resolve().then(async () => {
     const check = await QuoteHandler.handle(config, {
       currentCommand: {
-        symbols: ["AAPL"],
+        symbols: ["$AAPL"],
         isHelpCommand: false,
       },
       oldCommand: undefined,
