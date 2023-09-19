@@ -34,10 +34,13 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
     if (check && !check.error) {
       await axios({
         method: "GET",
-        url,
+        url: `${url}?status=up&msg=OK&ping=`,
       });
     } else {
-      // Don't hit the healthcheck endpoint because AAPL lookup failed
+      await axios({
+        method: "GET",
+        url: `${url}?status=down&msg=${encodeURIComponent("Failed to get health quote for AAPL")}&ping=`,
+      });
     }
   });
 };
