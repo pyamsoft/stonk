@@ -44,6 +44,8 @@ export interface DiscordBot {
 }
 
 export const initializeBot = function (config: BotConfig): DiscordBot {
+  // These do exist in the source files?
+  // noinspection JSUnresolvedReference
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -73,7 +75,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
 
   const messageUpdateHandler = function (
     oldMessage: Message | PartialMessage,
-    newMessage: Message | PartialMessage
+    newMessage: Message | PartialMessage,
   ) {
     handleBotMessage(config, MessageEventTypes.UPDATE, newMessage, oldMessage, {
       handlers: handlerList,
@@ -87,7 +89,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       handlers[id] = { id, handler, type };
       logger.log("Add new handler: ", handlers[id]);
       handlerList = Object.values(handlers).filter(
-        (h) => !!h
+        (h) => !!h,
       ) as KeyedMessageHandler[];
       return id;
     },
@@ -96,7 +98,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
         logger.log("Removed handler: ", handlers[id]);
         handlers[id] = undefined;
         handlerList = Object.values(handlers).filter(
-          (h) => !!h
+          (h) => !!h,
         ) as KeyedMessageHandler[];
         return true;
       } else {
@@ -131,7 +133,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
         onStop();
       });
     },
-    login: function () {
+    login: async function () {
       const { token } = config;
       return client
         .login(token)

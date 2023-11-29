@@ -18,8 +18,8 @@ import { KeyedObject } from "../../bot/model/KeyedObject";
 import { quoteApi } from "../../yahoo/quote";
 import { outputQuote } from "../outputs/quote";
 
-export const findQuotesForSymbols = function (
-  symbols: string[]
+export const findQuotesForSymbols = async function (
+  symbols: string[],
 ): Promise<KeyedObject<string>> {
   const resolved: KeyedObject<string> = {};
   return quoteApi(symbols).then((response) => {

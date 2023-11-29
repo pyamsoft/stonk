@@ -32,12 +32,15 @@ export const validateMessageHasChannel = function (message: Msg): boolean {
 
 export const validateMessageIsTextChannel = function (message: Msg): boolean {
   const type = message.channel.type;
+
+  // These do exist in the source files?
+  // noinspection JSUnresolvedReference
   return type === ChannelType.GuildText || type === ChannelType.DM;
 };
 
 export const validateMessageIsSpecificChannel = function (
   config: BotConfig,
-  message: Msg
+  message: Msg,
 ): boolean {
   if (config.specificChannel) {
     // I know this works, discord is dumb
@@ -50,14 +53,14 @@ export const validateMessageIsSpecificChannel = function (
 
 export const validateMessageIsWatched = function (
   config: BotConfig,
-  message: Msg
+  message: Msg,
 ): boolean {
   return message.content.startsWith(config.prefix);
 };
 
 export const validateMessage = function (
   config: BotConfig,
-  message: Msg
+  message: Msg,
 ): boolean {
   if (!validateMessageHasId(message)) {
     return false;
@@ -76,6 +79,9 @@ export const validateMessage = function (
   }
 
   const type = message.channel.type;
+
+  // These do exist in the source files?
+  // noinspection JSUnresolvedReference
   if (type === ChannelType.GuildText) {
     if (!validateMessageIsSpecificChannel(config, message)) {
       return false;
