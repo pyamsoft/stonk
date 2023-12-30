@@ -16,3 +16,6 @@ dist
 !.yarn/versions
 
 .pnp*
+
+# Corepack local install in flatpak
+lib
