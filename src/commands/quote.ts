@@ -23,11 +23,41 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
-import { KeyedObject } from "../bot/model/KeyedObject";
 import { AxiosError } from "axios";
+import { lookupRecommendations } from "./work/recommend";
+import { KeyedObject } from "../bot/model/KeyedObject";
 
 const TAG = "QuoteHandler";
 const logger = newLogger(TAG);
+
+type ExtendedSymbols = {
+  recs: string[];
+};
+
+const parseExtendedSymbols = function (
+  quoteSymbols: string[],
+): ExtendedSymbols {
+  const recs = new Set<string>();
+  for (const symbol of quoteSymbols) {
+    const indexOfOptionsStart = symbol.indexOf(":");
+
+    // Ignore "plain" symbols
+    if (indexOfOptionsStart <= -1) {
+      continue;
+    }
+
+    const justSymbol = symbol.substring(0, indexOfOptionsStart);
+    const options = symbol.substring(indexOfOptionsStart + 1).split(",");
+    logger.log("REC: ", justSymbol, options, symbol);
+    if (options.includes("REC")) {
+      recs.add(justSymbol);
+    }
+  }
+
+  return {
+    recs: [...recs],
+  };
+};
 
 export const QuoteHandler: MessageHandler = {
   tag: TAG,
@@ -77,25 +107,49 @@ export const QuoteHandler: MessageHandler = {
     // Thus, it should be handled by an Extended handler
     //
     // Process as a set to de-dupe
-    const plainSymbolList = new Set(
-      quoteSymbols.filter((s) => !s.includes(":")),
-    );
+    const plainSymbols = new Set(quoteSymbols.filter((s) => !s.includes(":")));
+    const extendedSymbols = parseExtendedSymbols(quoteSymbols);
 
     logger.log("Handle quote message", {
       command: currentCommand,
       rawSymbols: quoteSymbols,
-      plainSymbols: plainSymbolList,
+      plainSymbols,
+      extendedSymbols,
     });
 
     // Promise.all as we prepare for the future when we can handle multiple lookup types all at once
-    return Promise.all([findQuotesForSymbols([...plainSymbolList])])
-      .then(([quoteResults]) => {
-        // Sort outputs based on order of inputs
+    return Promise.all([
+      findQuotesForSymbols([...plainSymbols]),
+      lookupRecommendations(extendedSymbols.recs),
+    ])
+      .then(([quoteResults, recResults]) => {
+        const combinedResults = {
+          // Recommendations first
+          ...recResults,
+          // Override with direct requests
+          ...quoteResults,
+        };
+
+        // Order by input order when possible
+        const used = new Set<string>();
         const allResults: KeyedObject<string> = {};
+
+        // Once to use everything in order
         for (const symbol of quoteSymbols) {
-          const quoteResult = quoteResults[symbol];
-          if (quoteResult) {
-            allResults[symbol] = quoteResult;
+          const result = combinedResults[symbol];
+          if (result) {
+            allResults[symbol] = result;
+            used.add(symbol);
+          }
+        }
+
+        // Again to add any "unused"
+        for (const symbol of Object.keys(combinedResults)) {
+          if (!used.has(symbol)) {
+            const result = combinedResults[symbol];
+            if (result) {
+              allResults[symbol] = result;
+            }
           }
         }
 
