@@ -48,47 +48,57 @@ export const QuoteHandler: MessageHandler = {
     const { prefix } = config;
     const { symbols } = currentCommand;
 
-    const quoteSymbols = symbols.filter((s) => {
-      // Quote lookups start with the prefix only once, a double prefix is a lookup
-      return s[0] === prefix && !!s[1] && s[1] !== prefix;
-    });
+    const quoteSymbols = symbols
+      .filter((s) => {
+        // Quote lookups start with the prefix only once, a double prefix is a lookup
+        return s[0] === prefix && !!s[1] && s[1] !== prefix;
+      })
+      // Remove spaces
+      .map((s) => s.trim())
+      .map((s) => {
+        let cleanSymbol = s;
+        // Remove PREFIX or double PREFIX
+        while (cleanSymbol.startsWith(prefix)) {
+          cleanSymbol = cleanSymbol.substring(1);
+        }
+        return cleanSymbol;
+      });
 
     // No quotes, don't handle
     if (quoteSymbols.length <= 0) {
       return;
     }
 
-    // Use object to remove duplicate quote lookups
-    const symbolMap: KeyedObject<boolean> = {};
-    for (const symbol of quoteSymbols) {
-      // Remove spaces
-      let cleanSymbol = symbol.trim();
-
-      // Remove PREFIX or double PREFIX
-      while (cleanSymbol.startsWith(prefix)) {
-        cleanSymbol = cleanSymbol.substring(1);
-      }
-
-      // "Plain" symbols like $MSFT or $AAPL are handled here, but the presence of ":" means the
-      // symbol is running in an extended option mode.
-      //
-      // Thus, it should be handled by an Extended handler
-      if (!cleanSymbol.includes(":")) {
-        const stockSymbol = cleanSymbol.toUpperCase();
-        symbolMap[stockSymbol] = true;
-      }
-    }
-
-    const symbolList = Object.keys(symbolMap);
+    // "Plain" symbols like $MSFT or $AAPL are handled here, but the presence of ":" means the
+    // symbol is running in an extended option mode.
+    //
+    // Thus, it should be handled by an Extended handler
+    //
+    // Process as a set to de-dupe
+    const plainSymbolList = new Set(
+      quoteSymbols.filter((s) => !s.includes(":")),
+    );
 
     logger.log("Handle quote message", {
       command: currentCommand,
       rawSymbols: quoteSymbols,
-      parsedSymbols: symbolList,
+      plainSymbols: plainSymbolList,
     });
 
-    return findQuotesForSymbols(symbolList)
-      .then((result) => messageHandlerOutput(result))
+    // Promise.all as we prepare for the future when we can handle multiple lookup types all at once
+    return Promise.all([findQuotesForSymbols([...plainSymbolList])])
+      .then(([quoteResults]) => {
+        // Sort outputs based on order of inputs
+        const allResults: KeyedObject<string> = {};
+        for (const symbol of quoteSymbols) {
+          const quoteResult = quoteResults[symbol];
+          if (quoteResult) {
+            allResults[symbol] = quoteResult;
+          }
+        }
+
+        return messageHandlerOutput(allResults);
+      })
       .catch((e: AxiosError) => {
         logger.error(e, "Error getting quotes");
         return messageHandlerError(e, {

@@ -31,6 +31,56 @@ import { AxiosError } from "axios";
 const TAG = "RecommendHandler";
 const logger = newLogger(TAG);
 
+const lookupRecommendations = async function (
+  symbolList: string[],
+): Promise<KeyedObject<string>> {
+  const recList = symbolList.map((s) => recommendApi(s));
+  return Promise.all(recList).then((results) => {
+    const errors: KeyedObject<string> = {};
+    const symbolResolvers = [];
+    for (const res of results) {
+      if (res.recommendations.length > 0) {
+        symbolResolvers.push(
+          findQuotesForSymbols(res.recommendations).then((results) => {
+            // Pair the recs with the symbol
+            return {
+              symbol: res.symbol,
+              recs: results,
+            };
+          }),
+        );
+      } else if (res.error) {
+        errors[res.symbol] = res.error;
+      } else {
+        errors[res.symbol] = `Unable to get recommendation: ${res.symbol}`;
+      }
+    }
+
+    return Promise.all(symbolResolvers).then((results) => {
+      const quotes: KeyedObject<string> = {};
+
+      // For lookup
+      for (const pairing of results) {
+        // The symbol found these recs
+        const { symbol, recs } = pairing;
+        for (const recSymbol of Object.keys(recs)) {
+          // For rec symbol, attach OG, like MSFT found rec AAPL
+          const outputText = recs[recSymbol];
+          const messageSymbol = `${bold(symbol)} recommends similar ticker =>`;
+          quotes[recSymbol] = `${messageSymbol}${outputText}`;
+        }
+      }
+
+      // Then, for any lookup errors, replace the text with the error text
+      for (const key of Object.keys(errors)) {
+        quotes[key] = errors[key];
+      }
+
+      return quotes;
+    });
+  });
+};
+
 export const RecommendHandler: MessageHandler = {
   tag: TAG,
 
@@ -88,67 +138,14 @@ export const RecommendHandler: MessageHandler = {
       symbolMap[stockSymbol] = true;
     }
 
-    const recList = Object.keys(symbolMap).map((s) => recommendApi(s));
-    return Promise.all(recList).then((results) => {
-      const errors: KeyedObject<string> = {};
-      const symbolResolvers = [];
-      for (const res of results) {
-        if (res.recommendations.length > 0) {
-          symbolResolvers.push(
-            findQuotesForSymbols(res.recommendations).then((results) => {
-              // Pair the recs with the symbol
-              return {
-                symbol: res.symbol,
-                recs: results,
-              };
-            }),
-          );
-        } else if (res.error) {
-          errors[res.symbol] = res.error;
-        } else {
-          errors[res.symbol] = `Unable to get recommendation: ${res.symbol}`;
-        }
-      }
-
-      // No symbols found, only errors
-      if (symbolResolvers.length <= 0) {
-        return messageHandlerError(
-          new Error("Errors during recommendation"),
-          errors,
-        );
-      }
-
-      return Promise.all(symbolResolvers)
-        .then((results) => {
-          const quotes: KeyedObject<string> = {};
-
-          // For lookup
-          for (const pairing of results) {
-            // The symbol found these recs
-            const { symbol, recs } = pairing;
-            for (const recSymbol of Object.keys(recs)) {
-              // For rec symbol, attach OG, like MSFT found rec AAPL
-              const outputText = recs[recSymbol];
-              const messageSymbol = `${bold(
-                symbol,
-              )} recommends similar ticker =>`;
-              quotes[recSymbol] = `${messageSymbol}${outputText}`;
-            }
-          }
-
-          // Then, for any lookup errors, replace the text with the error text
-          for (const key of Object.keys(errors)) {
-            quotes[key] = errors[key];
-          }
-
-          return messageHandlerOutput(quotes);
-        })
-        .catch((e: AxiosError) => {
-          logger.error(e, "Error getting recommendations");
-          return messageHandlerError(e, {
-            ERROR: `${e.code} ${e.message} ${e.response?.data}`,
-          });
+    const symbolList = Object.keys(symbolMap);
+    return lookupRecommendations(symbolList)
+      .then((result) => messageHandlerOutput(result))
+      .catch((e: AxiosError) => {
+        logger.error(e, "Error getting recommendations");
+        return messageHandlerError(e, {
+          ERROR: `${e.code} ${e.message} ${e.response?.data}`,
         });
-    });
+      });
   },
 };
