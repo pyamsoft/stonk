@@ -55,9 +55,11 @@ export const QuoteHandler: MessageHandler = {
       })
       // Remove spaces
       .map((s) => s.trim())
+      // Uppercase
+      .map((s) => s.toUpperCase())
+      // Remove PREFIX
       .map((s) => {
         let cleanSymbol = s;
-        // Remove PREFIX or double PREFIX
         while (cleanSymbol.startsWith(prefix)) {
           cleanSymbol = cleanSymbol.substring(1);
         }
