@@ -58,11 +58,6 @@ export const QuoteHandler: MessageHandler = {
       return;
     }
 
-    logger.log("Handle quote message", {
-      command: currentCommand,
-      symbols: quoteSymbols,
-    });
-
     // Use object to remove duplicate quote lookups
     const symbolMap: KeyedObject<boolean> = {};
     for (const symbol of quoteSymbols) {
@@ -74,11 +69,24 @@ export const QuoteHandler: MessageHandler = {
         cleanSymbol = cleanSymbol.substring(1);
       }
 
-      const stockSymbol = cleanSymbol.toUpperCase();
-      symbolMap[stockSymbol] = true;
+      // "Plain" symbols like $MSFT or $AAPL are handled here, but the presence of ":" means the
+      // symbol is running in an extended option mode.
+      //
+      // Thus, it should be handled by an Extended handler
+      if (!cleanSymbol.includes(":")) {
+        const stockSymbol = cleanSymbol.toUpperCase();
+        symbolMap[stockSymbol] = true;
+      }
     }
 
     const symbolList = Object.keys(symbolMap);
+
+    logger.log("Handle quote message", {
+      command: currentCommand,
+      rawSymbols: quoteSymbols,
+      parsedSymbols: symbolList,
+    });
+
     return findQuotesForSymbols(symbolList)
       .then((result) => messageHandlerOutput(result))
       .catch((e: AxiosError) => {
