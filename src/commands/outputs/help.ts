@@ -39,16 +39,25 @@ Beep Boop.
 ${p("                       This help")}
 ${lk("                      This help")}
 ${rec("                     This help")}
-${p("SYMBOL...              Price information for <SYMBOL>")}
-${lk("QUERY...              Price information for <QUERY>")}
-${rec("SYMBOL...            Recommended similar stocks for <SYMBOL>")}
+${p("SYMBOL...              Price quote for <SYMBOL>")}
+${lk("QUERY...              Price quote for <QUERY>")}
+${p("SYMBOL:rec...          Quotes for similar stocks for <SYMBOL>")}
+
+[deprecated commands]
+${rec("SYMBOL...            Quotes for similar stocks for <SYMBOL>")}
 
 [EXAMPLE]
 
-${p("MSFT                   Gets price information for MSFT")}
+${p("MSFT                   Gets price quote for MSFT")}
+${p(`MSFT ${p("AAPL")}             Gets price quote for MSFT and AAPL`)}
+
+${lk("Apple                 Lookup symbol for 'Apple' and get price quote.")}
 ${lk(
-  "Apple                 Lookup the symbol for 'Apple' and get price information."
+  `Apple ${lk("Microsoft")}     Lookup symbol for 'Apple' and 'Microsoft' and
+                        get respective price quote.`,
 )}
+
 ${rec("AMD                  Get recommended stocks similar to 'AMD'")}
+${p("AMD:rec                Get recommended stocks similar to 'AMD'")}
 `);
 };
