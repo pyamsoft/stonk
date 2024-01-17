@@ -23,9 +23,9 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
-import { lookupApi } from "../yahoo/lookup";
 import { KeyedObject } from "../bot/model/KeyedObject";
 import { AxiosError } from "axios";
+import { lookupSymbolForName } from "./work/lookup";
 
 const TAG = "LookupHandler";
 const logger = newLogger(TAG);
@@ -75,39 +75,15 @@ export const LookupHandler: MessageHandler = {
       queryMap[cleanQuery] = true;
     }
 
-    const queryList = Object.keys(queryMap).map((q) => lookupApi(q));
-    return Promise.all(queryList).then((results) => {
-      const errors: KeyedObject<string> = {};
-      const symbols = [];
-      for (const res of results) {
-        if (!!res.symbol && !!res.symbol.trim()) {
-          symbols.push(res.symbol.toUpperCase());
-        } else if (res.error) {
-          errors[res.query] = res.error;
-        } else {
-          errors[res.query] = `Unable to lookup ticker: ${res.query}`;
-        }
-      }
-
-      // No symbols found, only errors
-      if (symbols.length <= 0) {
-        return messageHandlerError(Error("Errors during lookup"), errors);
-      }
-
-      return findQuotesForSymbols(symbols)
-        .then((quotes) => {
-          for (const key of Object.keys(errors)) {
-            quotes[key] = errors[key];
-          }
-
-          return messageHandlerOutput(quotes);
-        })
-        .catch((e: AxiosError) => {
-          logger.error(e, "Error getting lookup");
-          return messageHandlerError(e, {
-            ERROR: `${e.code} ${e.message} ${e.response?.data}`,
-          });
+    return lookupSymbolForName(Object.keys(queryMap), (symbols) =>
+      findQuotesForSymbols(symbols),
+    )
+      .then((quotes) => messageHandlerOutput(quotes))
+      .catch((e: AxiosError) => {
+        logger.error(e, "Error getting lookup");
+        return messageHandlerError(e, {
+          ERROR: `${e.code} ${e.message} ${e.response?.data}`,
         });
-    });
+      });
   },
 };

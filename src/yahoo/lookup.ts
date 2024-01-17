@@ -22,7 +22,7 @@ import yf from "yahoo-finance2";
 const logger = newLogger("YahooLookup");
 
 export const lookupApi = async function (
-  query: string
+  query: string,
 ): Promise<LookupResponse> {
   return yf.search(query).then((data: unknown) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +50,7 @@ export const lookupApi = async function (
 
     const bestGuesses = equities.sort(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (e1: any, e2: any) => e2.score - e1.score
+      (e1: any, e2: any) => e2.score - e1.score,
     );
     if (bestGuesses.length <= 0) {
       logger.warn("YFinance query missing bestGuess");
