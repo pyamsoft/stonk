@@ -31,16 +31,21 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
       oldCommand: undefined,
     });
 
-    if (check && !check.error) {
-      await axios({
-        method: "GET",
-        url: `${url}?status=up&msg=OK&ping=`,
-      });
-    } else {
-      await axios({
-        method: "GET",
-        url: `${url}?status=down&msg=${encodeURIComponent("Failed to get health quote for AAPL")}&ping=`,
-      });
+    try {
+      if (check && !check.error) {
+        await axios({
+          method: "GET",
+          url: `${url}?status=up&msg=OK&ping=`,
+        });
+      } else {
+        await axios({
+          method: "GET",
+          url: `${url}?status=down&msg=${encodeURIComponent("Failed to get health quote for AAPL")}&ping=`,
+        });
+      }
+    } catch (_e) {
+      // Health check error, try again later
+      // Maybe network is offline?
     }
   });
 };
