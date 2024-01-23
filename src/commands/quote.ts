@@ -50,7 +50,7 @@ const parseExtendedSymbols = function (
     const options = symbol.substring(indexOfOptionsStart + 1).split(",");
     logger.log("REC: ", justSymbol, options, symbol);
     if (options.includes("REC")) {
-      recs.add(justSymbol);
+      recs.add(justSymbol.trim());
     }
   }
 

@@ -6,11 +6,14 @@ import { bold } from "../../bot/discord/format";
 export const lookupRecommendations = async function (
   symbolList: string[],
 ): Promise<KeyedObject<string>> {
-  const recList = symbolList.map((s) => recommendApi(s));
-  return Promise.all(recList).then(async (results) => {
+  if (symbolList.length <= 0) {
+    return {};
+  }
+
+  return recommendApi(symbolList).then(async (results) => {
     const errors: KeyedObject<string> = {};
     const symbolResolvers = [];
-    for (const res of results) {
+    for (const res of results.data) {
       if (res.recommendations.length > 0) {
         symbolResolvers.push(
           findQuotesForSymbols(res.recommendations).then((results) => {

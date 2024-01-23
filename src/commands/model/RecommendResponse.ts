@@ -15,7 +15,11 @@
  */
 
 export interface RecommendResponse {
+  data: Rec[];
+}
+
+export type Rec = {
   symbol: string;
   recommendations: string[];
   error: string | undefined;
-}
+};
