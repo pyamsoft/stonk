@@ -22,6 +22,10 @@ export const findQuotesForSymbols = async function (
   symbols: string[],
 ): Promise<KeyedObject<string>> {
   const resolved: KeyedObject<string> = {};
+  if (symbols.length <= 0) {
+    return resolved;
+  }
+
   return quoteApi(symbols).then((response) => {
     for (const res of response) {
       if (res.error) {
