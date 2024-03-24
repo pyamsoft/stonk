@@ -17,11 +17,15 @@
 import axios from "axios";
 import { BotConfig } from "./config";
 import { QuoteHandler } from "./commands/quote";
+import {newLogger} from "./bot/logger";
+
+const logger = newLogger("HealthCheck");
 
 const fireHealthCheck = function (config: BotConfig, url: string) {
   // Check that AAPL returns some data.
   // If it does, we are live and working
   // If it does not, we are dead
+  logger.log(`Attempt check AAPL`);
   Promise.resolve().then(async () => {
     const check = await QuoteHandler.handle(config, {
       currentCommand: {
@@ -33,19 +37,22 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
 
     try {
       if (check && !check.error) {
+        logger.log(`AAPL success, attempt healthcheck: ${url}`);
         await axios({
           method: "GET",
           url: `${url}?status=up&msg=OK&ping=`,
         });
       } else {
+        logger.log(`AAPL failure, attempt healthcheck: ${url}`);
         await axios({
           method: "GET",
           url: `${url}?status=down&msg=${encodeURIComponent("Failed to get health quote for AAPL")}&ping=`,
         });
       }
-    } catch (_e) {
+    } catch (e) {
       // Health check error, try again later
       // Maybe network is offline?
+      logger.error(`Healthcheck failed!`, e);
     }
   });
 };
