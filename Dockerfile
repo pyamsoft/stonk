@@ -8,10 +8,12 @@ COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
 COPY .yarnrc.yml ./
-COPY .yarn ./
 COPY .eslintrc.cjs ./
 COPY .env ./
 COPY src ./src
+
+# Yarn build file
+COPY .yarn/releases/yarn-4.2.2.cjs ./.yarn/releases/yarn-4.2.2.cjs
 
 # Enable corepack
 RUN chmod 644 .env && sed -i 's/PREFIX=!/PREFIX=$/' .env && corepack enable
