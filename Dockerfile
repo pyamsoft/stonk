@@ -8,6 +8,7 @@ COPY package.json ./
 COPY tsconfig.json ./
 COPY yarn.lock ./
 COPY .yarnrc.yml ./
+COPY .yarn ./
 COPY .eslintrc.cjs ./
 COPY .env ./
 COPY src ./src
