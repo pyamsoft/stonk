@@ -38,14 +38,14 @@ export const validateMessageIsTextChannel = function (message: Msg): boolean {
   return type === ChannelType.GuildText || type === ChannelType.DM;
 };
 
-export const validateMessageIsSpecificChannel = function (
+export const validateMessageIsTargetedChannel = function (
   config: BotConfig,
   message: Msg,
 ): boolean {
-  if (config.specificChannel) {
+  if (config.targetedChannels && config.targetedChannels.length > 0) {
     // I know this works, discord is dumb
     const ch = message.channel as unknown as Channel;
-    return ch.id === config.specificChannel;
+    return config.targetedChannels.some((c) => ch.id === c);
   } else {
     return true;
   }
@@ -83,7 +83,7 @@ export const validateMessage = function (
   // These do exist in the source files?
   // noinspection JSUnresolvedReference
   if (type === ChannelType.GuildText) {
-    if (!validateMessageIsSpecificChannel(config, message)) {
+    if (!validateMessageIsTargetedChannel(config, message)) {
       return false;
     }
   }

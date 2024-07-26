@@ -49,9 +49,9 @@ For additional help and options, type the `<PREFIX>` and the bot will display al
 
 ## Customization
 
-You can have the bot only watch and reply in a designated channel by providing the
-`BOT_CHANNEL_ID` variable in the `.env` file, otherwise the bot will watch and reply from
-all channels.
+You can have the bot only watch and reply in a designated channels by providing the
+`BOT_TARGET_CHANNEL_IDS` variable in the `.env` file, otherwise the bot will watch and reply from
+all channels. The `BOT_TARGET_CHANNEL_IDS` is a comma-seperated list of channel IDs.
 
 The bot will always watch and reply in individual DMs.
 

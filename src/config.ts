@@ -17,21 +17,22 @@
 import { newLogger } from "./bot/logger";
 import env from "dotenv";
 
-env.config();
 const logger = newLogger("BotConfig");
 
 export interface BotConfig {
   prefix: string;
   token: string;
-  specificChannel: string;
+  targetedChannels: string[];
   healthCheckUrl: string;
 }
 
 export const sourceConfig = function (): BotConfig {
-  const config = Object.freeze({
+  env.config();
+  const rawSpecificChannel = process.env.BOT_TARGET_CHANNEL_IDS || "";
+  const config: BotConfig = Object.freeze({
     prefix: process.env.BOT_PREFIX || "$",
     token: process.env.BOT_TOKEN || "",
-    specificChannel: process.env.BOT_CHANNEL_ID || "",
+    targetedChannels: rawSpecificChannel.split(",").map(s => s.trim()),
     healthCheckUrl: process.env.BOT_HEALTHCHECK_URL || "",
   });
   logger.log("Bot Config: ", config);

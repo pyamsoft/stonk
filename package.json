@@ -1,6 +1,6 @@
 {
   "name": "stonk-bot",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -13,22 +13,22 @@
   },
   "dependencies": {
     "axios": "1.7.2",
-    "discord.js": "14.15.2",
+    "discord.js": "14.15.3",
     "dotenv": "16.4.5",
-    "uuid": "9.0.1",
+    "uuid": "10.0.0",
     "yahoo-finance2": "2.11.3"
   },
   "devDependencies": {
-    "@types/node": "20.13.0",
+    "@types/node": "20.14.12",
     "@types/tough-cookie": "4.0.5",
-    "@types/uuid": "9.0.8",
-    "@typescript-eslint/eslint-plugin": "7.11.0",
-    "@typescript-eslint/parser": "7.11.0",
+    "@types/uuid": "10.0.0",
+    "@typescript-eslint/eslint-plugin": "7.17.0",
+    "@typescript-eslint/parser": "7.17.0",
     "eslint": "8.57.0",
     "npm-check-updates": "16.14.20",
-    "prettier": "3.2.5",
-    "tslib": "2.6.2",
-    "typescript": "5.4.5"
+    "prettier": "3.3.3",
+    "tslib": "2.6.3",
+    "typescript": "5.5.4"
   },
   "packageManager": "yarn@4.2.2"
 }
