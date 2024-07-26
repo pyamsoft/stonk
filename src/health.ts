@@ -31,6 +31,8 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
       currentCommand: {
         symbols: ["$AAPL"],
         isHelpCommand: false,
+        ignore: false,
+        ignoreReason: "",
       },
       oldCommand: undefined,
     });

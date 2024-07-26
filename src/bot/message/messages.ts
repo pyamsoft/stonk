@@ -45,7 +45,7 @@ const sendMessageAfterParsing = function (
   env: {
     handlers: KeyedMessageHandler[];
     cache: MessageCache;
-  }
+  },
 ) {
   // None of our handlers have done this, if we continue, behavior is undefined
   if (results.length <= 0) {
@@ -61,7 +61,7 @@ const sendMessageAfterParsing = function (
         message.id,
         sendChannel,
         createCommunicationMessage(res.helpOutput),
-        env
+        env,
       ).then((responded) => {
         logger.log("Responded with help text", !!responded);
       });
@@ -78,12 +78,12 @@ const sendMessageAfterParsing = function (
     message.id,
     sendChannel,
     createCommunicationResult(combinedOutputs),
-    env
+    env,
   ).then((responded) => {
     logger.log(
       "Responded with combined output for keys: ",
       Object.keys(combinedOutputs),
-      !!responded
+      !!responded,
     );
   });
 };
@@ -96,7 +96,7 @@ export const handleBotMessage = function (
   env: {
     handlers: KeyedMessageHandler[];
     cache: MessageCache;
-  }
+  },
 ) {
   const msg = msgFromMessage(message);
   if (!validateMessage(config, msg)) {
@@ -112,6 +112,15 @@ export const handleBotMessage = function (
   const old = oldMsg
     ? stringContentToSymbolList(config, oldMsg.content)
     : undefined;
+
+  if (current.ignore) {
+    logger.log("Current command is ignored: ", {
+      command: current,
+      eventType,
+      message,
+    });
+    return;
+  }
 
   const work = [];
   const { handlers } = env;
@@ -139,6 +148,6 @@ export const handleBotMessage = function (
   }
 
   Promise.all(work).then((results) =>
-    sendMessageAfterParsing(results, msg, sendChannel, env)
+    sendMessageAfterParsing(results, msg, sendChannel, env),
   );
 };

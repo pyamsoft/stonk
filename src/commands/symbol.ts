@@ -21,13 +21,15 @@ const NUMBER_REGEX = /\d/;
 export interface SymbolCommand {
   isHelpCommand: boolean;
   symbols: string[];
+  ignore: boolean;
+  ignoreReason: string;
 }
 
 const stringContentToArray = function (
   config: BotConfig,
   sliceOut: number,
-  content: string
-): SymbolCommand {
+  content: string,
+): Omit<SymbolCommand, "ignore" | "ignoreReason"> {
   const { prefix } = config;
   // This is just the prefix
   if (content.split("").every((s) => s === prefix)) {
@@ -60,7 +62,7 @@ const stringContentToArray = function (
 
 export const stringContentToSymbolList = function (
   config: BotConfig,
-  content: string
+  content: string,
 ): SymbolCommand {
   const { prefix } = config;
 
@@ -85,8 +87,44 @@ export const stringContentToSymbolList = function (
       }
     });
 
+  let ignore = false;
+  let ignoreReason = "";
+
+  if (!isHelpCommand) {
+    // We saw a raw Money value like $7 or $100
+    // We don't want to trigger in this case, we are expecting
+    // things like $msft or $vti instead
+    const isSymbolsAllMoney = symbols.every((s) => {
+      // Must start with the prefix and be more than just the prefix string
+      if (s.indexOf(prefix) === 0 && s.length > 1) {
+        // Has options, split up first then check symbol
+        if (s.indexOf(":") > 0) {
+          const splitUp = s.split(":");
+          if (splitUp.length <= 0) {
+            return false;
+          }
+
+          // A symbol cannot be numbers
+          const symbol = s.split(":")[0];
+          return NUMBER_REGEX.test(symbol);
+        } else {
+          return NUMBER_REGEX.test(s);
+        }
+      }
+
+      return false;
+    });
+
+    if (isSymbolsAllMoney) {
+      ignore = true;
+      ignoreReason = "Symbols all money.";
+    }
+  }
+
   return {
-    isHelpCommand: isHelpCommand || filteredSymbols.length <= 0,
+    ignore,
+    ignoreReason,
+    isHelpCommand: isHelpCommand || filteredSymbols.length < 0,
     symbols: filteredSymbols,
   };
 };
