@@ -18,19 +18,19 @@ import { Msg } from "./Msg";
 import { BotConfig } from "../../config";
 import { Channel, ChannelType } from "discord.js";
 
-export const validateMessageHasId = function (message: Msg): boolean {
+const validateMessageHasId = function (message: Msg): boolean {
   return !!message.id;
 };
 
-export const validateMessageIsNotFromBot = function (message: Msg): boolean {
+const validateMessageIsNotFromBot = function (message: Msg): boolean {
   return !message.author.bot;
 };
 
-export const validateMessageHasChannel = function (message: Msg): boolean {
+const validateMessageHasChannel = function (message: Msg): boolean {
   return !!message.channel;
 };
 
-export const validateMessageIsTextChannel = function (message: Msg): boolean {
+const validateMessageIsTextChannel = function (message: Msg): boolean {
   const type = message.channel.type;
 
   // These do exist in the source files?
@@ -38,7 +38,7 @@ export const validateMessageIsTextChannel = function (message: Msg): boolean {
   return type === ChannelType.GuildText || type === ChannelType.DM;
 };
 
-export const validateMessageIsTargetedChannel = function (
+const validateMessageIsTargetedChannel = function (
   config: BotConfig,
   message: Msg,
 ): boolean {
@@ -51,7 +51,7 @@ export const validateMessageIsTargetedChannel = function (
   }
 };
 
-export const validateMessageIsWatched = function (
+const validateMessageIsWatched = function (
   config: BotConfig,
   message: Msg,
 ): boolean {
