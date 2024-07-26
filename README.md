@@ -60,7 +60,7 @@ The bot will always watch and reply in individual DMs.
 Apache 2
 
 ```
-Copyright 2023 pyamsoft
+Copyright 2024 pyamsoft
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
