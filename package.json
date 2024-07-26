@@ -9,7 +9,7 @@
     "lint": "eslint --ext ts,tsx --report-unused-disable-directives --max-warnings 0 src"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": ">=20.x"
   },
   "dependencies": {
     "axios": "1.7.2",
@@ -30,5 +30,5 @@
     "tslib": "2.6.3",
     "typescript": "5.5.4"
   },
-  "packageManager": "yarn@4.2.2"
+  "packageManager": "yarn@4.3.1"
 }

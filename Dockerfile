@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:20-slim
 
 WORKDIR /stonk-bot
 
@@ -13,7 +13,7 @@ COPY .env ./
 COPY src ./src
 
 # Yarn build file
-COPY .yarn/releases/yarn-4.2.2.cjs ./.yarn/releases/yarn-4.2.2.cjs
+COPY .yarn/releases/yarn-*.cjs ./.yarn/releases/
 
 # Enable corepack
 RUN chmod 644 .env && sed -i 's/PREFIX=!/PREFIX=$/' .env && corepack enable
