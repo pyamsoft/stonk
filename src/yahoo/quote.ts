@@ -64,7 +64,7 @@ const company = function (quote: any): string {
 const parseYFQuote = function (
   symbol: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  quote: any
+  quote: any,
 ): {
   quote: Quote | undefined;
   error: string | undefined;
@@ -131,9 +131,9 @@ const parseYFQuote = function (
 };
 
 export const quoteApi = async function (
-  symbols: string[]
-): Promise<QuoteResponse[]> {
-  return yf.quote(symbols).then((data: unknown[]) => {
+  symbols: ReadonlyArray<string>,
+): Promise<ReadonlyArray<QuoteResponse>> {
+  return yf.quote(symbols as string[]).then((data: unknown[]) => {
     if (!data) {
       logger.warn("YF missing response");
       const results: QuoteResponse[] = [];

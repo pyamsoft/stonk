@@ -24,7 +24,6 @@ import {
 } from "discord.js";
 import { newLogger } from "./logger";
 import { KeyedMessageHandler, MessageHandler } from "./message/MessageHandler";
-import { KeyedObject } from "./model/KeyedObject";
 import { generateRandomId } from "./model/id";
 import { Listener, newListener } from "./model/listener";
 import { handleBotMessage } from "./message/messages";
@@ -60,7 +59,7 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
     partials: [Partials.Message, Partials.Channel],
   });
 
-  const handlers: KeyedObject<KeyedMessageHandler | undefined> = {};
+  const handlers: Record<string, KeyedMessageHandler | undefined> = {};
   const messageCache = createMessageCache();
 
   // Keep this cached to avoid having to recalculate it each time
@@ -88,18 +87,14 @@ export const initializeBot = function (config: BotConfig): DiscordBot {
       const id = generateRandomId();
       handlers[id] = { id, handler, type };
       logger.log("Add new handler: ", handlers[id]);
-      handlerList = Object.values(handlers).filter(
-        (h) => !!h,
-      ) as KeyedMessageHandler[];
+      handlerList = Object.values(handlers).filter((h) => !!h);
       return id;
     },
     removeHandler: function (id: string) {
       if (handlers[id]) {
         logger.log("Removed handler: ", handlers[id]);
         handlers[id] = undefined;
-        handlerList = Object.values(handlers).filter(
-          (h) => !!h,
-        ) as KeyedMessageHandler[];
+        handlerList = Object.values(handlers).filter((h) => !!h);
         return true;
       } else {
         return false;

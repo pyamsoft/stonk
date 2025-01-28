@@ -66,10 +66,10 @@ const parseRecommendation = function (rec: unknown): Rec {
 };
 
 export const recommendApi = async function (
-  symbols: string[],
+  symbols: ReadonlyArray<string>,
 ): Promise<RecommendResponse> {
   return yf
-    .recommendationsBySymbol(symbols)
+    .recommendationsBySymbol(symbols as string[])
     .then((data: unknown[]) => data.map((d) => parseRecommendation(d)))
     .then((data) => {
       return { data };

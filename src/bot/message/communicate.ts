@@ -25,7 +25,6 @@ import {
   SendChannel,
 } from "./Msg";
 import { ensureArray } from "../../util/array";
-import { KeyedObject } from "../model/KeyedObject";
 
 const GLOBAL_CACHE_KEY = "global-cache-key";
 const logger = newLogger("communicate");
@@ -60,17 +59,17 @@ export const createCommunicationResult = function <T>(
 
 const deleteOldMessages = function (
   receivedMessageId: string,
-  keys: string[],
+  keys: ReadonlyArray<string>,
   env: {
     cache: MessageCache;
   },
-): Promise<void | void[]> {
+): Promise<ReadonlyArray<void>> {
   const { cache } = env;
   const allOldData = cache.getAll(receivedMessageId);
   const oldContents = Object.keys(allOldData);
   if (oldContents.length <= 0) {
     logger.log("No old contents to delete, continue.");
-    return Promise.resolve();
+    return Promise.resolve([]);
   }
 
   const work = [];
@@ -119,12 +118,12 @@ const deleteOldMessages = function (
 const postNewMessages = async function (
   messageId: string,
   channel: SendChannel,
-  keys: string[],
-  messages: KeyedObject<string>,
+  keys: ReadonlyArray<string>,
+  messages: Record<string, string>,
   env: {
     cache: MessageCache;
   },
-): Promise<Msg[]> {
+): Promise<ReadonlyArray<Msg>> {
   const work = [];
   for (const key of keys) {
     const messageText = messages[key];
@@ -280,11 +279,11 @@ const postMessageToPublicChannel = function (
 export const sendMessage = async function (
   receivedMessageId: string,
   channel: SendChannel,
-  content: CommunicationMessage | CommunicationResult<KeyedObject<string>>,
+  content: CommunicationMessage | CommunicationResult<Record<string, string>>,
   env: {
     cache: MessageCache;
   },
-): Promise<Msg[]> {
+): Promise<ReadonlyArray<Msg>> {
   if (content.objectType === "CommunicationMessage") {
     // Plain text message
     return postMessageToPublicChannel(

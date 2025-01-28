@@ -51,10 +51,10 @@ export const outputQuote = function (quote: Quote): string {
 
   const messageNormalPrice = formatPrice(normalMarket.price);
   const messageNormalDirection = formatAmountDirection(
-    normalMarket.changeAmount
+    normalMarket.changeAmount,
   );
   const messageNormalChangeAmount = formatChangeAmount(
-    normalMarket.changeAmount
+    normalMarket.changeAmount,
   );
   const messageNormalPercent = formatChangePercent(normalMarket.changePercent);
 

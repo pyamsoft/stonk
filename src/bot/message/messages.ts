@@ -34,16 +34,15 @@ import {
   createCommunicationResult,
   sendMessage,
 } from "./communicate";
-import { KeyedObject } from "../model/KeyedObject";
 
 const logger = newLogger("messages");
 
 const sendMessageAfterParsing = function (
-  results: MessageHandlerOutput[],
+  results: ReadonlyArray<MessageHandlerOutput>,
   message: Msg,
   sendChannel: SendChannel,
   env: {
-    handlers: KeyedMessageHandler[];
+    handlers: ReadonlyArray<KeyedMessageHandler>;
     cache: MessageCache;
   },
 ) {
@@ -53,7 +52,7 @@ const sendMessageAfterParsing = function (
     return;
   }
 
-  const combinedOutputs: KeyedObject<string> = {};
+  const combinedOutputs: Record<string, string> = {};
   for (const res of results) {
     // Any help outputs immediately stop the message sending
     if (!!res.helpOutput && !!res.helpOutput.trim()) {
@@ -94,7 +93,7 @@ export const handleBotMessage = function (
   message: Message | PartialMessage,
   optionalOldMessage: Message | PartialMessage | undefined,
   env: {
-    handlers: KeyedMessageHandler[];
+    handlers: ReadonlyArray<KeyedMessageHandler>;
     cache: MessageCache;
   },
 ) {

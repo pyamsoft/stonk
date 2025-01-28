@@ -34,7 +34,7 @@ export const HelpHandler: MessageHandler = {
     command: {
       currentCommand: SymbolCommand;
       oldCommand?: SymbolCommand;
-    }
+    },
   ) {
     // Only handle help
     const { currentCommand } = command;

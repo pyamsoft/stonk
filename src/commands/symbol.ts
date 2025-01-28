@@ -20,7 +20,7 @@ const NUMBER_REGEX = /\d/;
 
 export interface SymbolCommand {
   isHelpCommand: boolean;
-  symbols: string[];
+  symbols: ReadonlyArray<string>;
   ignore: boolean;
   ignoreReason: string;
 }

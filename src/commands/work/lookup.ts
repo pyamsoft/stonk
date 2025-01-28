@@ -1,14 +1,13 @@
 import { lookupApi } from "../../yahoo/lookup";
-import { KeyedObject } from "../../bot/model/KeyedObject";
 
 export const lookupSymbolForName = function (
-  queryList: string[],
-  process: (symbols: string[]) => Promise<KeyedObject<string>>,
+  queryList: ReadonlyArray<string>,
+  process: (symbols: ReadonlyArray<string>) => Promise<Record<string, string>>,
 ) {
   const apiList = queryList.map((q) => lookupApi(q));
   return Promise.all(apiList).then((results) => {
-    const errors: KeyedObject<string> = {};
-    const symbols = [];
+    const errors: Record<string, string> = {};
+    const symbols: string[] = [];
     for (const res of results) {
       if (!!res.symbol && !!res.symbol.trim()) {
         symbols.push(res.symbol.toUpperCase());

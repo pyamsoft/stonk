@@ -15,11 +15,11 @@
  */
 
 export interface RecommendResponse {
-  data: Rec[];
+  data: ReadonlyArray<Rec>;
 }
 
 export type Rec = {
   symbol: string;
-  recommendations: string[];
+  recommendations: ReadonlyArray<string>;
   error: string | undefined;
 };

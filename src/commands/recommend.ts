@@ -22,7 +22,6 @@ import {
 import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
-import { KeyedObject } from "../bot/model/KeyedObject";
 import { AxiosError } from "axios";
 import { lookupRecommendations } from "./work/recommend";
 
@@ -72,7 +71,7 @@ export const RecommendHandler: MessageHandler = {
     });
 
     // Use object to remove duplicate quote lookups
-    const symbolMap: KeyedObject<boolean> = {};
+    const symbolMap: Record<string, boolean> = {};
     for (const symbol of recSymbols) {
       // Remove spaces
       let cleanSymbol = symbol.trim();

@@ -17,7 +17,7 @@
 import axios from "axios";
 import { BotConfig } from "./config";
 import { QuoteHandler } from "./commands/quote";
-import {newLogger} from "./bot/logger";
+import { newLogger } from "./bot/logger";
 
 const logger = newLogger("HealthCheck");
 

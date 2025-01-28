@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import { KeyedObject } from "../../bot/model/KeyedObject";
 import { quoteApi } from "../../yahoo/quote";
 import { outputQuote } from "../outputs/quote";
 
 export const findQuotesForSymbols = async function (
-  symbols: string[],
-): Promise<KeyedObject<string>> {
-  const resolved: KeyedObject<string> = {};
+  symbols: ReadonlyArray<string>,
+): Promise<Record<string, string>> {
+  const resolved: Record<string, string> = {};
   if (symbols.length <= 0) {
     return resolved;
   }

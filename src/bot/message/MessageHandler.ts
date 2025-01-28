@@ -16,7 +16,6 @@
 
 import { BotConfig } from "../../config";
 import { SymbolCommand } from "../../commands/symbol";
-import { KeyedObject } from "../model/KeyedObject";
 
 export interface KeyedMessageHandler {
   id: string;
@@ -27,12 +26,12 @@ export interface KeyedMessageHandler {
 export interface MessageHandlerOutput {
   objectType: "MessageHandlerOutput";
   helpOutput: string;
-  messages: KeyedObject<string>;
+  messages: Record<string, string>;
   error: Error | undefined;
 }
 
 export const messageHandlerOutput = function (
-  messages: KeyedObject<string>,
+  messages: Record<string, string>,
 ): MessageHandlerOutput {
   return {
     objectType: "MessageHandlerOutput",
@@ -44,7 +43,7 @@ export const messageHandlerOutput = function (
 
 export const messageHandlerError = function (
   error: Error,
-  messages: KeyedObject<string>,
+  messages: Record<string, string>,
 ): MessageHandlerOutput {
   return {
     objectType: "MessageHandlerOutput",

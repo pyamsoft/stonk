@@ -23,7 +23,6 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
-import { KeyedObject } from "../bot/model/KeyedObject";
 import { AxiosError } from "axios";
 import { lookupSymbolForName } from "./work/lookup";
 
@@ -66,7 +65,7 @@ export const LookupHandler: MessageHandler = {
       queries: lookupQueries,
     });
 
-    const queryMap: KeyedObject<boolean> = {};
+    const queryMap: Record<string, boolean> = {};
     for (const query of lookupQueries) {
       let cleanQuery = query.trim();
       while (cleanQuery.startsWith(prefix)) {

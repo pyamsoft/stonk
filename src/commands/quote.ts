@@ -25,18 +25,17 @@ import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
 import { AxiosError } from "axios";
 import { lookupRecommendations } from "./work/recommend";
-import { KeyedObject } from "../bot/model/KeyedObject";
 
 const TAG = "QuoteHandler";
 const logger = newLogger(TAG);
 
 type ExtendedSymbols = {
-  recs: string[];
+  recs: ReadonlyArray<string>;
 };
 
 const parseExtendedSymbols = function (
-  quoteSymbols: string[],
-): ExtendedSymbols {
+  quoteSymbols: ReadonlyArray<string>,
+): Readonly<ExtendedSymbols> {
   const recs = new Set<string>();
   for (const symbol of quoteSymbols) {
     const indexOfOptionsStart = symbol.indexOf(":");
@@ -132,7 +131,7 @@ export const QuoteHandler: MessageHandler = {
 
         // Order by input order when possible
         const used = new Set<string>();
-        const allResults: KeyedObject<string> = {};
+        const allResults: Record<string, string> = {};
 
         // Once to use everything in order
         for (const symbol of quoteSymbols) {

@@ -22,7 +22,7 @@ const logger = newLogger("BotConfig");
 export interface BotConfig {
   prefix: string;
   token: string;
-  targetedChannels: string[];
+  targetedChannels: ReadonlyArray<string>;
   healthCheckUrl: string;
 }
 
@@ -32,7 +32,7 @@ export const sourceConfig = function (): BotConfig {
   const config: BotConfig = Object.freeze({
     prefix: process.env.BOT_PREFIX || "$",
     token: process.env.BOT_TOKEN || "",
-    targetedChannels: rawSpecificChannel.split(",").map(s => s.trim()),
+    targetedChannels: rawSpecificChannel.split(",").map((s) => s.trim()),
     healthCheckUrl: process.env.BOT_HEALTHCHECK_URL || "",
   });
   logger.log("Bot Config: ", config);

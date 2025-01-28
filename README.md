@@ -13,7 +13,7 @@ Copy the `env.default` file to `.env` to get started!
 
 # Running
 
-You will need to create a Bot in the 
+You will need to create a Bot in the
 [Discord Developer Portal](https://discord.com/developers/applications/). At
 a minimum, the bot must have a `TOKEN` and you must set the bot up with the
 `Message Content` intent.
@@ -21,9 +21,10 @@ a minimum, the bot must have a `TOKEN` and you must set the bot up with the
 [![Intents](https://raw.githubusercontent.com/pyamsoft/stonk/main/art/intents.png)][1]
 
 ```bash
-$ yarn && yarn start
+# You'll need pnpm installed, either via a local corepack directory or globally
+$ pnpm install && pnpm run start
 
-OR 
+OR
 
 $ ./bin/dockerize
 ```
@@ -74,7 +75,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
 
 [1]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/intents.png
 [2]: https://raw.githubusercontent.com/pyamsoft/stonk/main/art/ticker.png

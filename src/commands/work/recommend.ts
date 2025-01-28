@@ -1,17 +1,16 @@
-import { KeyedObject } from "../../bot/model/KeyedObject";
 import { recommendApi } from "../../yahoo/recommend";
 import { findQuotesForSymbols } from "./quote";
 import { bold } from "../../bot/discord/format";
 
 export const lookupRecommendations = async function (
-  symbolList: string[],
-): Promise<KeyedObject<string>> {
+  symbolList: ReadonlyArray<string>,
+): Promise<Record<string, string>> {
   if (symbolList.length <= 0) {
     return {};
   }
 
   return recommendApi(symbolList).then(async (results) => {
-    const errors: KeyedObject<string> = {};
+    const errors: Record<string, string> = {};
     const symbolResolvers = [];
     for (const res of results.data) {
       if (res.recommendations.length > 0) {
@@ -32,7 +31,7 @@ export const lookupRecommendations = async function (
     }
 
     return Promise.all(symbolResolvers).then((results) => {
-      const quotes: KeyedObject<string> = {};
+      const quotes: Record<string, string> = {};
 
       // For lookup
       for (const pairing of results) {
