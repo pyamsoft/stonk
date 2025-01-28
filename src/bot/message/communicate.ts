@@ -63,13 +63,13 @@ const deleteOldMessages = function (
   env: {
     cache: MessageCache;
   },
-): Promise<ReadonlyArray<void>> {
+): Promise<void> {
   const { cache } = env;
   const allOldData = cache.getAll(receivedMessageId);
   const oldContents = Object.keys(allOldData);
   if (oldContents.length <= 0) {
     logger.log("No old contents to delete, continue.");
-    return Promise.resolve([]);
+    return Promise.resolve();
   }
 
   const work = [];
@@ -112,7 +112,9 @@ const deleteOldMessages = function (
     }
   }
 
-  return Promise.all(work);
+  return Promise.all(work).then(() => {
+    // Blank
+  });
 };
 
 const postNewMessages = async function (
