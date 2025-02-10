@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {newLogger} from "./bot/logger";
+import { newLogger } from "./bot/logger";
 import env from "dotenv";
 
 const logger = newLogger("BotConfig");
