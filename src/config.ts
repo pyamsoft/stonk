@@ -16,14 +16,24 @@
 
 import { newLogger } from "./bot/logger";
 import env from "dotenv";
+import { Method } from "axios";
 
 const logger = newLogger("BotConfig");
 
 export interface BotConfig {
+  // Respond to chat prefix
   prefix: string;
+
+  // API token
   token: string;
+
+  // Only message these channel(s)
   targetedChannels: ReadonlyArray<string>;
+
+  // Health check
   healthCheckUrl: string;
+  healthCheckMethod: Method | undefined
+  healthCheckBearerToken: string | undefined,
 }
 
 export const sourceConfig = function (): BotConfig {
@@ -31,12 +41,17 @@ export const sourceConfig = function (): BotConfig {
   const rawSpecificChannel = process.env.BOT_TARGET_CHANNEL_IDS || "";
   const config: BotConfig = Object.freeze({
     prefix: process.env.BOT_PREFIX || "$",
+
     token: process.env.BOT_TOKEN || "",
-    healthCheckUrl: process.env.BOT_HEALTHCHECK_URL || "",
+
     targetedChannels: rawSpecificChannel
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s),
+
+    healthCheckUrl: process.env.BOT_HEALTHCHECK_URL || "",
+    healthCheckMethod: process.env.BOT_HEALTHCHECK_METHOD as Method,
+    healthCheckBearerToken: process.env.BOT_HEALTHCHECK_BEARER_TOKEN,
   });
   logger.log("Bot Config: ", config);
   return config;

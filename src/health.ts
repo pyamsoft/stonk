@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-import axios from "axios";
+import axios, { type RawAxiosRequestHeaders, type Method } from "axios";
 import { BotConfig } from "./config";
 import { QuoteHandler } from "./commands/quote";
 import { newLogger } from "./bot/logger";
 
 const logger = newLogger("HealthCheck");
 
-const fireHealthCheck = function (config: BotConfig, url: string) {
+const fireHealthCheck = function (
+  config: BotConfig,
+  url: string,
+  method: Method | undefined,
+  bearerToken: string | undefined,
+) {
   // Check that AAPL returns some data.
   // If it does, we are live and working
   // If it does not, we are dead
@@ -38,19 +43,28 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
     });
 
     try {
+      let success: boolean;
       if (check && !check.error) {
         logger.log(`AAPL success, attempt healthcheck: ${url}`);
-        await axios({
-          method: "GET",
-          url: `${url}?status=up&msg=OK&ping=`,
-        });
+        success = true;
       } else {
         logger.log(`AAPL failure, attempt healthcheck: ${url}`);
-        await axios({
-          method: "GET",
-          url: `${url}?status=down&msg=${encodeURIComponent("Failed to get health quote for AAPL")}&ping=`,
-        });
+        success = false;
       }
+
+      let headers: RawAxiosRequestHeaders | undefined = undefined;
+      if (bearerToken) {
+        headers = {
+          Authorization: `Bearer ${bearerToken}`,
+        };
+      }
+
+      await axios({
+        // If undefined, will be axios default "get"
+        method,
+        headers,
+        url: `${url}?success=${success}`,
+      });
     } catch (e) {
       // Health check error, try again later
       // Maybe network is offline?
@@ -62,14 +76,24 @@ const fireHealthCheck = function (config: BotConfig, url: string) {
 export const registerPeriodicHealthCheck = function (config: BotConfig) {
   let timer: NodeJS.Timeout | undefined = undefined;
 
-  const { healthCheckUrl } = config;
+  const { healthCheckMethod, healthCheckUrl, healthCheckBearerToken } = config;
 
   if (healthCheckUrl) {
     timer = setInterval(() => {
-      fireHealthCheck(config, healthCheckUrl);
+      fireHealthCheck(
+        config,
+        healthCheckUrl,
+        healthCheckMethod,
+        healthCheckBearerToken,
+      );
     }, 60 * 1000);
 
-    fireHealthCheck(config, healthCheckUrl);
+    fireHealthCheck(
+      config,
+      healthCheckUrl,
+      healthCheckMethod,
+      healthCheckBearerToken,
+    );
   }
 
   return {
