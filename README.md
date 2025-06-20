@@ -56,13 +56,20 @@ all channels. The `BOT_TARGET_CHANNEL_IDS` is a comma-seperated list of channel 
 
 The bot will always watch and reply in individual DMs.
 
+See the `env.default` file for reference.
+
 ### Health Check
 
 You can configure the bot to periodically send HTTP requests to a "health check" endpoint of your choice.
 You can configure the HTTP Method, URL, and provide a Bearer Token for authorization if needed.
 In order for the healthcheck to be enabled you MUST provide a valid URL.
 The method should be known by `axios`, if it is not provided, it will use the `axios` defaults.
-If the bearer token is not provided, it will be ignored. See the `env.default` file for reference.
+If the bearer token is not provided, it will be ignored.
+
+The variables for `BOT_HEALTHCHECK_URLS`, `BOT_HEALTHCHECK_METHODS`, and `BOT_HEALTHCHECK_BEARER_TOKENS` are
+comma-seperated lists. The lists must ALL be the same length.
+
+See the `env.default` file for reference.
 
 # License
 

@@ -23,9 +23,9 @@ const logger = newLogger("HealthCheck");
 
 const fireHealthCheck = function (
   config: BotConfig,
-  url: string,
-  method: Method | undefined,
-  bearerToken: string | undefined,
+  urls: ReadonlyArray<string>,
+  methods: ReadonlyArray<Method>,
+  bearerTokens: ReadonlyArray<string>,
 ) {
   // Check that AAPL returns some data.
   // If it does, we are live and working
@@ -42,15 +42,13 @@ const fireHealthCheck = function (
       oldCommand: undefined,
     });
 
-    try {
-      let success: boolean;
-      if (check && !check.error) {
-        logger.log(`AAPL success, attempt healthcheck: ${url}`);
-        success = true;
-      } else {
-        logger.log(`AAPL failure, attempt healthcheck: ${url}`);
-        success = false;
-      }
+    const success = !!(check && !check.error);
+
+    const work: Promise<unknown>[] = [];
+    for (let i = 0; i < urls.length; ++i) {
+      const url = urls[i];
+      const method = methods[i];
+      const bearerToken = bearerTokens[i];
 
       let headers: RawAxiosRequestHeaders | undefined = undefined;
       if (bearerToken) {
@@ -59,40 +57,49 @@ const fireHealthCheck = function (
         };
       }
 
-      await axios({
-        // If undefined, will be axios default "get"
-        method,
-        headers,
-        url: `${url}?success=${success}`,
-      });
-    } catch (e) {
-      // Health check error, try again later
-      // Maybe network is offline?
-      logger.error(`Healthcheck failed!`, e);
+      work.push(
+        Promise.resolve().then(async () => {
+          try {
+            await axios({
+              // If undefined, will be axios default "get"
+              method,
+              headers,
+              url: `${url}?success=${success}`,
+            });
+          } catch (e) {
+            // Health check error, try again later
+            // Maybe network is offline?
+            logger.error(`Healthcheck report failed!`, url, success, e);
+          }
+        }),
+      );
     }
+
+    await Promise.all(work);
   });
 };
 
 export const registerPeriodicHealthCheck = function (config: BotConfig) {
   let timer: NodeJS.Timeout | undefined = undefined;
 
-  const { healthCheckMethod, healthCheckUrl, healthCheckBearerToken } = config;
+  const { healthCheckUrls, healthCheckMethods, healthCheckBearerTokens } =
+    config;
 
-  if (healthCheckUrl) {
+  if (healthCheckUrls.length > 0) {
     timer = setInterval(() => {
       fireHealthCheck(
         config,
-        healthCheckUrl,
-        healthCheckMethod,
-        healthCheckBearerToken,
+        healthCheckUrls,
+        healthCheckMethods,
+        healthCheckBearerTokens,
       );
     }, 60 * 1000);
 
     fireHealthCheck(
       config,
-      healthCheckUrl,
-      healthCheckMethod,
-      healthCheckBearerToken,
+      healthCheckUrls,
+      healthCheckMethods,
+      healthCheckBearerTokens,
     );
   }
 

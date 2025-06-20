@@ -31,14 +31,18 @@ export interface BotConfig {
   targetedChannels: ReadonlyArray<string>;
 
   // Health check
-  healthCheckUrl: string;
-  healthCheckMethod: Method | undefined
-  healthCheckBearerToken: string | undefined,
+  healthCheckUrls: ReadonlyArray<string>;
+  healthCheckMethods: ReadonlyArray<Method>;
+  healthCheckBearerTokens: ReadonlyArray<string>;
 }
 
 export const sourceConfig = function (): BotConfig {
   env.config();
   const rawSpecificChannel = process.env.BOT_TARGET_CHANNEL_IDS || "";
+  const rawHealthcheckUrl = process.env.BOT_HEALTHCHECK_URLS || "";
+  const rawHealthcheckMethod = process.env.BOT_HEALTHCHECK_METHODS || "";
+  const rawHealthcheckBearerToken =
+    process.env.BOT_HEALTHCHECK_BEARER_TOKENS || "";
   const config: BotConfig = Object.freeze({
     prefix: process.env.BOT_PREFIX || "$",
 
@@ -49,9 +53,14 @@ export const sourceConfig = function (): BotConfig {
       .map((s) => s.trim())
       .filter((s) => s),
 
-    healthCheckUrl: process.env.BOT_HEALTHCHECK_URL || "",
-    healthCheckMethod: process.env.BOT_HEALTHCHECK_METHOD as Method,
-    healthCheckBearerToken: process.env.BOT_HEALTHCHECK_BEARER_TOKEN,
+    healthCheckUrls: rawHealthcheckUrl.split(",").map((s) => s.trim()),
+    healthCheckMethods: rawHealthcheckMethod
+      .split(",")
+      .map((s) => s.trim())
+      .map((s) => s as Method),
+    healthCheckBearerTokens: rawHealthcheckBearerToken
+      .split(",")
+      .map((s) => s.trim()),
   });
   logger.log("Bot Config: ", config);
   return config;
