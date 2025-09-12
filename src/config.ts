@@ -53,14 +53,19 @@ export const sourceConfig = function (): BotConfig {
       .map((s) => s.trim())
       .filter((s) => s),
 
-    healthCheckUrls: rawHealthcheckUrl.split(",").map((s) => s.trim()),
+    healthCheckUrls: rawHealthcheckUrl
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s),
     healthCheckMethods: rawHealthcheckMethod
       .split(",")
       .map((s) => s.trim())
+      .filter((s) => s)
       .map((s) => s as Method),
     healthCheckBearerTokens: rawHealthcheckBearerToken
       .split(",")
-      .map((s) => s.trim()),
+      .map((s) => s.trim())
+      .filter((s) => s),
   });
   logger.log("Bot Config: ", config);
   return config;
