@@ -15,8 +15,8 @@
  */
 
 import { newLogger } from "./bot/logger";
-import env from "dotenv";
-import { Method } from "axios";
+import { configDotenv } from "dotenv";
+import type { Method } from "axios";
 
 const logger = newLogger("BotConfig");
 
@@ -37,7 +37,8 @@ export interface BotConfig {
 }
 
 export const sourceConfig = function (): BotConfig {
-  env.config();
+  configDotenv();
+
   const rawSpecificChannel = process.env.BOT_TARGET_CHANNEL_IDS || "";
   const rawHealthcheckUrl = process.env.BOT_HEALTHCHECK_URLS || "";
   const rawHealthcheckMethod = process.env.BOT_HEALTHCHECK_METHODS || "";
