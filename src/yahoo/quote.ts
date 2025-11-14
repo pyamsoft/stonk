@@ -17,7 +17,7 @@
 import { Quote, QuoteResponse } from "../commands/model/QuoteResponse";
 import { newLogger } from "../bot/logger";
 import { bold } from "../bot/discord/format";
-import yf from "yahoo-finance2";
+import { YahooFinance } from "./yf";
 
 const logger = newLogger("YahooQuote");
 
@@ -133,7 +133,7 @@ const parseYFQuote = function (
 export const quoteApi = async function (
   symbols: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<QuoteResponse>> {
-  return yf.quote(symbols as string[]).then((data: unknown[]) => {
+  return YahooFinance.quote(symbols as string[]).then((data: unknown[]) => {
     if (!data) {
       logger.warn("YF missing response");
       const results: QuoteResponse[] = [];

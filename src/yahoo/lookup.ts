@@ -17,14 +17,14 @@
 import { newLogger } from "../bot/logger";
 import { LookupResponse } from "../commands/model/LookupResponse";
 import { bold } from "../bot/discord/format";
-import yf from "yahoo-finance2";
+import { YahooFinance } from "./yf";
 
 const logger = newLogger("YahooLookup");
 
 export const lookupApi = async function (
   query: string,
 ): Promise<LookupResponse> {
-  return yf.search(query).then((data: unknown) => {
+  return YahooFinance.search(query).then((data: unknown) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { quotes } = data as any;
 

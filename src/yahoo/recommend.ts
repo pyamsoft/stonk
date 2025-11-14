@@ -17,7 +17,7 @@
 import { newLogger } from "../bot/logger";
 import { bold } from "../bot/discord/format";
 import { Rec, RecommendResponse } from "../commands/model/RecommendResponse";
-import yf from "yahoo-finance2";
+import { YahooFinance } from "./yf";
 
 const logger = newLogger("YahooRecommend");
 
@@ -68,8 +68,7 @@ const parseRecommendation = function (rec: unknown): Rec {
 export const recommendApi = async function (
   symbols: ReadonlyArray<string>,
 ): Promise<RecommendResponse> {
-  return yf
-    .recommendationsBySymbol(symbols as string[])
+  return YahooFinance.recommendationsBySymbol(symbols as string[])
     .then((data: unknown[]) => data.map((d) => parseRecommendation(d)))
     .then((data) => {
       return { data };
