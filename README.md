@@ -63,7 +63,7 @@ See the `env.default` file for reference.
 You can configure the bot to periodically send HTTP requests to a "health check" endpoint of your choice.
 You can configure the HTTP Method, URL, and provide a Bearer Token for authorization if needed.
 In order for the healthcheck to be enabled you MUST provide a valid URL.
-The method should be known by `axios`, if it is not provided, it will use the `axios` defaults.
+The method should be known by `fetch`, if it is not provided, it will use the `fetch` defaults.
 If the bearer token is not provided, it will be ignored.
 
 The variables for `BOT_HEALTHCHECK_URLS`, `BOT_HEALTHCHECK_METHODS`, and `BOT_HEALTHCHECK_BEARER_TOKENS` are

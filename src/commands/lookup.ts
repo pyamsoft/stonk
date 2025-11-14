@@ -23,7 +23,6 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
-import { AxiosError } from "axios";
 import { lookupSymbolForName } from "./work/lookup";
 
 const TAG = "LookupHandler";
@@ -78,7 +77,7 @@ export const LookupHandler: MessageHandler = {
       findQuotesForSymbols(symbols),
     )
       .then((quotes) => messageHandlerOutput(quotes))
-      .catch((e: AxiosError) => {
+      .catch((e) => {
         logger.error(e, "Error getting lookup");
         return messageHandlerError(e, {
           ERROR: `${e.code} ${e.message} ${e.response?.data}`,

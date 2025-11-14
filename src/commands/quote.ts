@@ -23,7 +23,6 @@ import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
 import { findQuotesForSymbols } from "./work/quote";
-import { AxiosError } from "axios";
 import { lookupRecommendations } from "./work/recommend";
 
 const TAG = "QuoteHandler";
@@ -154,7 +153,7 @@ export const QuoteHandler: MessageHandler = {
 
         return messageHandlerOutput(allResults);
       })
-      .catch((e: AxiosError) => {
+      .catch((e) => {
         logger.error(e, "Error getting quotes");
         return messageHandlerError(e, {
           ERROR: `${e.code} ${e.message} ${e.response?.data}`,

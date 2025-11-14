@@ -22,7 +22,6 @@ import {
 import { newLogger } from "../bot/logger";
 import { BotConfig } from "../config";
 import { SymbolCommand } from "./symbol";
-import { AxiosError } from "axios";
 import { lookupRecommendations } from "./work/recommend";
 
 const TAG = "RecommendHandler";
@@ -88,7 +87,7 @@ export const RecommendHandler: MessageHandler = {
     const symbolList = Object.keys(symbolMap);
     return lookupRecommendations(symbolList)
       .then((result) => messageHandlerOutput(result))
-      .catch((e: AxiosError) => {
+      .catch((e) => {
         logger.error(e, "Error getting recommendations");
         return messageHandlerError(e, {
           ERROR: `${e.code} ${e.message} ${e.response?.data}`,

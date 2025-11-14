@@ -16,7 +16,6 @@
 
 import { newLogger } from "./bot/logger";
 import { configDotenv } from "dotenv";
-import type { Method } from "axios";
 
 const logger = newLogger("BotConfig");
 
@@ -32,7 +31,7 @@ export interface BotConfig {
 
   // Health check
   healthCheckUrls: ReadonlyArray<string>;
-  healthCheckMethods: ReadonlyArray<Method>;
+  healthCheckMethods: ReadonlyArray<RequestInit["method"]>;
   healthCheckBearerTokens: ReadonlyArray<string>;
 }
 
@@ -62,7 +61,7 @@ export const sourceConfig = function (): BotConfig {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s)
-      .map((s) => s as Method),
+      .map((s) => s as RequestInit["method"]),
     healthCheckBearerTokens: rawHealthcheckBearerToken
       .split(",")
       .map((s) => s.trim())

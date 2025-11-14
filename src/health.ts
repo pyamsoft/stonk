@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import axios, { type RawAxiosRequestHeaders, type Method } from "axios";
 import { BotConfig } from "./config";
 import { QuoteHandler } from "./commands/quote";
 import { newLogger } from "./bot/logger";
@@ -24,7 +23,7 @@ const logger = newLogger("HealthCheck");
 const fireHealthCheck = function (
   config: BotConfig,
   urls: ReadonlyArray<string>,
-  methods: ReadonlyArray<Method>,
+  methods: ReadonlyArray<RequestInit["method"]>,
   bearerTokens: ReadonlyArray<string>,
 ) {
   // Check that AAPL returns some data.
@@ -50,7 +49,7 @@ const fireHealthCheck = function (
       const method = methods[i];
       const bearerToken = bearerTokens[i];
 
-      let headers: RawAxiosRequestHeaders | undefined = undefined;
+      let headers: RequestInit["headers"] | undefined = undefined;
       if (bearerToken) {
         headers = {
           Authorization: `Bearer ${bearerToken}`,
@@ -60,11 +59,10 @@ const fireHealthCheck = function (
       work.push(
         Promise.resolve().then(async () => {
           try {
-            await axios({
+            await fetch(`${url}?success=${success}`, {
               // If undefined, will be axios default "get"
               method,
               headers,
-              url: `${url}?success=${success}`,
             });
           } catch (e) {
             // Health check error, try again later
