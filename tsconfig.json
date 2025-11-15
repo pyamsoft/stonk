@@ -22,5 +22,5 @@
     "noImplicitOverride": true,
     "noImplicitThis": true
   },
-  "include": ["src"],
+  "include": ["src"]
 }

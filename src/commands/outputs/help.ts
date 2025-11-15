@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { version } from "../../../package.json";
 import { BotConfig } from "../../config";
 import { codeBlock } from "../../bot/discord/format";
 
@@ -33,7 +34,7 @@ export const outputHelpText = function (config: BotConfig): string {
   };
 
   return codeBlock(`
-Beep Boop.
+Beep Boop. (${version})
 
 [COMMANDS]
 ${p("                       This help")}
