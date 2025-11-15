@@ -12,7 +12,7 @@
     "format": "prettier --write ."
   },
   "engines": {
-    "node": ">=22.x"
+    "node": ">=24.x"
   },
   "dependencies": {
     "discord.js": "14.24.2",
