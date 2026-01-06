@@ -2,19 +2,20 @@ FROM node:24-slim
 
 WORKDIR /stonk-bot
 
+# Permissive umask
 RUN umask 0022
 
+# Copy src files
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY eslint.config.mjs ./
-COPY .env ./
 COPY src ./src
 
-# Enable corepack
-RUN chmod 644 .env && sed -i 's/PREFIX=!/PREFIX=$/' .env && corepack enable
+# Copy environment for Production
+COPY .env.prod ./
 
-# build
-RUN pnpm install
+# Build
+RUN corepack enable && pnpm install
 
 # run
 CMD [ "pnpm", "start" ]
