@@ -15,7 +15,7 @@
     "node": ">=24.x"
   },
   "dependencies": {
-    "discord.js": "14.26.3",
+    "discord.js": "14.26.4",
     "dotenv": "17.4.2",
     "yahoo-finance2": "3.14.0"
   },
