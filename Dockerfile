@@ -12,7 +12,7 @@ COPY eslint.config.mjs ./
 COPY src ./src
 
 # Copy environment for Production
-COPY .env.prod ./
+COPY .env.prod ./.env
 
 # Build
 RUN corepack enable && pnpm install

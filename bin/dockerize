@@ -17,7 +17,7 @@
 #
 
 readonly NAME="dockerize"
-readonly CONTAINER="pyamsoft/mousewatch"
+readonly CONTAINER="pyamsoft/stonk-bot"
 
 BIN_DIR="$(dirname "$(realpath "$0")")"
 ROOT_DIR="$(realpath "${BIN_DIR}/..")"
