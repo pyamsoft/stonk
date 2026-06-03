@@ -19,3 +19,6 @@ dist
 
 # Corepack local install in flatpak
 lib
+
+# Eslint
+.eslintcache
