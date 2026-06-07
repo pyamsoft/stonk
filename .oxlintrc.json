@@ -4,6 +4,8 @@
     "typescript",
     "unicorn",
     "oxc",
+    "import",
+    "node",
     "promise"
   ],
   "categories": {
