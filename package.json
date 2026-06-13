@@ -18,7 +18,7 @@
   "dependencies": {
     "discord.js": "14.26.4",
     "dotenv": "17.4.2",
-    "yahoo-finance2": "3.15.2"
+    "yahoo-finance2": "3.15.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.5",
