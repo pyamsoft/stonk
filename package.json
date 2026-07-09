@@ -23,7 +23,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "10.0.1",
-    "@types/node": "26.1.0",
+    "@types/node": "26.1.1",
     "@types/tough-cookie": "4.0.5",
     "@typescript-eslint/eslint-plugin": "8.63.0",
     "@typescript-eslint/parser": "8.63.0",
