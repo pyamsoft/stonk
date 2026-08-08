@@ -43,8 +43,8 @@ importers:
         specifier: 17.8.0
         version: 17.8.0
       npm-check-updates:
-        specifier: 23.0.0
-        version: 23.0.0
+        specifier: 23.0.1
+        version: 23.0.1
       oxlint:
         specifier: 1.76.0
         version: 1.76.0
@@ -1082,8 +1082,8 @@ packages:
     resolution: {integrity: sha512-uhXOdZry0L6M2UIo9BTt7FdpBDiAGN/7oItedQwPKh8jh31ZlvC8U9Xl/EJ3aijDHaywXTW3QbZ6LuCocur1YA==}
     engines: {node: '>=12.20'}
 
-  npm-check-updates@23.0.0:
-    resolution: {integrity: sha512-B7dvnnS4Tm/4YQghXjBgGBDuHsk88hqCmr4ZuCr0nscsPzf/QVMls5mT8ZUcHrcrFRBP1afB2KNuJo8Px55DrA==}
+  npm-check-updates@23.0.1:
+    resolution: {integrity: sha512-e4hu3Rq4waj7SnhzvqAc5UG557mfP5e3JIFFQd7Fg3RiRkJl8yR90NFoZ1GSWUT3S/QacJndJb+7dLQBPeH+iA==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0, npm: '>=10.0.0'}
     hasBin: true
 
@@ -2382,7 +2382,7 @@ snapshots:
 
   normalize-url@7.2.0: {}
 
-  npm-check-updates@23.0.0: {}
+  npm-check-updates@23.0.1: {}
 
   object-assign@4.1.1: {}
 
