@@ -28,7 +28,7 @@
     "@typescript-eslint/eslint-plugin": "8.66.0",
     "@typescript-eslint/parser": "8.66.0",
     "eslint": "10.8.1",
-    "globals": "17.9.0",
+    "globals": "17.10.0",
     "npm-check-updates": "23.0.2",
     "oxlint": "1.77.0",
     "prettier": "3.9.6",
