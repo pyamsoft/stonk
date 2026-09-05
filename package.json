@@ -27,7 +27,7 @@
     "@types/node": "26.3.0",
     "@types/tough-cookie": "4.0.5",
     "@typescript-eslint/eslint-plugin": "8.68.0",
-    "@typescript-eslint/parser": "8.68.0",
+    "@typescript-eslint/parser": "8.69.0",
     "eslint": "10.9.1",
     "globals": "17.11.0",
     "npm-check-updates": "23.1.0",
