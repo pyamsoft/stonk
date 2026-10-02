@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { version } from "../../../package.json";
+import packageJson from "../../../package.json" with { type: "json" };
 import { BotConfig } from "../../config";
 import { codeBlock } from "../../bot/discord/format";
 
@@ -34,7 +34,7 @@ export const outputHelpText = function (config: BotConfig): string {
   };
 
   return codeBlock(`
-Beep Boop. (${version})
+Beep Boop. (${packageJson.version})
 
 [COMMANDS]
 ${p("                       This help")}
