@@ -21,25 +21,25 @@ import { YahooFinance } from "./yf";
 
 const logger = newLogger("YahooRecommend");
 
-const parseRecommendation = function (rec: unknown): Rec {
+const missingRecommendation = function (symbol: string): Rec {
+  return {
+    symbol: symbol.toUpperCase(),
+    recommendations: [],
+    error: `Unable to find recommendations for ${bold(symbol)}`,
+  };
+};
+
+const parseRecommendation = function (rec: unknown): Rec | undefined {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { symbol, recommendedSymbols } = rec as any;
   if (!symbol) {
-    logger.warn("YFinance recommend missing finance");
-    return {
-      symbol: symbol.toUpperCase(),
-      recommendations: [],
-      error: `Unable to find recommendations for ${bold(symbol)}`,
-    };
+    logger.warn("YFinance recommend missing symbol");
+    return undefined;
   }
 
   if (!recommendedSymbols || recommendedSymbols.length <= 0) {
     logger.warn("YFinance missing recommendedSymbols");
-    return {
-      symbol: symbol.toUpperCase(),
-      recommendations: [],
-      error: `Unable to find recommendations for ${bold(symbol)}`,
-    };
+    return missingRecommendation(symbol);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,11 +51,7 @@ const parseRecommendation = function (rec: unknown): Rec {
     logger.warn(
       "YFinance recommend.finance.result.recommendedSymbols missing bestRecs",
     );
-    return {
-      symbol: symbol.toUpperCase(),
-      recommendations: [],
-      error: `Unable to find recommendations for ${bold(symbol)}`,
-    };
+    return missingRecommendation(symbol);
   }
 
   return {
@@ -68,9 +64,24 @@ const parseRecommendation = function (rec: unknown): Rec {
 export const recommendApi = async function (
   symbols: ReadonlyArray<string>,
 ): Promise<RecommendResponse> {
-  return YahooFinance.recommendationsBySymbol(symbols as string[])
-    .then((data: unknown[]) => data.map((d) => parseRecommendation(d)))
-    .then((data) => {
-      return { data };
-    });
+  return YahooFinance.recommendationsBySymbol(symbols as string[]).then(
+    (data: unknown[]) => {
+      const parsed: Rec[] = [];
+      for (const d of data) {
+        const rec = parseRecommendation(d);
+        if (rec) {
+          parsed.push(rec);
+        }
+      }
+
+      for (const symbol of symbols) {
+        const upper = symbol.toUpperCase();
+        if (!parsed.some((r) => r.symbol === upper)) {
+          parsed.push(missingRecommendation(upper));
+        }
+      }
+
+      return { data: parsed };
+    },
+  );
 };
